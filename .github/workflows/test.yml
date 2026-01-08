@@ -5,6 +5,9 @@ permissions:
 
 on:
   push:
+    branches:
+      - main
+      - develop
   pull_request:
   workflow_dispatch:
 
@@ -13,25 +16,68 @@ env:
 
 jobs:
   check:
+    strategy:
+      fail-fast: true
+
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           submodules: recursive
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
 
       - name: Show Forge version
-        run: forge --version
+        run: |
+          forge --version
+          cast --version
 
       - name: Run Forge fmt
-        run: forge fmt --check
+        run: |
+          forge fmt --check
+        id: fmt
 
       - name: Run Forge build
-        run: forge build --sizes
+        run: |
+          forge --version
+          forge build --sizes
+        id: build
 
       - name: Run Forge tests
-        run: forge test -vvv
+        run: |
+          forge test -vvv
+        id: test
+        env:
+          # Add any required environment variables for tests
+          FOUNDRY_FUZZ_RUNS: 256
+          FOUNDRY_VERBOSITY: 3
+
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run coverage
+        run: forge coverage --report summary --report lcov
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./lcov.info
+          flags: smart-contract-tests
+          name: foundry-coverage
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        continue-on-error: true
