@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 //import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "../lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/initializable.sol";
+
 /**
  * @title TranscriptRegistryUpgradeable
  * @dev Upgradeable version of TranscriptRegistry using OpenZeppelin's Initializable
@@ -324,11 +325,13 @@ contract TranscriptRegistryUpgradeable is Initializable {
         emit RegistrarUpdated(oldRegistrar, newRegistrar);
     }
     
-    function deactivateContract() external onlyAdmin {
+    function deactivateContract() external {
+        require(msg.sender == admin, "Only admin can call this");
         isActive = false;
     }
     
-    function activateContract() external onlyAdmin {
+    function activateContract() external {
+        require(msg.sender == admin, "Only admin can call this");
         isActive = true;
     }
     
