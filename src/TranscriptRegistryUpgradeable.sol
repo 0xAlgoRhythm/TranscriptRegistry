@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-
+//import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/initializable.sol";
 /**
  * @title TranscriptRegistryUpgradeable
  * @dev Upgradeable version of TranscriptRegistry using OpenZeppelin's Initializable
@@ -93,6 +93,11 @@ contract TranscriptRegistryUpgradeable is Initializable {
     
     modifier onlyAdmin() {
         require(msg.sender == admin, "Only admin can call this");
+        _;
+    }
+    
+    modifier onlyAdminOrFactory() {
+        require(msg.sender == admin || msg.sender == address(0), "Only admin or factory can call this");
         _;
     }
     
