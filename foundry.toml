@@ -2,8 +2,14 @@
 src = "src"
 out = "out"
 libs = ["lib"]
-solc_version = "0.8.20"
+solc_version = "0.8.23"
 ffi = true
+
+# OpenZeppelin remappings
+remappings = [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+]
 
 # Test configuration
 [profile.default.fuzz]
@@ -26,9 +32,3 @@ bracket_spacing = true
 # RPC endpoints for testing (Base Sepolia)
 [rpc_endpoints]
 base_sepolia = "https://sepolia.base.org"
-
-# Add these remappings
-remappings = [
-    "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
-    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
-]
