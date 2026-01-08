@@ -247,7 +247,8 @@ contract UniversityFactory {
     
     /**
      * @dev Get platform statistics
-     * @return Total universities, active count
+     * @return totalUniversities Total number of universities deployed
+     * @return activeCount Number of active universities
      */
     function getPlatformStats()
         external
