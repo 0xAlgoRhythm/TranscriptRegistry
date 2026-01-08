@@ -1,8 +1,5 @@
 # TranscriptChain - Decentralized Transcript Management System
 
-![CI](https://github.com/YOUR_USERNAME/TranscriptRegistryPlatform/workflows/CI/badge.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Solidity](https://img.shields.io/badge/solidity-0.8.20-brightgreen.svg)
 
 A blockchain-based platform for issuing, managing, and verifying academic transcripts using Beacon Proxy pattern for gas-efficient, upgradeable smart contracts.
 
@@ -51,7 +48,7 @@ UniversityFactory (Beacon Pattern)
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/TranscriptRegistryPlatform.git
+git clone https://github.com/mhiskall282/TranscriptRegistryPlatform.git
 cd TranscriptRegistryPlatform
 
 # Install dependencies
