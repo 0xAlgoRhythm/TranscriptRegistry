@@ -12,3 +12,40 @@ docs/
 
 # Dotenv file
 .env
+.env.*
+!.env.example
+
+# Node modules
+node_modules/
+
+# Coverage
+coverage/
+coverage.json
+lcov.info
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Foundry
+forge-cache/
+broadcast/
+cache_forge/
+
+# Hardhat (if you switch)
+artifacts/
+typechain/
+typechain-types/
+
+# Testing
+*.log
+
+# Build info
+build-info/
