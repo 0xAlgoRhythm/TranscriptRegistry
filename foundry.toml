@@ -3,9 +3,8 @@ src = "src"
 out = "out"
 libs = ["lib"]
 solc_version = "0.8.23"
-ffi = true
 
-# OpenZeppelin remappings
+# Remappings for OpenZeppelin
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
     "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
@@ -19,16 +18,51 @@ runs = 256
 runs = 256
 depth = 15
 
-# Code coverage
-[profile.coverage]
-verbosity = 3
-
 # Formatter
-[fmt]
+[profile.default.fmt]
 line_length = 100
 tab_width = 4
 bracket_spacing = true
+int_types = "long"
+multiline_func_header = "all"
+quote_style = "double"
+number_underscore = "thousands"
 
-# RPC endpoints for testing (Base Sepolia)
+# RPC endpoints for testing
 [rpc_endpoints]
-base_sepolia = "https://sepolia.base.org"
+sepolia = "${SEPOLIA_RPC_URL}"
+base_sepolia = "https://sepolia.drpc.org"
+
+# Etherscan API keys for verification
+[etherscan]
+sepolia = { key = "${ETHERSCAN_API_KEY}" }
+base_sepolia = { key = "${BASESCAN_API_KEY}" }
+
+# CI Profile - Optimized for GitHub Actions
+[profile.ci]
+fuzz = { runs = 512 }
+verbosity = 3
+gas_reports = ["*"]
+
+# Profile for coverage
+[profile.coverage]
+via_ir = false
+
+# Optimizer settings
+[profile.default.optimizer]
+enabled = true
+runs = 200
+
+[profile.default.optimizer_details]
+peephole = true
+inliner = true
+jumpdestRemover = true
+orderLiterals = true
+deduplicate = true
+cse = true
+constantOptimizer = true
+yul = true
+
+[profile.default.optimizer_details.yulDetails]
+stackAllocation = true
+optimizerSteps = "dhfoDgvulfnTUtnIf"
