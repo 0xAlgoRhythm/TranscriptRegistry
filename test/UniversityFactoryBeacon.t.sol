@@ -292,6 +292,9 @@ contract UniversityFactoryBeaconTest is Test {
         vm.prank(platformAdmin);
         factory.deactivateUniversity(universityId, "Test");
         
+        vm.prank(platformAdmin);
+        TranscriptRegistryUpgradeable(proxyAddress).deactivateContract();
+        
         UniversityFactoryBeacon.UniversityInfo memory uniInfo = factory.getUniversity(universityId);
         assertFalse(uniInfo.isActive);
         
@@ -306,6 +309,10 @@ contract UniversityFactoryBeaconTest is Test {
         
         uniInfo = factory.getUniversity(universityId);
         assertTrue(uniInfo.isActive);
+        
+        // Platform admin reactivates the registry directly
+        vm.prank(platformAdmin);
+        registry.activateContract();
         assertTrue(registry.isActive());
     }
     
