@@ -272,7 +272,12 @@ contract TranscriptRegistry {
     /**
      * @dev Get transcript details (public view)
      * @param recordId Transcript record ID
-     * @return Transcript struct
+     * @return studentHash Hash of student ID
+     * @return metadataCID IPFS CID for metadata
+     * @return fileHash SHA-256 hash of file
+     * @return issuer Address of registrar who issued
+     * @return timestamp Issue timestamp
+     * @return status Current status of transcript
      */
     function getTranscript(bytes32 recordId)
         external
@@ -380,7 +385,9 @@ contract TranscriptRegistry {
     
     /**
      * @dev Get contract statistics
-     * @return Total transcripts, total verifications, contract status
+     * @return totalTranscripts Total number of transcripts issued
+     * @return totalVerifications Total number of verifications performed
+     * @return contractActive Whether contract is active
      */
     function getContractStats()
         external
