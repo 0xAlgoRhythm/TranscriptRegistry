@@ -584,4 +584,3 @@ contract UniversityFactoryTest is Test {
         assertEq(activeIds.length, expectedLength);
     }
 }
-

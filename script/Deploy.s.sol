@@ -17,14 +17,15 @@ contract DeployTranscriptChain is Script {
     
     function run() external {
         // Get deployment private key from environment
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        // Use vm.envString for private key without 0x prefix
+        string memory pkString = vm.envString("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.parseUint(string(abi.encodePacked("0x", pkString)));
         address deployer = vm.addr(deployerPrivateKey);
         
         console.log("==============================================");
         console.log("TRANSCRIPTCHAIN DEPLOYMENT SCRIPT");
         console.log("==============================================");
         console.log("Deployer address:", deployer);
-        console.log("Deployer balance:", deployer.balance);
         console.log("Chain ID:", block.chainid);
         console.log("==============================================");
         
@@ -62,7 +63,8 @@ contract DeployTestUniversities is Script {
     
     function run() external {
         // Get private key and factory address from environment
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        string memory pkString = vm.envString("PRIVATE_KEY");
+        uint256 deployerPrivateKey = vm.parseUint(string(abi.encodePacked("0x", pkString)));
         address factoryAddress = vm.envAddress("FACTORY_ADDRESS");
         
         UniversityFactory factory = UniversityFactory(factoryAddress);
@@ -129,7 +131,8 @@ contract DeployTestUniversities is Script {
 contract RegisterTestTranscript is Script {
     
     function run() external {
-        uint256 registrarPrivateKey = vm.envUint("REGISTRAR_PRIVATE_KEY");
+        string memory pkString = vm.envString("REGISTRAR_PRIVATE_KEY");
+        uint256 registrarPrivateKey = vm.parseUint(string(abi.encodePacked("0x", pkString)));
         address registryAddress = vm.envAddress("REGISTRY_ADDRESS");
         
         TranscriptRegistry registry = TranscriptRegistry(registryAddress);
