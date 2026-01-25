@@ -189,4 +189,3 @@ contract RegisterTestTranscript is Script {
         console.log("Status:", uint8(status) == 0 ? "Active" : "Other");
         console.log("==============================================");
     }
-// commit-marker-69
