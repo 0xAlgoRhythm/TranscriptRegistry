@@ -160,4 +160,4 @@ case "$1" in
         print_usage
         exit 1
         ;;
-esac# commit-marker-1
+# commit-marker-1
