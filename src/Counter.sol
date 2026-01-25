@@ -12,4 +12,3 @@ contract Counter {
         number++;
     }
 }
-// commit-marker-1
