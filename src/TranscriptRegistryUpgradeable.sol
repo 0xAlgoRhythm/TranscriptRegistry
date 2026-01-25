@@ -356,3 +356,4 @@ contract TranscriptRegistryUpgradeable is Initializable {
     function version() external pure returns (string memory) {
         return "1.0.0";
     }
+# commit-marker-2
