@@ -357,4 +357,3 @@ contract TranscriptRegistryUpgradeable is Initializable {
         return "1.0.0";
     }
 # commit-marker-14
-# commit-marker-1
