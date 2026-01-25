@@ -1,7 +1,7 @@
 #!/bin/bash
 
-FILE="quick-test.sh"
-MESSAGE="create script file commit"
+FILE="./src/TranscriptRegistryUpgradeable.sol"
+MESSAGE="create sol file"
 
 TOTAL_LINES=$(wc -l < "$FILE")
 
