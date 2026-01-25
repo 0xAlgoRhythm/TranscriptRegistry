@@ -47,7 +47,6 @@ gas_reports = ["*"]
 # Profile for coverage
 [profile.coverage]
 via_ir = false
-
 # Optimizer settings
 [profile.default.optimizer]
 enabled = true
