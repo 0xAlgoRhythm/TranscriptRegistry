@@ -4,6 +4,11 @@ out = "out"
 libs = ["lib"]
 solc_version = "0.8.23"
 
+# Optimizer (Foundry expects booleans, not maps)
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+
 # Remappings for OpenZeppelin
 remappings = [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
@@ -28,41 +33,21 @@ multiline_func_header = "all"
 quote_style = "double"
 number_underscore = "thousands"
 
-# RPC endpoints for testing
+# RPC endpoints
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
 base_sepolia = "https://sepolia.drpc.org"
 
-# Etherscan API keys for verification
+# Etherscan / Basescan
 [etherscan]
 sepolia = { key = "${ETHERSCAN_API_KEY}" }
 base_sepolia = { key = "${BASESCAN_API_KEY}" }
 
-# CI Profile - Optimized for GitHub Actions
+# CI profile
 [profile.ci]
-fuzz = { runs = 512 }
 verbosity = 3
 gas_reports = ["*"]
 
-# Profile for coverage
+# Coverage profile
 [profile.coverage]
 via_ir = false
-
-# Optimizer settings
-[profile.default.optimizer]
-enabled = true
-runs = 200
-
-[profile.default.optimizer_details]
-peephole = true
-inliner = true
-jumpdestRemover = true
-orderLiterals = true
-deduplicate = true
-cse = true
-constantOptimizer = true
-yul = true
-
-[profile.default.optimizer_details.yulDetails]
-stackAllocation = true
-optimizerSteps = "dhfoDgvulfnTUtnIf"
