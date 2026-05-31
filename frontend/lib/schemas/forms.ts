@@ -6,7 +6,7 @@ const ethAddressSchema = z.string().refine((val) => isAddress(val), {
   message: "Invalid Ethereum address format",
 })
 
-export const deployUniversitySchema = z.model = z.object({
+export const deployUniversitySchema = z.object({
   name: z.string().min(2, "University name must be at least 2 characters"),
   symbol: z.string().min(2, "Symbol must be at least 2 characters").max(10, "Symbol must be 10 characters or less"),
   adminAddress: ethAddressSchema,
