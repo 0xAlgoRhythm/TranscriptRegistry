@@ -60,7 +60,7 @@ export default function DashboardPage() {
           label="Registered Universities"
           value={String(totalUniversities)}
           icon={<Building2 className="h-4.5 w-4.5" />}
-          accent="accent"
+          accent="default"
           trend="All instances"
         />
         <StatCard

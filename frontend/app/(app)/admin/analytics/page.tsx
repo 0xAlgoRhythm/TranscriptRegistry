@@ -26,7 +26,7 @@ export default function AdminAnalyticsPage() {
           label="Total Issued Records"
           value="1,492"
           icon={<BarChart className="h-4.5 w-4.5" />}
-          accent="accent"
+          accent="default"
           trend="+14% MoM"
         />
         <StatCard
