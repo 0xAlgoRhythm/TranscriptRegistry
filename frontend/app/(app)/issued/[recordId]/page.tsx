@@ -48,7 +48,7 @@ export default function IssuedDetailPage() {
   const statusStr = TRANSCRIPT_STATUS[status as TranscriptStatus]
 
   const handleUpdateStatus = (newStatus: number) => {
-    updateStatus(registryAddress, recordId, newStatus)
+    updateStatus(registryAddress, recordId, newStatus, "Status updated by registrar")
   }
 
   return (
