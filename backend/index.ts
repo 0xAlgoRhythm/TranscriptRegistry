@@ -1,176 +1,203 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
+import { db } from "./db/connection.js"
+import { universities, transcripts, accessGrants, ipfsUploads } from "./db/schema.js"
+import { eq, and, sql } from "drizzle-orm"
+import { startIndexer } from "./indexer/sync.js"
+import { serve } from "@hono/node-server"
+import dotenv from "dotenv"
+import path from "path"
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
 const app = new Hono()
 
-// Enable CORS
 app.use("/*", cors({
   origin: "*",
   allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowHeaders: ["Content-Type", "Authorization"],
 }))
 
-// Mock Database State for prototyping
-const mockUniversities = [
-  {
-    id: 1,
-    universityId: 0,
-    name: "Massachusetts Institute of Technology",
-    contractAddr: "0x82c81e9d12a9bdfef0789278912ef64d0012bc0a",
-    registrar: "0x5b38da6a701c568545dcfcb03fcb875f56beddc4",
-    deployedAt: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-  {
-    id: 2,
-    universityId: 1,
-    name: "Stanford University",
-    contractAddr: "0xd207b844f0789278912ef64d0012bc09a63fe89d",
-    registrar: "0xab8483f64d9c6d1ecf9b849ae677d3f2400a5788",
-    deployedAt: new Date(Date.now() - 5 * 24 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-]
-
-const mockTranscripts = [
-  {
-    recordId: "0x4f3e5c72a819bdfef0789278912ef64d0012bc09a63fe89d71a8bc8f921888ad",
-    studentHash: "0x89a3f2b1cde458a28793b8dcf284e921888a7b6d19a2b8e72c841e2a0b9c3f4e", // keccak256 hash
-    metadataCid: "QmXyZk4s8ad9d821389bc72a912ef64d0012bc09a63fe89d71a8bc8f921888ad",
-    fileHash: "0x4f3e5c72a819bdfef0789278912ef64d0012bc09a63fe89d71a8bc8f921888ad",
-    issuer: "0x5b38da6a701c568545dcfcb03fcb875f56beddc4",
-    registryAddr: "0x82c81e9d12a9bdfef0789278912ef64d0012bc0a",
-    universityId: 0,
-    issuedAt: new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString(),
-    status: "Active",
-  },
-  {
-    recordId: "0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f12ef",
-    studentHash: "0x7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f12ef3a2b1c0d9e8f7a6b5c4d3e2f",
-    metadataCid: "bafybeigdyrzt5swn7g7ofwrdgahqznb52yc1hpu3y25e1cf42fhpu3y25e",
-    fileHash: "0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f12ef",
-    issuer: "0xab8483f64d9c6d1ecf9b849ae677d3f2400a5788",
-    registryAddr: "0xd207b844f0789278912ef64d0012bc09a63fe89d",
-    universityId: 1,
-    issuedAt: new Date(Date.now() - 4 * 24 * 3600 * 1000).toISOString(),
-    status: "Active",
-  },
-]
-
-const mockAccessGrants = [
-  {
-    recordId: "0x4f3e5c72a819bdfef0789278912ef64d0012bc09a63fe89d71a8bc8f921888ad",
-    verifier: "0x4b20993bc481177ec7c8f571cecae8a9e22c02db",
-    student: "0x0f1117...",
-    grantedAt: new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 29 * 24 * 3600 * 1000).toISOString(),
-    isActive: true,
-  },
-]
-
-// ─── Privy Mock Auth Middleware ───
-const mockAuth = async (c: any, next: any) => {
+// Auth Middleware Stub (can check Privy JWTs)
+const verifyAuth = async (c: any, next: any) => {
   const authHeader = c.req.header("Authorization")
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return c.json({ error: "Unauthorized" }, 401)
   }
-  // For prototype mock validation, accept any bearer token
   await next()
 }
 
-// ─── Routes ───
+// ─── API Routes ───
 
 // Platform stats
-app.get("/api/stats/platform", (c) => {
-  return c.json({
-    totalUniversities: mockUniversities.length,
-    activeUniversities: mockUniversities.filter(u => u.isActive).length,
-    totalTranscripts: mockTranscripts.length,
-    totalVerifications: 142,
-  })
+app.get("/api/stats/platform", async (c) => {
+  try {
+    const totalUnisResult = await db.select({ count: sql<number>`count(*)` }).from(universities)
+    const activeUnisResult = await db.select({ count: sql<number>`count(*)` }).from(universities).where(eq(universities.isActive, true))
+    const totalTranscriptsResult = await db.select({ count: sql<number>`count(*)` }).from(transcripts)
+
+    return c.json({
+      totalUniversities: Number(totalUnisResult[0]?.count || 0),
+      activeUniversities: Number(activeUnisResult[0]?.count || 0),
+      totalTranscripts: Number(totalTranscriptsResult[0]?.count || 0),
+      totalVerifications: 28, // mock stat
+    })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
 // Universities
-app.get("/api/universities", (c) => {
-  return c.json(mockUniversities)
+app.get("/api/universities", async (c) => {
+  try {
+    const list = await db.select().from(universities)
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/universities/:id", (c) => {
-  const id = parseInt(c.req.param("id"))
-  const uni = mockUniversities.find((u) => u.universityId === id)
-  if (!uni) return c.json({ error: "University not found" }, 404)
-  return c.json(uni)
+app.get("/api/universities/:id", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.universityId, id)
+    })
+    if (!uni) return c.json({ error: "University not found" }, 404)
+    return c.json(uni)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/universities/by-address/:addr", (c) => {
-  const addr = c.req.param("addr").toLowerCase()
-  const uni = mockUniversities.find((u) => u.contractAddr.toLowerCase() === addr)
-  if (!uni) return c.json({ error: "Registry address not found" }, 404)
-  return c.json(uni)
+app.get("/api/universities/by-address/:addr", async (c) => {
+  try {
+    const addr = c.req.param("addr").toLowerCase()
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.contractAddr, addr)
+    })
+    if (!uni) return c.json({ error: "Registry contract address not registered" }, 404)
+    return c.json(uni)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
 // Transcripts
-app.get("/api/transcripts/:recordId", (c) => {
-  const recordId = c.req.param("recordId")
-  const tx = mockTranscripts.find((t) => t.recordId === recordId)
-  if (!tx) return c.json({ error: "Transcript not found" }, 404)
-  return c.json(tx)
+app.get("/api/transcripts/:recordId", async (c) => {
+  try {
+    const recordId = c.req.param("recordId")
+    const tx = await db.query.transcripts.findFirst({
+      where: eq(transcripts.recordId, recordId)
+    })
+    if (!tx) return c.json({ error: "Transcript record not found" }, 404)
+    return c.json(tx)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/transcripts/by-student/:studentHash", (c) => {
-  const studentHash = c.req.param("studentHash").toLowerCase()
-  const txs = mockTranscripts.filter((t) => t.studentHash.toLowerCase() === studentHash)
-  return c.json(txs)
+app.get("/api/transcripts/by-student/:studentHash", async (c) => {
+  try {
+    const studentHash = c.req.param("studentHash").toLowerCase()
+    const list = await db.select().from(transcripts).where(eq(transcripts.studentHash, studentHash))
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/transcripts/by-registrar/:address", (c) => {
-  const address = c.req.param("address").toLowerCase()
-  const txs = mockTranscripts.filter((t) => t.issuer.toLowerCase() === address)
-  return c.json(txs)
+app.get("/api/transcripts/by-registrar/:address", async (c) => {
+  try {
+    const address = c.req.param("address").toLowerCase()
+    const list = await db.select().from(transcripts).where(eq(transcripts.issuer, address))
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/transcripts/by-registry/:addr", (c) => {
-  const addr = c.req.param("addr").toLowerCase()
-  const txs = mockTranscripts.filter((t) => t.registryAddr.toLowerCase() === addr)
-  return c.json(txs)
+app.get("/api/transcripts/by-registry/:addr", async (c) => {
+  try {
+    const addr = c.req.param("addr").toLowerCase()
+    const list = await db.select().from(transcripts).where(eq(transcripts.registryAddr, addr))
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
 // Access Hub
-app.get("/api/access/by-student/:studentHash", (c) => {
-  const studentHash = c.req.param("studentHash").toLowerCase()
-  const grants = mockAccessGrants.filter((g) => g.student.toLowerCase() === studentHash)
-  return c.json(grants)
+app.get("/api/access/by-student/:studentHash", async (c) => {
+  try {
+    const studentHash = c.req.param("studentHash").toLowerCase()
+    const list = await db.select().from(accessGrants).where(eq(accessGrants.student, studentHash))
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-app.get("/api/access/:recordId/:verifier", (c) => {
-  const recordId = c.req.param("recordId")
-  const verifier = c.req.param("verifier").toLowerCase()
-  const grant = mockAccessGrants.find(
-    (g) => g.recordId === recordId && g.verifier.toLowerCase() === verifier
-  )
-  return c.json({ hasAccess: !!grant && grant.isActive })
+app.get("/api/access/:recordId/:verifier", async (c) => {
+  try {
+    const recordId = c.req.param("recordId")
+    const verifier = c.req.param("verifier").toLowerCase()
+    const grant = await db.query.accessGrants.findFirst({
+      where: and(
+        eq(accessGrants.recordId, recordId),
+        eq(accessGrants.verifier, verifier),
+        eq(accessGrants.isActive, true)
+      )
+    })
+    return c.json({ hasAccess: !!grant })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
 // IPFS Upload Simulator
-app.post("/api/ipfs/upload", mockAuth, async (c) => {
-  const body = await c.req.json()
-  const fileHash = body.fileHash || "0x" + Math.random().toString(16).slice(2, 66)
-  const cid = "Qm" + Math.random().toString(36).slice(2, 48)
+app.post("/api/ipfs/upload", verifyAuth, async (c) => {
+  try {
+    const body = await c.req.json()
+    const fileHash = body.fileHash || "0x" + Math.random().toString(16).slice(2, 66)
+    const cid = "Qm" + Math.random().toString(36).slice(2, 48)
 
-  return c.json({
-    cid,
-    fileHash,
-    metadataJson: {
+    const metadata = {
       studentAddress: body.studentAddress,
       universityName: body.universityName,
       registryAddress: body.registryAddress,
       uploadedAt: new Date().toISOString(),
     }
-  })
+
+    // Save metadata CID register record in DB
+    await db.insert(ipfsUploads).values({
+      cid,
+      fileHash,
+      studentHash: body.studentAddress || "0x",
+      universityName: body.universityName || "MIT",
+      uploadedAt: new Date(),
+      metadataJson: metadata,
+    })
+
+    return c.json({
+      cid,
+      fileHash,
+      metadataJson: metadata,
+    })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
 
-export default {
-  port: 3001,
+// Start server and launch micro-indexer listener
+const port = 3001
+serve({
   fetch: app.fetch,
-}
-console.log("CredAxis Hono Mock Backend running on http://localhost:3001")
+  port,
+})
+console.log(`CredAxis Database-Backed API Server running on http://localhost:${port}`)
+
+// Launch real-time background blockchain listener
+startIndexer().catch((err: any) => {
+  console.error("Failed to start indexing agent service on start:", err)
+})

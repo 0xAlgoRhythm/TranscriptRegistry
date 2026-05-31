@@ -6,7 +6,6 @@ import { useUIStore } from "@/lib/stores/ui-store"
 import { useRoleStore } from "@/lib/stores/role-store"
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
-import { RoleSelector } from "./role-selector"
 import { 
   LayoutDashboard, 
   FileCheck2, 
@@ -83,8 +82,6 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-border/40 bg-card/25 space-y-4">
-        <RoleSelector />
-        
         <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 w-fit">
           <span className="size-1.5 rounded-full bg-[oklch(var(--ca-teal))]" />
           <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">

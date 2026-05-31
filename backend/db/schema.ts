@@ -22,7 +22,7 @@ export const transcripts = pgTable("transcripts", {
   registryAddr: text("registry_addr").notNull(),
   universityId: integer("university_id").references(() => universities.universityId),
   issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
-  status: text("status").default("Active"), // Active | Revoked | Suspended
+  status: text("status").default("Active"), // Active | Revoked | Amended
   txHash: text("tx_hash"),
   blockNumber: bigint("block_number", { mode: "bigint" }),
 })

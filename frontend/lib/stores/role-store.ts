@@ -15,10 +15,10 @@ export const useRoleStore = create<RoleState>()(
   persist(
     (set) => ({
       role: null,
-      isDemoMode: true, // Default to demo mode to allow role toggling in prototype
+      isDemoMode: false, // Enforce live wallet based resolution for production Dapp
       setRole: (role) => set({ role }),
       toggleDemoMode: () => set((state) => ({ isDemoMode: !state.isDemoMode })),
-      reset: () => set({ role: null, isDemoMode: true }),
+      reset: () => set({ role: null, isDemoMode: false }),
     }),
     {
       name: "credaxis-role-storage",
