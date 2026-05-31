@@ -172,12 +172,13 @@ export function useUpdateTranscriptStatus() {
     registryAddress: Address,
     recordId: `0x${string}`,
     status: number,
+    reason: string,
   ) {
     writeContract({
       address: registryAddress,
       abi: transcriptRegistryAbi,
       functionName: "updateTranscriptStatus",
-      args: [recordId, status],
+      args: [recordId, status, reason],
     })
   }
 
