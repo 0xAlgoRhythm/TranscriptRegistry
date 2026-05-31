@@ -14,8 +14,7 @@ import {
   SearchCode, 
   Settings2,
   Lock,
-  ListFilter,
-  UserGear
+  ListFilter
 } from "lucide-react"
 
 const NAV_ITEMS = [
