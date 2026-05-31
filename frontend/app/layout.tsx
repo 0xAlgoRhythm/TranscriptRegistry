@@ -7,23 +7,40 @@ const displayFont = Cormorant_Garamond({
 	variable: "--font-display",
 	subsets: ["latin"],
 	weight: ["300", "400", "500", "600", "700"],
+	display: "swap",
 })
 
 const sansFont = Plus_Jakarta_Sans({
 	variable: "--font-sans",
 	subsets: ["latin"],
+	display: "swap",
 })
 
 const monoFont = JetBrains_Mono({
 	variable: "--font-mono",
 	subsets: ["latin"],
 	weight: ["400", "500"],
+	display: "swap",
 })
 
 export const metadata: Metadata = {
 	title: "CredAxis — Blockchain Academic Credentials",
 	description:
 		"Issue, manage, and verify academic transcripts on the blockchain. Secure, instant, student-controlled.",
+	openGraph: {
+		title: "CredAxis — Blockchain Academic Credentials",
+		description:
+			"Issue, manage, and verify academic transcripts on the blockchain.",
+		siteName: "CredAxis",
+		locale: "en_US",
+		type: "website",
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "CredAxis — Blockchain Academic Credentials",
+		description:
+			"Issue, manage, and verify academic transcripts on the blockchain.",
+	},
 }
 
 export default function RootLayout({
@@ -32,7 +49,7 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" className="dark">
 			<body
 				className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} font-sans antialiased`}
 			>

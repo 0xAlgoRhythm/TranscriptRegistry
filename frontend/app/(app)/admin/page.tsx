@@ -1,13 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { type Address } from "viem"
 import { useAccount } from "wagmi"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useRoleStore } from "@/lib/stores/role-store"
 import {
   usePlatformStats,
   usePlatformAdmin,
@@ -17,7 +13,15 @@ import {
   useDeactivateUniversity,
   useReactivateUniversity,
 } from "@/hooks/use-university-factory"
-import { truncateAddress, getHumanError } from "@/lib/utils"
+import { StatCard } from "@/components/ui/stat-card"
+import { GlowCard } from "@/components/ui/glow-card"
+import { SectionLabel } from "@/components/ui/section-label"
+import { AddressInput } from "@/components/ui/address-input"
+import { StatusBadge } from "@/components/ui/status-badge"
+import { HashDisplay } from "@/components/ui/hash-display"
+import { TxPanel } from "@/components/ui/tx-panel"
+import { Button } from "@/components/ui/button"
+import { Shield, Sparkles, Building2, Plus, AlertTriangle, Play, Pause } from "lucide-react"
 
 function UniversityRow({ id }: { id: bigint }) {
   const { data } = useUniversity(id)
@@ -29,53 +33,39 @@ function UniversityRow({ id }: { id: bigint }) {
   const { name, contractAddress, registrar, isActive } = data
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-[var(--tc-border)] bg-[var(--tc-surface)] p-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-medium text-[var(--tc-text)]">{name}</p>
-          <Badge
-            className={
-              isActive
-                ? "bg-[var(--tc-teal)]/10 text-[var(--tc-teal)]"
-                : "bg-red-500/10 text-red-500"
-            }
-          >
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
-        </div>
-        <p className="font-mono text-[10px] text-[var(--tc-muted)]">
-          Registry: {truncateAddress(contractAddress)} · Registrar:{" "}
-          {truncateAddress(registrar)}
-        </p>
-      </div>
-      <div>
+    <tr className="border-b border-border/40 hover:bg-muted/10 transition-colors">
+      <td className="p-4 font-mono font-bold text-foreground text-xs uppercase">{name}</td>
+      <td className="p-4 font-mono text-xs">
+        <HashDisplay hash={contractAddress} />
+      </td>
+      <td className="p-4 font-mono text-xs">
+        <HashDisplay hash={registrar} />
+      </td>
+      <td className="p-4 text-xs">
+        <StatusBadge status={isActive ? "success" : "error"} label={isActive ? "Active" : "Suspended"} />
+      </td>
+      <td className="p-4 text-right">
         {isActive ? (
           <Button
-            variant="outline"
             size="sm"
-            onClick={() => deactivate.deactivate(id, "Admin deactivation")}
+            onClick={() => deactivate.deactivate(id, "Administrative Suspension")}
             disabled={deactivate.isPending || deactivate.isConfirming}
-            className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+            className="bg-[oklch(var(--ca-destructive)/0.15)] text-[oklch(var(--ca-destructive))] hover:bg-[oklch(var(--ca-destructive)/0.25)] border border-[oklch(var(--ca-destructive)/0.3)] font-mono text-[10px] py-1 h-7"
           >
-            {deactivate.isPending || deactivate.isConfirming
-              ? "..."
-              : "Deactivate"}
+            <Pause className="h-3 w-3 mr-1" /> SUSPEND
           </Button>
         ) : (
           <Button
-            variant="outline"
             size="sm"
             onClick={() => reactivate.reactivate(id)}
             disabled={reactivate.isPending || reactivate.isConfirming}
-            className="border-[var(--tc-teal)]/30 text-[var(--tc-teal)] hover:bg-[var(--tc-teal)]/10"
+            className="bg-[oklch(var(--ca-success)/0.15)] text-[oklch(var(--ca-success))] hover:bg-[oklch(var(--ca-success)/0.25)] border border-[oklch(var(--ca-success)/0.3)] font-mono text-[10px] py-1 h-7"
           >
-            {reactivate.isPending || reactivate.isConfirming
-              ? "..."
-              : "Reactivate"}
+            <Play className="h-3 w-3 mr-1" /> REACTIVATE
           </Button>
         )}
-      </div>
-    </div>
+      </td>
+    </tr>
   )
 }
 
@@ -85,17 +75,30 @@ function UniversityList() {
 
   if (total === 0) {
     return (
-      <p className="py-8 text-center text-sm text-[var(--tc-muted)]">
-        No universities deployed yet.
-      </p>
+      <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+        NO REGISTERED INSTITUTIONS DETECTED
+      </div>
     )
   }
 
   return (
-    <div className="space-y-2">
-      {Array.from({ length: total }, (_, i) => (
-        <UniversityRow key={i} id={BigInt(i)} />
-      ))}
+    <div className="overflow-x-auto w-full">
+      <table className="w-full text-left border-collapse font-mono">
+        <thead>
+          <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+            <th className="p-4 font-bold">University Name</th>
+            <th className="p-4 font-bold">Registry Address</th>
+            <th className="p-4 font-bold">Registrar Wallet</th>
+            <th className="p-4 font-bold">Status</th>
+            <th className="p-4 font-bold text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: total }, (_, i) => (
+            <UniversityRow key={i} id={BigInt(i)} />
+          ))}
+        </tbody>
+      </table>
     </div>
   )
 }
@@ -104,8 +107,7 @@ function DeployUniversityForm() {
   const [name, setName] = useState("")
   const [registrar, setRegistrar] = useState("")
 
-  const { deploy, hash, isPending, isConfirming, isSuccess, error } =
-    useDeployUniversity()
+  const { deploy, hash, isPending, isConfirming, isSuccess, error } = useDeployUniversity()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -114,94 +116,80 @@ function DeployUniversityForm() {
   }
 
   return (
-    <Card className="border-[var(--tc-border)] bg-[var(--tc-bg)]">
-      <CardHeader>
-        <CardTitle className="text-sm font-medium text-[var(--tc-text)]">
-          Deploy New University
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs text-[var(--tc-muted)]">
-              University Name
-            </Label>
-            <Input
-              placeholder="e.g. Kwame Nkrumah University"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="border-[var(--tc-border)] bg-[var(--tc-surface)] text-sm"
-              required
-            />
-          </div>
+    <GlowCard className="p-6 md:p-8 space-y-6 relative overflow-hidden" glow>
+      <div className="space-y-1">
+        <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+          Deploy On-Chain University
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Spawn a new instance of the TranscriptRegistry smart contract for an accredited institution.
+        </p>
+      </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-[var(--tc-muted)]">
-              Registrar Address
-            </Label>
-            <Input
-              placeholder="0x..."
-              value={registrar}
-              onChange={(e) => setRegistrar(e.target.value)}
-              className="border-[var(--tc-border)] bg-[var(--tc-surface)] font-mono text-xs"
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Institution Name</label>
+          <input
+            type="text"
+            placeholder="e.g. Massachusetts Institute of Technology"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+            required
+          />
+        </div>
 
-          <Button
-            type="submit"
-            disabled={isPending || isConfirming}
-            className="w-full bg-[var(--tc-gold)] text-white hover:bg-[var(--tc-gold-light)]"
-          >
-            {isPending
-              ? "Confirm in wallet..."
-              : isConfirming
-                ? "Deploying..."
-                : "Deploy University"}
-          </Button>
+        <AddressInput
+          label="Designated Registrar Wallet"
+          placeholder="0x..."
+          value={registrar}
+          onChange={setRegistrar}
+        />
 
-          {isSuccess && hash && (
-            <div className="rounded-lg border border-[var(--tc-teal)]/30 bg-[var(--tc-teal)]/5 p-4">
-              <p className="text-sm font-medium text-[var(--tc-teal)]">
-                University deployed!
-              </p>
-              <p className="mt-1 font-mono text-xs text-[var(--tc-muted)]">
-                Tx: {hash}
-              </p>
-            </div>
-          )}
+        <Button
+          type="submit"
+          disabled={isPending || isConfirming}
+          className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5"
+        >
+          <Plus className="h-4.5 w-4.5" /> DEPLOY REGISTRY CONTRACT
+        </Button>
 
-          {error && (
-            <p className="text-sm text-red-500">{getHumanError(error)}</p>
-          )}
-        </form>
-      </CardContent>
-    </Card>
+        <TxPanel
+          status={isPending ? "signing" : isConfirming ? "pending" : isSuccess ? "success" : error ? "error" : "idle"}
+          hash={hash}
+          error={error ? error.message : undefined}
+          title="Deploy University Contract Transaction"
+        />
+      </form>
+    </GlowCard>
   )
 }
 
 export default function AdminPage() {
   const { address } = useAccount()
+  const { role } = useRoleStore()
   const { data: adminAddress } = usePlatformAdmin()
   const { data: stats } = usePlatformStats()
 
-  const isAdmin =
-    address && adminAddress && address.toLowerCase() === adminAddress.toLowerCase()
+  // In demo mode or if selected simulation is admin, we bypass raw wallet restriction
+  const isRealAdmin = address && adminAddress && address.toLowerCase() === adminAddress.toLowerCase()
+  const isSimulatedAdmin = role === "admin"
+  const hasAccess = isRealAdmin || isSimulatedAdmin
 
-  if (!isAdmin) {
+  if (!hasAccess) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="text-center">
-          <h1
-            className="mb-2 text-xl font-light text-[var(--tc-text)]"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Admin Access Required
-          </h1>
-          <p className="text-sm text-[var(--tc-muted)]">
-            Only the platform admin can access this page.
+      <div className="flex min-h-[60vh] items-center justify-center animate-fade-in">
+        <GlowCard className="p-8 max-w-md text-center space-y-4">
+          <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-destructive)/0.15)] flex items-center justify-center text-[oklch(var(--ca-destructive))]">
+            <AlertTriangle className="h-6 w-6" />
+          </div>
+          <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-foreground">
+            UNAUTHORIZED ACCESS
+          </h2>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Administrative console restricted. Connect the platform administrator deployer wallet or switch the simulator role to Platform Admin.
           </p>
-        </div>
+        </GlowCard>
       </div>
     )
   }
@@ -210,56 +198,43 @@ export default function AdminPage() {
   const activeCount = stats ? Number(stats[1]) : 0
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <h1
-          className="text-2xl font-light tracking-tight text-[var(--tc-text)]"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          Platform Admin
+    <div className="mx-auto max-w-5xl space-y-10 animate-fade-in pb-16">
+      {/* Header */}
+      <div className="space-y-1">
+        <SectionLabel index={1} label="ADMINISTRATIVE ACTION" />
+        <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">
+          Platform Governance
         </h1>
-        <p className="mt-1 text-sm text-[var(--tc-muted)]">
-          Manage universities and platform settings
+        <p className="text-xs text-muted-foreground">
+          Manage system instances, register accredited universities, and perform administrative suspensions.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <Card className="border-[var(--tc-border)] bg-[var(--tc-bg)]">
-          <CardContent className="p-5">
-            <p className="text-xs text-[var(--tc-muted)]">Total Universities</p>
-            <p
-              className="text-2xl font-semibold text-[var(--tc-text)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {totalUniversities}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-[var(--tc-border)] bg-[var(--tc-bg)]">
-          <CardContent className="p-5">
-            <p className="text-xs text-[var(--tc-muted)]">Active</p>
-            <p
-              className="text-2xl font-semibold text-[var(--tc-teal)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              {activeCount}
-            </p>
-          </CardContent>
-        </Card>
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <StatCard
+          label="Total Universities"
+          value={String(totalUniversities)}
+          icon={<Building2 className="h-4.5 w-4.5" />}
+          accent="accent"
+        />
+        <StatCard
+          label="Active Networks"
+          value={String(activeCount)}
+          icon={<Shield className="h-4.5 w-4.5" />}
+          accent="success"
+        />
       </div>
 
       <DeployUniversityForm />
 
-      <Card className="border-[var(--tc-border)] bg-[var(--tc-bg)]">
-        <CardHeader>
-          <CardTitle className="text-sm font-medium text-[var(--tc-text)]">
-            Universities
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Registry Table */}
+      <div className="space-y-4">
+        <SectionLabel index={2} label="CONTRACT REGISTRIES" />
+        <GlowCard className="p-4 overflow-hidden">
           <UniversityList />
-        </CardContent>
-      </Card>
+        </GlowCard>
+      </div>
     </div>
   )
 }

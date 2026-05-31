@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth"
 import { Button } from "@/components/ui/button"
 import { Logo } from "@/components/ui/logo"
 import type { ReactNode } from "react"
+import { Lock, ShieldAlert, Sparkles, Network } from "lucide-react"
 
 interface AuthGateProps {
   children: ReactNode
@@ -14,63 +15,82 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (!ready) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--tc-bg)]">
-        <div className="size-8 animate-pulse rounded-lg bg-[var(--tc-surface)]" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
       </div>
     )
   }
 
   if (!authenticated) {
     return (
-      <div className="flex min-h-screen">
-        {/* Left — gradient brand panel */}
-        <div className="relative hidden w-1/2 flex-col justify-end overflow-hidden lg:flex">
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0d14] via-[#1a1408] to-[#c9933f]/80" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(201,147,63,0.3),transparent)]" />
+      <div className="flex min-h-screen w-full bg-background relative overflow-hidden">
+        {/* Decorative Grid Backdrop */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(108,91,240,0.15),transparent_40%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
 
-          <div className="relative z-10 p-12">
-            <h2
-              className="mb-3 text-3xl font-light leading-snug tracking-tight text-white/90 md:text-4xl"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Secure academic credentials,
-              <br />
-              verified on-chain.
-            </h2>
-            <p className="max-w-md text-sm leading-relaxed text-white/50">
-              Issue, manage, and verify transcripts with cryptographic trust.
-              No intermediaries. No delays.
+        {/* Left — Brand Panel */}
+        <div className="relative hidden w-1/2 flex-col justify-between p-16 border-r border-border/40 lg:flex">
+          <div className="relative z-10">
+            <Logo size="md" />
+          </div>
+          
+          <div className="relative z-10 space-y-6">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.05)] px-3 py-1 text-xs font-mono text-[oklch(var(--ca-accent))] w-fit">
+                <Network className="h-3.5 w-3.5" /> SECURED BY ETHEREUM
+              </div>
+              <h2 className="text-4xl font-display font-light leading-[1.15] tracking-tight text-foreground max-w-lg">
+                Decentralised academic verification.
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+              Verify, issue, and manage academic transcripts using cryptographically secure on-chain records. Free from intermediaries and institutional delays.
             </p>
+          </div>
+
+          <div className="relative z-10 flex items-center gap-4 text-xs font-mono text-muted-foreground/60">
+            <span>PLATFORM VERSION 2.0.0</span>
+            <span>•</span>
+            <span>POWERED BY WAGMI + PRIVY</span>
           </div>
         </div>
 
-        {/* Right — sign in */}
-        <div className="flex w-full flex-col items-center justify-center bg-[var(--tc-bg)] px-8 lg:w-1/2">
-          <div className="w-full max-w-sm">
-            <Logo size="md" className="mb-10" />
+        {/* Right — Sign In Panel */}
+        <div className="flex w-full flex-col items-center justify-center px-8 lg:w-1/2 relative">
+          <div className="w-full max-w-sm space-y-8 bg-card/35 p-8 rounded-2xl border border-border/50 backdrop-blur-md relative">
+            {/* Corner brackets */}
+            <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t-2 border-l-2 border-muted-foreground/30" />
+            <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t-2 border-r-2 border-muted-foreground/30" />
+            <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b-2 border-l-2 border-muted-foreground/30" />
+            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b-2 border-r-2 border-muted-foreground/30" />
 
-            <h1
-              className="mb-2 text-2xl font-light tracking-tight text-[var(--tc-text)]"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Welcome to CredAxis
-            </h1>
-            <p className="mb-8 text-sm text-[var(--tc-muted)]">
-              Sign in to access your dashboard, manage transcripts, and verify
-              credentials.
-            </p>
+            <div className="space-y-2 text-center lg:text-left">
+              <div className="lg:hidden flex justify-center mb-6">
+                <Logo size="md" />
+              </div>
+              <h1 className="text-2xl font-mono font-bold tracking-tight uppercase text-foreground">
+                ACCESS SYSTEM
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                Connect your account to access dashboards, request/issue transcripts, and verify identities.
+              </p>
+            </div>
 
-            <Button
-              onClick={login}
-              className="w-full bg-[var(--tc-gold)] py-3 text-white hover:bg-[var(--tc-gold-light)]"
-              size="lg"
-            >
-              Sign In
-            </Button>
+            <div className="space-y-4">
+              <Button
+                onClick={login}
+                className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider py-5 rounded-lg border border-transparent shadow-lg shadow-[oklch(var(--ca-accent)/0.15)] flex items-center justify-center gap-2 group transition-all"
+                size="lg"
+              >
+                <Lock className="h-4 w-4 transition-transform group-hover:scale-110" />
+                CONNECT IDENTITY
+              </Button>
 
-            <p className="mt-6 text-center text-xs text-[var(--tc-muted)]">
-              Supports email, Google, or any Ethereum wallet
-            </p>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-muted-foreground/80">
+                <Sparkles className="h-3 w-3 text-[oklch(var(--ca-accent))]" />
+                Supports Email, Socials, or Passkeys
+              </div>
+            </div>
           </div>
         </div>
       </div>

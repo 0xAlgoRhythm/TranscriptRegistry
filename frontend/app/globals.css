@@ -43,164 +43,405 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   CredAxis v2 — Dark Fintech Design System
+   Inspired by ZenithPay visual language
+   ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ── Shadcn base (dark mode only) ── */
+  --background:           oklch(0.07 0.005 264);
+  --foreground:           oklch(0.95 0.005 264);
+  --card:                 oklch(0.10 0.006 264);
+  --card-foreground:      oklch(0.95 0.005 264);
+  --popover:              oklch(0.10 0.006 264);
+  --popover-foreground:   oklch(0.95 0.005 264);
+  --primary:              oklch(0.68 0.22 275);
+  --primary-foreground:   oklch(0.98 0 0);
+  --secondary:            oklch(0.13 0.007 264);
+  --secondary-foreground: oklch(0.95 0.005 264);
+  --muted:                oklch(0.13 0.007 264);
+  --muted-foreground:     oklch(0.55 0.006 264);
+  --accent:               oklch(0.17 0.008 264);
+  --accent-foreground:    oklch(0.95 0.005 264);
+  --destructive:          oklch(0.62 0.22 27);
+  --border:               oklch(1 0 0 / 0.08);
+  --input:                oklch(1 0 0 / 0.10);
+  --ring:                 oklch(0.68 0.22 275 / 0.40);
+  --radius:               0.375rem;
+
+  /* ── Sidebar ── */
+  --sidebar:                oklch(0.09 0.006 264);
+  --sidebar-foreground:     oklch(0.95 0.005 264);
+  --sidebar-primary:        oklch(0.68 0.22 275);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent:         oklch(0.13 0.007 264);
+  --sidebar-accent-foreground: oklch(0.95 0.005 264);
+  --sidebar-border:         oklch(1 0 0 / 0.07);
+  --sidebar-ring:           oklch(0.68 0.22 275 / 0.30);
+
+  /* ── Charts ── */
+  --chart-1: oklch(0.68 0.22 275);
+  --chart-2: oklch(0.72 0.18 190);
+  --chart-3: oklch(0.72 0.18 155);
+  --chart-4: oklch(0.78 0.18 85);
+  --chart-5: oklch(0.62 0.22 27);
+
+  /* ═══ CredAxis Design Tokens ═══ */
+
+  /* Base surfaces */
+  --ca-bg:         oklch(0.07 0.005 264);
+  --ca-surface:    oklch(0.10 0.006 264);
+  --ca-surface-2:  oklch(0.13 0.007 264);
+  --ca-surface-3:  oklch(0.17 0.008 264);
+
+  /* Accent — Electric Indigo */
+  --ca-accent:       oklch(0.68 0.22 275);
+  --ca-accent-dim:   oklch(0.68 0.22 275 / 0.12);
+  --ca-accent-glow:  oklch(0.68 0.22 275 / 0.25);
+  --ca-accent-hover: oklch(0.72 0.22 275);
+
+  /* Secondary accent — Teal */
+  --ca-teal:       oklch(0.72 0.18 190);
+  --ca-teal-dim:   oklch(0.72 0.18 190 / 0.12);
+
+  /* Status colours */
+  --ca-success:    oklch(0.72 0.18 155);
+  --ca-success-dim:oklch(0.72 0.18 155 / 0.12);
+  --ca-warning:    oklch(0.78 0.18 85);
+  --ca-warning-dim:oklch(0.78 0.18 85 / 0.12);
+  --ca-danger:     oklch(0.62 0.22 27);
+  --ca-danger-dim: oklch(0.62 0.22 27 / 0.12);
+  --ca-amended:    oklch(0.75 0.18 60);
+  --ca-amended-dim:oklch(0.75 0.18 60 / 0.12);
+
+  /* Text hierarchy */
+  --ca-text:    oklch(0.95 0.005 264);
+  --ca-text-2:  oklch(0.75 0.008 264);
+  --ca-muted:   oklch(0.50 0.006 264);
+
+  /* Borders */
+  --ca-border:        oklch(1 0 0 / 0.08);
+  --ca-border-dim:    oklch(1 0 0 / 0.05);
+  --ca-border-accent: oklch(0.68 0.22 275 / 0.30);
+  --ca-border-success:oklch(0.72 0.18 155 / 0.30);
+  --ca-border-danger: oklch(0.62 0.22 27 / 0.30);
+
+  /* Shadows */
+  --ca-shadow-card:    0 0 0 1px var(--ca-border), 0 4px 24px -4px oklch(0 0 0 / 0.5);
+  --ca-shadow-accent:  0 0 0 1px var(--ca-border-accent), 0 0 32px -8px var(--ca-accent-glow);
+  --ca-shadow-success: 0 0 0 1px var(--ca-border-success), 0 4px 24px -4px oklch(0 0 0 / 0.4);
+  --ca-shadow-danger:  0 0 0 1px var(--ca-border-danger), 0 4px 24px -4px oklch(0 0 0 / 0.4);
+  --ca-shadow-elevated:0 8px 32px -8px oklch(0 0 0 / 0.6);
+
+  /* Gradients */
+  --ca-gradient-hero:   radial-gradient(ellipse 120% 80% at 50% 0%, oklch(0.68 0.22 275 / 0.10) 0%, transparent 60%);
+  --ca-gradient-card:   linear-gradient(135deg, oklch(0.12 0.01 264) 0%, oklch(0.09 0.006 264) 100%);
+  --ca-gradient-accent: linear-gradient(135deg, var(--ca-accent) 0%, oklch(0.60 0.22 255) 100%);
+  --ca-gradient-teal:   linear-gradient(135deg, var(--ca-teal) 0%, oklch(0.66 0.18 200) 100%);
+
+  /* Hatch texture (ZenithPay-style gutter texture) */
+  --ca-hatch: repeating-linear-gradient(
+    315deg,
+    currentColor 0,
+    currentColor 1px,
+    transparent 0,
+    transparent 50%
+  );
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+/* ── Base layer ─────────────────────────────────────────────── */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
+
+  html {
+    color-scheme: dark;
   }
+
+  body {
+    background: var(--ca-bg);
+    color: var(--ca-text);
+    font-family: var(--font-sans, system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(1 0 0 / 0.12);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(1 0 0 / 0.20); }
 }
 
-/* ─── CredAxis Design System ──────────────────────────────────── */
+/* ── Typography utilities ───────────────────────────────────── */
 
-:root {
-  --tc-bg: #ffffff;
-  --tc-surface: #f5f6fa;
-  --tc-surface-2: #eaecf4;
-  --tc-border: rgba(0, 0, 0, 0.08);
-  --tc-gold: #c9933f;
-  --tc-gold-light: #e8b65a;
-  --tc-teal: #0a9b79;
-  --tc-text: #0f1117;
-  --tc-muted: #6b7280;
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 0.625rem; /* 10px */
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ca-muted);
 }
 
-body {
-  background: var(--tc-bg);
+.label-accent {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ca-accent);
 }
 
-/* Dark-only sections (Hero, decorative backgrounds) */
-.dark-section {
-  --tc-bg: #070a10;
-  --tc-surface: #0d1219;
-  --tc-surface-2: #141b26;
-  --tc-border: rgba(255, 255, 255, 0.08);
-  --tc-teal: #0bc49a;
-  --tc-text: #eef0f7;
-  --tc-muted: #5a6070;
-  background: var(--tc-bg);
+.section-number {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ca-accent);
 }
+
+.display-heading {
+  font-family: var(--font-display);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ── Card utilities ─────────────────────────────────────────── */
+
+.ca-card {
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-border);
+  box-shadow: var(--ca-shadow-card);
+  border-radius: var(--ca-radius-lg, 6px);
+  position: relative;
+  overflow: hidden;
+}
+
+.ca-card-glow {
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-border-accent);
+  box-shadow: var(--ca-shadow-accent);
+  border-radius: var(--ca-radius-lg, 6px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Corner bracket decorators — ZenithPay style */
+.ca-corners::before,
+.ca-corners::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transition: border-color 0.2s ease;
+}
+
+.ca-bracket-tl { position: absolute; top: 0; left: 0;  width: 10px; height: 10px; border-top: 1px solid var(--ca-border); border-left: 1px solid var(--ca-border); transition: border-color 0.2s; }
+.ca-bracket-tr { position: absolute; top: 0; right: 0; width: 10px; height: 10px; border-top: 1px solid var(--ca-border); border-right: 1px solid var(--ca-border); transition: border-color 0.2s; }
+.ca-bracket-bl { position: absolute; bottom: 0; left: 0;  width: 10px; height: 10px; border-bottom: 1px solid var(--ca-border); border-left: 1px solid var(--ca-border); transition: border-color 0.2s; }
+.ca-bracket-br { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; border-bottom: 1px solid var(--ca-border); border-right: 1px solid var(--ca-border); transition: border-color 0.2s; }
+
+.group:hover .ca-bracket-tl,
+.group:hover .ca-bracket-tr,
+.group:hover .ca-bracket-bl,
+.group:hover .ca-bracket-br {
+  border-color: var(--ca-accent);
+}
+
+/* Shine sweep effect */
+.ca-shine {
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 75%;
+  height: 200%;
+  transform: skewX(-20deg);
+  background: linear-gradient(105deg, transparent 40%, oklch(1 0 0 / 0.06) 50%, transparent 60%);
+  pointer-events: none;
+  transition: left 0.5s ease;
+}
+
+.group:hover .ca-shine {
+  left: 150%;
+  transition: left 0.5s ease;
+}
+
+/* ── Dot / hatch grid backgrounds ───────────────────────────── */
 
 .dot-grid {
-  background-image: radial-gradient(
-    circle,
-    rgba(255, 255, 255, 0.055) 1px,
-    transparent 1px
-  );
+  background-image: radial-gradient(circle, oklch(1 0 0 / 0.055) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
-.dot-grid-light {
-  background-image: radial-gradient(
-    circle,
-    rgba(0, 0, 0, 0.06) 1px,
-    transparent 1px
-  );
-  background-size: 28px 28px;
+.hatch-grid {
+  background-image: var(--ca-hatch);
+  background-size: 7px 7px;
+  background-attachment: fixed;
+  color: oklch(1 0 0 / 0.06);
 }
+
+/* ── Button extensions ──────────────────────────────────────── */
+
+.btn-accent {
+  background: var(--ca-accent);
+  color: #fff;
+  border-radius: 2px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-accent:hover { opacity: 0.9; }
+.btn-accent:active { transform: scale(0.98); }
+
+.btn-outline-dashed {
+  background: transparent;
+  color: var(--ca-text);
+  border: 1px dashed var(--ca-border);
+  border-radius: 2px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-outline-dashed:hover {
+  border-color: oklch(1 0 0 / 0.20);
+  background: var(--ca-surface-2);
+}
+
+/* ── Status pulsing dot ─────────────────────────────────────── */
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.dot-pulse { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* ── Stagger fade-in animations ─────────────────────────────── */
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-in-1 {
-  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 }
-.animate-in-2 {
-  opacity: 0;
-  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
-.animate-in-3 {
-  opacity: 0;
-  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+
+.animate-in-1 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-in-2 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.07s both; }
+.animate-in-3 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both; }
+.animate-in-4 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.21s both; }
+.animate-in-5 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both; }
+.animate-in-6 { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+
+.animate-scale-in { animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-right { animation: slideInRight 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* ── Skeleton loading ───────────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
 }
-.animate-in-4 {
-  opacity: 0;
-  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    oklch(1 0 0 / 0.04) 25%,
+    oklch(1 0 0 / 0.08) 50%,
+    oklch(1 0 0 / 0.04) 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.8s infinite linear;
+  border-radius: 3px;
 }
-.animate-in-5 {
-  opacity: 0;
-  animation: fadeInUp 0.65s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+
+/* ── Dashed divider ─────────────────────────────────────────── */
+
+.ca-divider {
+  border: none;
+  border-top: 1px dashed var(--ca-border);
+  margin: 0;
+}
+
+/* ── Hash / mono data display ───────────────────────────────── */
+
+.ca-hash {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ca-text-2);
+  letter-spacing: 0.02em;
+}
+
+/* ── Glow accent border for focused inputs ───────────────────── */
+
+.ca-input:focus-within {
+  border-color: var(--ca-border-accent);
+  box-shadow: 0 0 0 3px var(--ca-accent-dim);
+  outline: none;
+}
+
+/* ── Verification result states ─────────────────────────────── */
+
+.result-valid {
+  background: var(--ca-success-dim);
+  border: 1px solid var(--ca-border-success);
+  box-shadow: 0 0 24px -8px oklch(0.72 0.18 155 / 0.20);
+}
+
+.result-invalid {
+  background: var(--ca-danger-dim);
+  border: 1px solid var(--ca-border-danger);
+  box-shadow: 0 0 24px -8px oklch(0.62 0.22 27 / 0.20);
+}
+
+/* ── Nav active state ───────────────────────────────────────── */
+
+.nav-item-active {
+  color: var(--ca-accent);
+  background: var(--ca-accent-dim);
+  border-left: 2px solid var(--ca-accent);
+}
+
+.nav-item {
+  color: var(--ca-muted);
+  border-left: 2px solid transparent;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-item:hover {
+  color: var(--ca-text);
+  background: var(--ca-surface-2);
 }

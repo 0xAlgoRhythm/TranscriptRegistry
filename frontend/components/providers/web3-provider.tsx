@@ -2,19 +2,27 @@
 
 import { PrivyProvider } from "@privy-io/react-auth"
 import { WagmiProvider, createConfig, http } from "wagmi"
-import { mainnet, sepolia } from "viem/chains"
+import { sepolia } from "viem/chains"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import type { ReactNode } from "react"
 
+const sepoliaRpc = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL
+
 const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia],
+  chains: [sepolia],
   transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
+    [sepolia.id]: http(sepoliaRpc || undefined),
   },
 })
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 30, // 30 seconds
+      retry: 2,
+    },
+  },
+})
 
 interface Web3ProviderProps {
   children: ReactNode
@@ -24,6 +32,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
   if (!appId) {
+    // Dev mode: no Privy, just Wagmi + TanStack Query
     return (
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>{children}</WagmiProvider>
@@ -37,14 +46,15 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       config={{
         loginMethods: ["email", "wallet", "google"],
         appearance: {
-          theme: "light",
-          accentColor: "#c9933f",
+          theme: "dark",
+          accentColor: "#7c6bf0", // --ca-accent electric indigo
+          logo: "/icon.svg",
         },
         embeddedWallets: {
           ethereum: { createOnLogin: "users-without-wallets" },
         },
         defaultChain: sepolia,
-        supportedChains: [mainnet, sepolia],
+        supportedChains: [sepolia],
       }}
     >
       <QueryClientProvider client={queryClient}>

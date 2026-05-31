@@ -17,7 +17,7 @@ export function Navbar() {
       initial={{ y: -16, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-[var(--tc-border)] bg-[var(--tc-bg)]/80 backdrop-blur-md"
+      className="fixed inset-x-0 top-0 z-50 h-16 border-b border-border/40 bg-background/80 backdrop-blur-md"
     >
       <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-6">
         <Logo size="sm" />
@@ -27,15 +27,15 @@ export function Navbar() {
             <Link
               key={link.label}
               href={link.href}
-              className="text-sm text-[var(--tc-muted)] transition-colors hover:text-[var(--tc-text)]"
+              className="text-xs font-mono font-bold tracking-wider uppercase text-muted-foreground transition-colors hover:text-foreground"
             >
               {link.label}
             </Link>
           ))}
         </div>
 
-        <Button asChild size="lg" className="bg-[var(--tc-gold)] px-5 text-white hover:bg-[var(--tc-gold-light)]">
-          <Link href="/dashboard">Sign In</Link>
+        <Button asChild size="sm" className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs px-4">
+          <Link href="/dashboard">LAUNCH DAPP</Link>
         </Button>
       </div>
     </motion.nav>

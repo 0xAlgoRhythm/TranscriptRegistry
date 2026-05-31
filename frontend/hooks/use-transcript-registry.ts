@@ -163,3 +163,24 @@ export function useVerifyTranscript() {
 
   return { verify, hash, isPending, isConfirming, isSuccess, error }
 }
+
+export function useUpdateTranscriptStatus() {
+  const { writeContract, data: hash, isPending, error } = useWriteContract()
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
+
+  function updateStatus(
+    registryAddress: Address,
+    recordId: `0x${string}`,
+    status: number,
+  ) {
+    writeContract({
+      address: registryAddress,
+      abi: transcriptRegistryAbi,
+      functionName: "updateTranscriptStatus",
+      args: [recordId, status],
+    })
+  }
+
+  return { updateStatus, hash, isPending, isConfirming, isSuccess, error }
+}
+
