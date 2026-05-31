@@ -31,7 +31,7 @@ export default function AccessHubPage() {
     verifierAddress as Address
   )
 
-  const isFormValid = registryAddress && recordId && verifierAddress
+  const isFormValid = !!(registryAddress && recordId && verifierAddress)
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 animate-fade-in pb-16">
