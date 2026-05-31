@@ -49,5 +49,7 @@ typechain-types/
 
 # Build info
 build-info/
-lib/forge-std
-/lib
+# Coverage reports
+lcov.info
+coverage/
+*.lcov

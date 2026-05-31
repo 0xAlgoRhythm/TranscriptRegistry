@@ -189,7 +189,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📞 Support
 
-For support, email johnokyere282@icloud.com or open an issue on GitHub.
+For support, email johnokyere@lovify.tech or open an issue on GitHub.
 
 ---
 

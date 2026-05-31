@@ -16,8 +16,8 @@ contract UniversityFactoryBeacon is Ownable {
     
     // ============ State Variables ============
     
-    UpgradeableBeacon public immutable beacon;
-    address public immutable implementation;
+    UpgradeableBeacon public beacon;
+    address public implementation;
     uint256 public universityCount;
     
     // University information
@@ -65,7 +65,8 @@ contract UniversityFactoryBeacon is Ownable {
     
     constructor() Ownable(msg.sender) {
         // Deploy the implementation contract once
-        implementation = address(new TranscriptRegistryUpgradeable());
+        TranscriptRegistryUpgradeable impl = new TranscriptRegistryUpgradeable();
+        implementation = address(impl);
         
         // Deploy the beacon pointing to implementation
         beacon = new UpgradeableBeacon(implementation, address(this));
