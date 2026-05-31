@@ -1,25 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Grid } from "lucide-react"
 
 const STATS = [
   { label: "Partner Universities", value: "3" },
   { label: "Transcripts Issued", value: "1,200+" },
   { label: "Avg. Verification", value: "< 5s" },
 ]
-
-const EASE = [0.16, 1, 0.3, 1] as const
-
-function fadeUp(delay = 0) {
-  return {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.65, ease: EASE, delay },
-  }
-}
 
 export function Hero() {
   return (
@@ -44,36 +32,27 @@ export function Hero() {
         </span>
       </div>
 
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-24 md:py-36">
-        <motion.div
-          {...fadeUp(0)}
-          className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/25 backdrop-blur-md px-3 py-1.5"
-        >
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-24 md:py-36 space-y-6">
+        <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/25 backdrop-blur-md px-3 py-1.5 animate-fade-in">
           <span className="size-1.5 animate-pulse rounded-full bg-[oklch(var(--ca-accent))]" />
           <span className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground">
             INTRODUCING CREDAXIS V2.0
           </span>
-        </motion.div>
+        </div>
 
-        <motion.h1
-          {...fadeUp(0.1)}
-          className="mb-6 text-5xl font-display font-light leading-[1.05] tracking-tight text-foreground md:text-7xl lg:text-[5.5rem]"
-        >
+        <h1 className="mb-6 text-5xl font-display font-light leading-[1.05] tracking-tight text-foreground md:text-7xl lg:text-[5.5rem] animate-fade-in delay-100">
           Academic Transcripts,
           <br />
           <em className="not-italic font-semibold text-[oklch(var(--ca-accent))]">
             Forged on Blockchain.
           </em>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          {...fadeUp(0.2)}
-          className="mb-10 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base"
-        >
+        <p className="mb-10 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base animate-fade-in delay-200">
           Immutable. Verifiable. Student-controlled. Issue, manage, and audit academic records directly on-chain. Completely immune to institutional delays and verification fee scams.
-        </motion.p>
+        </p>
 
-        <motion.div {...fadeUp(0.3)} className="mb-16 flex flex-wrap gap-4">
+        <div className="mb-16 flex flex-wrap gap-4 animate-fade-in delay-300">
           <Button
             asChild
             size="lg"
@@ -89,12 +68,9 @@ export function Hero() {
           >
             <Link href="/verify">VERIFY A RECORD</Link>
           </Button>
-        </motion.div>
+        </div>
 
-        <motion.div
-          {...fadeUp(0.45)}
-          className="flex flex-wrap items-center gap-8 border-t border-border/40 pt-8"
-        >
+        <div className="flex flex-wrap items-center gap-8 border-t border-border/40 pt-8 animate-fade-in delay-500">
           {STATS.map((stat, i) => (
             <div key={stat.label} className="flex items-center gap-8 font-mono">
               <div>
@@ -110,7 +86,7 @@ export function Hero() {
               )}
             </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   )
