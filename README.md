@@ -1,6 +1,7 @@
 # TranscriptChain - Decentralized Transcript Management System
 
 
+
 A blockchain-based platform for issuing, managing, and verifying academic transcripts using Beacon Proxy pattern for gas-efficient, upgradeable smart contracts.
 
 ## 🌟 Features
