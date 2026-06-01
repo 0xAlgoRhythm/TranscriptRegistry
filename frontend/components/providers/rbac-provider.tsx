@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useEffect } from "react"
+import React, { createContext, useContext, useEffect, useState } from "react"
 import { useAccount } from "wagmi"
 import { useRoleStore, UserRole } from "@/lib/stores/role-store"
 import { usePlatformAdmin } from "@/hooks/use-university-factory"
@@ -14,17 +14,19 @@ const RBACContext = createContext<RBACContextType>({ resolvedRole: null, isLoadi
 
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount()
-  const { role, setRole, isDemoMode } = useRoleStore()
+  const { role, setRole } = useRoleStore()
   const { data: adminAddress, isLoading: adminLoading } = usePlatformAdmin()
+  const [resolving, setResolving] = useState(false)
 
   useEffect(() => {
-    // If not in demo mode and address is connected, we dynamically resolve the role
-    if (!isDemoMode && address) {
+    if (address) {
       const resolveRole = async () => {
+        setResolving(true)
         try {
           // 1. Check Platform Admin
           if (adminAddress && address.toLowerCase() === (adminAddress as string).toLowerCase()) {
             setRole("admin")
+            setResolving(false)
             return
           }
 
@@ -38,6 +40,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
             )
             if (isRegistrar) {
               setRole("registrar")
+              setResolving(false)
               return
             }
           }
@@ -47,16 +50,18 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {
           console.error("Failed to resolve RBAC role:", e)
           setRole("student")
+        } finally {
+          setResolving(false)
         }
       }
 
       resolveRole()
-    } else if (!address) {
+    } else {
       setRole(null)
     }
-  }, [address, adminAddress, isDemoMode])
+  }, [address, adminAddress, setRole])
 
-  const isLoading = !isDemoMode && address && adminLoading
+  const isLoading = (address && adminLoading) || resolving
 
   return (
     <RBACContext.Provider value={{ resolvedRole: role, isLoading: !!isLoading }}>

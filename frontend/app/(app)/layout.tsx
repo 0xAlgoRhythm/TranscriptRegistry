@@ -6,6 +6,7 @@ import { MobileNav } from "@/components/app/mobile-nav"
 import { AuthGate } from "@/components/app/auth-gate"
 import { RBACProvider } from "@/components/providers/rbac-provider"
 import { RoleGuard } from "@/components/app/role-guard"
+import { StudentGate } from "@/components/app/student-gate"
 import { useUIStore } from "@/lib/stores/ui-store"
 import type { ReactNode } from "react"
 
@@ -16,23 +17,25 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <AuthGate>
       <RBACProvider>
         <RoleGuard>
-          <div className="flex h-screen bg-background text-foreground overflow-hidden">
-            {/* Sidebar Component */}
-            <Sidebar />
-            
-            {/* Mobile Navigation Drawer */}
-            <MobileNav />
-
-            <div className="flex flex-1 flex-col overflow-hidden relative">
-              {/* Top Header Panel */}
-              <Topbar />
+          <StudentGate>
+            <div className="flex h-screen bg-background text-foreground overflow-hidden">
+              {/* Sidebar Component */}
+              <Sidebar />
               
-              {/* Main Content Area */}
-              <main className="flex-1 overflow-y-auto bg-card/10 p-6 md:p-8">
-                {children}
-              </main>
+              {/* Mobile Navigation Drawer */}
+              <MobileNav />
+
+              <div className="flex flex-1 flex-col overflow-hidden relative">
+                {/* Top Header Panel */}
+                <Topbar />
+                
+                {/* Main Content Area */}
+                <main className="flex-1 overflow-y-auto bg-card/10 p-6 md:p-8">
+                  {children}
+                </main>
+              </div>
             </div>
-          </div>
+          </StudentGate>
         </RoleGuard>
       </RBACProvider>
     </AuthGate>

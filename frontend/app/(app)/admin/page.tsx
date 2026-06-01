@@ -21,7 +21,106 @@ import { StatusBadge } from "@/components/ui/status-badge"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { TxPanel } from "@/components/ui/tx-panel"
 import { Button } from "@/components/ui/button"
-import { Shield, Sparkles, Building2, Plus, AlertTriangle, Play, Pause } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Shield, Sparkles, Building2, Plus, AlertTriangle, Play, Pause, RefreshCw } from "lucide-react"
+
+interface LogItem {
+  type: string
+  description: string
+  operator: string
+  timestamp: string
+  txHash: string | null
+}
+
+function ActivityLogs() {
+  const [logs, setLogs] = useState<LogItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_URL}/api/logs`)
+      if (res.ok) {
+        const data = await res.json()
+        setLogs(data)
+      } else {
+        setError("Failed to fetch system activity logs.")
+      }
+    } catch (e) {
+      setError("Failed to connect to backend server.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  React.useEffect(() => {
+    fetchLogs()
+  }, [])
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <SectionLabel index={3} label="GLOBAL SYSTEM ACTIVITY LOGS" />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={fetchLogs}
+          className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+        >
+          <RefreshCw className="h-3 w-3 mr-1" /> REFRESH
+        </Button>
+      </div>
+
+      <GlowCard className="p-6 relative overflow-hidden" glow>
+        {loading ? (
+          <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+            LOADING EVENT INDEXER LOGS...
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 font-mono text-xs text-[oklch(var(--ca-destructive))]">
+            {error}
+          </div>
+        ) : logs.length === 0 ? (
+          <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+            NO SYSTEM LOGS FOUND
+          </div>
+        ) : (
+          <div className="space-y-4 font-mono text-xs max-h-[400px] overflow-y-auto pr-2">
+            {logs.map((log, index) => {
+              let dotColor = "bg-[oklch(var(--ca-accent))]"
+              if (log.type === "university_registered") dotColor = "bg-[oklch(var(--ca-success))]"
+              if (log.type === "status_changed") dotColor = "bg-[oklch(var(--ca-destructive))]"
+
+              return (
+                <div key={index} className="flex items-start justify-between border-b border-border/20 pb-3 last:border-0 last:pb-0">
+                  <div className="space-y-1">
+                    <p className="text-foreground font-semibold flex items-center gap-1.5 uppercase text-[10px]">
+                      <span className={cn("h-1.5 w-1.5 rounded-full", dotColor)} />
+                      {log.type.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed">
+                      {log.description}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground/60">
+                      Operator: {log.operator}
+                      {log.txHash && ` | Tx: ${log.txHash.slice(0, 10)}...`}
+                    </p>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground shrink-0 pl-4">
+                    {new Date(log.timestamp).toLocaleString()}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </GlowCard>
+    </div>
+  )
+}
 
 function UniversityRow({ id }: { id: bigint }) {
   const { data } = useUniversity(id)
@@ -168,13 +267,9 @@ function DeployUniversityForm() {
 export default function AdminPage() {
   const { address } = useAccount()
   const { role } = useRoleStore()
-  const { data: adminAddress } = usePlatformAdmin()
   const { data: stats } = usePlatformStats()
 
-  // In demo mode or if selected simulation is admin, we bypass raw wallet restriction
-  const isRealAdmin = address && adminAddress && address.toLowerCase() === adminAddress.toLowerCase()
-  const isSimulatedAdmin = role === "admin"
-  const hasAccess = isRealAdmin || isSimulatedAdmin
+  const hasAccess = role === "admin"
 
   if (!hasAccess) {
     return (
@@ -187,15 +282,8 @@ export default function AdminPage() {
             UNAUTHORIZED ACCESS
           </h2>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Administrative console restricted. Connect the platform administrator deployer wallet via Metamask, or use the quick-test bypass below to simulate admin privileges on your current embedded wallet.
+            Administrative console restricted. Connect the platform administrator deployer wallet via Metamask.
           </p>
-          <Button 
-            onClick={() => useRoleStore.getState().setRole("admin")}
-            variant="outline"
-            className="w-full mt-2 font-mono text-[10px] tracking-widest uppercase border-[oklch(var(--ca-accent)/0.3)] text-[oklch(var(--ca-accent))] hover:bg-[oklch(var(--ca-accent)/0.1)]"
-          >
-            SIMULATE ADMIN PRIVILEGES
-          </Button>
         </GlowCard>
       </div>
     )
@@ -242,6 +330,9 @@ export default function AdminPage() {
           <UniversityList />
         </GlowCard>
       </div>
+
+      {/* Activity Logs */}
+      <ActivityLogs />
     </div>
   )
 }
