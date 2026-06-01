@@ -290,7 +290,7 @@
   color: oklch(1 0 0 / 0.06);
 }
 
-/* ── Button extensions ──────────────────────────────────────── */
+/* ── Button extensions ──────────────────────────────── */
 
 .btn-accent {
   background: var(--ca-accent);
@@ -301,15 +301,33 @@
   padding: 0.5rem 1rem;
   position: relative;
   overflow: hidden;
-  transition: opacity 0.15s ease, transform 0.1s ease;
+  transition: opacity 0.15s ease, transform 0.1s ease, box-shadow 0.2s ease;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0 0 0 0 var(--ca-accent-glow);
 }
 
-.btn-accent:hover { opacity: 0.9; }
-.btn-accent:active { transform: scale(0.98); }
+.btn-accent::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(105deg, transparent 40%, oklch(1 0 0 / 0.12) 50%, transparent 60%);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: left 0.5s ease;
+}
+
+.btn-accent:hover { 
+  opacity: 0.92;
+  box-shadow: 0 0 24px -4px var(--ca-accent-glow);
+}
+.btn-accent:hover::after { left: 150%; }
+.btn-accent:active { transform: scale(0.97); }
 
 .btn-outline-dashed {
   background: transparent;
@@ -321,7 +339,7 @@
   padding: 0.5rem 1rem;
   position: relative;
   overflow: hidden;
-  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.2s ease;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -329,8 +347,9 @@
 }
 
 .btn-outline-dashed:hover {
-  border-color: oklch(1 0 0 / 0.20);
+  border-color: oklch(0.68 0.22 275 / 0.4);
   background: var(--ca-surface-2);
+  box-shadow: 0 0 0 1px oklch(0.68 0.22 275 / 0.15);
 }
 
 /* ── Status pulsing dot ─────────────────────────────────────── */
