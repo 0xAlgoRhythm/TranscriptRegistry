@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { type Address } from "viem"
 import { useRegistryStats, useTranscript } from "@/hooks/use-transcript-registry"
