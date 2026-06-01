@@ -26,6 +26,8 @@ export default function IssuePage() {
   const [studentAddress, setStudentAddress] = useState("")
   const [studentName, setStudentName] = useState("")
   const [studentId, setStudentId] = useState("")
+  const [studentStatus, setStudentStatus] = useState<"idle" | "checking" | "approved" | "pending" | "rejected" | "not_found">("idle")
+  const [studentStatusMsg, setStudentStatusMsg] = useState("")
 
   // Step 3: File Upload & Hash
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -38,6 +40,45 @@ export default function IssuePage() {
   const [metadataCID, setMetadataCID] = useState("QmXyZ...") // Stub default
 
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  useEffect(() => {
+    if (studentAddress && studentAddress.length === 42 && studentAddress.startsWith("0x")) {
+      const checkStudent = async () => {
+        setStudentStatus("checking")
+        setStudentStatusMsg("Verifying student profile status...")
+        try {
+          const res = await fetch(`${API_URL}/api/students/profile/${studentAddress.toLowerCase()}`)
+          if (res.ok) {
+            const profile = await res.json()
+            if (profile.status === "approved") {
+              setStudentStatus("approved")
+              setStudentStatusMsg("Approved student profile verified.")
+              setStudentName(profile.fullName)
+              setStudentId(profile.studentId)
+            } else if (profile.status === "pending") {
+              setStudentStatus("pending")
+              setStudentStatusMsg("Verification pending. Please approve this student first on your dashboard.")
+            } else {
+              setStudentStatus("rejected")
+              setStudentStatusMsg("Student profile is rejected.")
+            }
+          } else {
+            setStudentStatus("not_found")
+            setStudentStatusMsg("Student wallet address not registered. The student must onboard or be whitelisted.")
+          }
+        } catch (e) {
+          setStudentStatus("not_found")
+          setStudentStatusMsg("Error connecting to database server.")
+        }
+      }
+      checkStudent()
+    } else {
+      setStudentStatus("idle")
+      setStudentStatusMsg("")
+    }
+  }, [studentAddress])
 
   useEffect(() => {
     if (selectedFile) {
