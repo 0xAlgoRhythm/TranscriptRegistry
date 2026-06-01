@@ -94,7 +94,7 @@ export default function PublicProfilePage() {
                   
                   <div className="space-y-1.5 pt-2 border-t border-border/40">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Issued At</p>
-                    <p className="font-mono text-sm">{formatTimestamp(new Date(t.issuedAt).getTime() / 1000)}</p>
+                    <p className="font-mono text-sm">{formatTimestamp(BigInt(Math.floor(new Date(t.issuedAt).getTime() / 1000)))}</p>
                   </div>
                 </div>
 
