@@ -84,7 +84,7 @@ export default function AdminAnalyticsPage() {
             <div className="space-y-4">
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span>MIT REGISTRY</span>
+                  <span>KNUST REGISTRY</span>
                   <span>62%</span>
                 </div>
                 <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden">
@@ -94,7 +94,7 @@ export default function AdminAnalyticsPage() {
 
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span>STANFORD REGISTRY</span>
+                  <span>UCC REGISTRY</span>
                   <span>28%</span>
                 </div>
                 <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden">
@@ -104,7 +104,7 @@ export default function AdminAnalyticsPage() {
 
               <div className="space-y-1.5">
                 <div className="flex justify-between text-[10px]">
-                  <span>HARVARD REGISTRY</span>
+                  <span>UEW REGISTRY</span>
                   <span>10%</span>
                 </div>
                 <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden">

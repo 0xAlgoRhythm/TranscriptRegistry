@@ -142,11 +142,23 @@ export default function IssuedPage() {
                           <span className="font-bold text-foreground">Record ID: {t.recordId.slice(0, 6)}...{t.recordId.slice(-4)}</span>
                           <p className="text-[10px] text-muted-foreground">Student Hash: {t.studentHash.slice(0, 10)}... · Date: {new Date(t.createdAt).toISOString().split('T')[0]}</p>
                         </div>
-                        <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
-                          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
-                            DETAILS <ChevronRight className="h-3.5 w-3.5" />
-                          </a>
-                        </Link>
+                        <div className="flex items-center gap-4">
+                          {t.metadataCid && (
+                            <a 
+                              href={`https://ipfs.io/ipfs/${t.metadataCid}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-[10px] font-bold text-green-400 hover:underline"
+                            >
+                              VIEW DOCUMENT
+                            </a>
+                          )}
+                          <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
+                            <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
+                              DETAILS <ChevronRight className="h-3.5 w-3.5" />
+                            </a>
+                          </Link>
+                        </div>
                       </div>
                     ))}
                   </div>
