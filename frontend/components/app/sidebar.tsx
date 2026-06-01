@@ -43,6 +43,7 @@ export function Sidebar() {
   const filteredNav = NAV_ITEMS.filter(item => {
     if (!role) return true
     if (!item.role) return true
+    if (role === "admin") return true
     return item.role === role
   })
 

@@ -27,12 +27,35 @@ function IssuedRow({ id, registryAddress }: { id: bigint; registryAddress: Addre
 
 export default function IssuedPage() {
   const { address } = useAccount()
-  const [registryAddress, setRegistryAddress] = useState("")
+  const [transcripts, setTranscripts] = useState<any[]>([])
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false)
 
   const { data: stats, isLoading: statsLoading, refetch } = useRegistryStats(registryAddress as Address)
   
   const totalCount = stats ? Number(stats[0]) : 0
   const verificationCount = stats ? Number(stats[1]) : 0
+
+  useEffect(() => {
+    if (registryAddress && registryAddress.length === 42 && registryAddress.startsWith("0x")) {
+      const fetchTranscripts = async () => {
+        setTranscriptsLoading(true)
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/transcripts/by-registry/${registryAddress}`)
+          if (res.ok) {
+            const data = await res.json()
+            setTranscripts(data)
+          }
+        } catch (e) {
+          console.error("Failed to fetch transcripts:", e)
+        } finally {
+          setTranscriptsLoading(false)
+        }
+      }
+      fetchTranscripts()
+    } else {
+      setTranscripts([])
+    }
+  }, [registryAddress])
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 animate-fade-in pb-16">
@@ -79,7 +102,7 @@ export default function IssuedPage() {
             description="Enter the university transcript registry smart contract address to load the database list."
             icon={<School className="h-8 w-8 text-muted-foreground/50" />}
           />
-        ) : statsLoading ? (
+        ) : statsLoading || transcriptsLoading ? (
           <div className="py-12 flex justify-center">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
           </div>
@@ -97,7 +120,7 @@ export default function IssuedPage() {
                 </div>
               </div>
 
-              {totalCount === 0 ? (
+              {transcripts.length === 0 ? (
                 <div className="text-center py-8 text-xs text-muted-foreground font-mono">
                   NO TRANSCRIPTS REGISTERED YET ON THIS INSTANCE
                 </div>
@@ -105,37 +128,26 @@ export default function IssuedPage() {
                 <div className="border border-border/40 rounded-lg p-4 bg-muted/10 font-mono text-xs space-y-2">
                   <div className="flex justify-between items-center pb-2 border-b border-border/30">
                     <span className="font-bold">TRANSCRIPT INDEX RECORD</span>
-                    <span className="text-muted-foreground">({totalCount} items)</span>
+                    <span className="text-muted-foreground">({transcripts.length} items)</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">
                     Note: To inspect or revoke a specific transcript, enter the unique 32-byte record ID hash directly in the search verify or click the item details.
                   </p>
                   
-                  {/* Demo/stub items for fast prototyping visualization */}
                   <div className="space-y-2 pt-4">
-                    <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all">
-                      <div className="space-y-1">
-                        <span className="font-bold text-foreground">Record ID: 0x4f3e...88ad</span>
-                        <p className="text-[10px] text-muted-foreground">Verified GPA: 3.90 · Registered: 2026-05-30</p>
+                    {transcripts.map((t) => (
+                      <div key={t.recordId} className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all">
+                        <div className="space-y-1">
+                          <span className="font-bold text-foreground">Record ID: {t.recordId.slice(0, 6)}...{t.recordId.slice(-4)}</span>
+                          <p className="text-[10px] text-muted-foreground">Student Hash: {t.studentHash.slice(0, 10)}... · Date: {new Date(t.createdAt).toISOString().split('T')[0]}</p>
+                        </div>
+                        <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
+                          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
+                            DETAILS <ChevronRight className="h-3.5 w-3.5" />
+                          </a>
+                        </Link>
                       </div>
-                      <Link href={`/issued/0x4f3e5c72a819bdfef0789278912ef64d0012bc09a63fe89d71a8bc8f921888ad?registry=${registryAddress}`} passHref legacyBehavior>
-                        <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
-                          DETAILS <ChevronRight className="h-3.5 w-3.5" />
-                        </a>
-                      </Link>
-                    </div>
-
-                    <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all">
-                      <div className="space-y-1">
-                        <span className="font-bold text-foreground">Record ID: 0x9a8b...12ef</span>
-                        <p className="text-[10px] text-muted-foreground">Verified GPA: 3.72 · Registered: 2026-05-28</p>
-                      </div>
-                      <Link href={`/issued/0x9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f12ef?registry=${registryAddress}`} passHref legacyBehavior>
-                        <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
-                          DETAILS <ChevronRight className="h-3.5 w-3.5" />
-                        </a>
-                      </Link>
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}

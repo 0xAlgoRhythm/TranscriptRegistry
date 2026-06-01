@@ -1,110 +1,106 @@
-# TranscriptRegistry — Architecture Overview
+# TranscriptRegistry Architecture Overview
 
-This file contains the overall architecture flowchart, the issue and verify sequence diagrams, and the two adaptations (fully on-chain and ERC-721 wrapping).  
-All Mermaid diagrams are compatible with **GitHub-flavored Mermaid rendering**.
+This file contains the overall architecture flowchart, sequence diagrams, and structural overview for the live production MVP. All Mermaid diagrams are compatible with **GitHub-flavored Mermaid rendering**.
 
 ---
 
-## 1) Overall architecture (Mermaid flowchart)
+## 1) Overall System Architecture
+
+```mermaid
+flowchart TD
+  subgraph Frontend["Frontend Layer (Next.js App Router)"]
+    UI["Web Application"]
+    Wagmi["Wagmi / Viem hooks"]
+    Auth["Privy Auth"]
+    RBAC["Role-Based Access Control"]
+  end
+
+  subgraph Backend["Backend Layer (Hono Node API)"]
+    API["REST API Endpoints"]
+    Indexer["Viem Event Indexer (Microservice)"]
+    Drizzle["Drizzle ORM"]
+  end
+
+  subgraph DB["Database Layer (PostgreSQL)"]
+    Postgres[(Indexed Blockchain Data)]
+  end
+
+  subgraph Blockchain["Base Sepolia Blockchain (EVM)"]
+    Factory["UniversityFactory (Registry Manager)"]
+    Beacon["Upgradeable Beacon"]
+    Proxies["Beacon Proxy Instances (Registries)"]
+  end
+
+  %% Relationships
+  UI <--> |API Calls| API
+  Wagmi <--> |RPC| Blockchain
+  Indexer <--> |Listen to Events| Blockchain
+  API <--> Drizzle
+  Indexer <--> Drizzle
+  Drizzle <--> Postgres
+  Factory --> |Creates| Proxies
+  Factory --> |Reads impl from| Beacon
+```
+
+## 2) Smart Contract Architecture (Beacon Proxy Pattern)
 
 ```mermaid
 flowchart LR
-  subgraph OffChain["Off-chain User Layer"]
-    UI["Web App / DApp"]
-    Backend["Backend API / Indexer"]
-    DB["Indexed Metadata DB"]
-    IPFS["IPFS / File Storage"]
-    Institutions["Institution Issuer"]
-    Students["Student Holder"]
-    Verifiers["Verifier Employer or School"]
-  end
+  Admin((Platform Admin))
+  Factory[UniversityFactory]
+  Beacon[UpgradeableBeacon]
+  Impl[TranscriptRegistry V1]
+  Proxy1[Registry Proxy A]
+  Proxy2[Registry Proxy B]
 
-  subgraph OnChain["On-chain Blockchain Layer"]
-    Chain["EVM Network"]
-    Registry["TranscriptRegistry Contract"]
-  end
-
-  Institutions --> Backend
-  Backend --> IPFS
-  IPFS --> Backend
-  Backend --> Registry
-
-  Students --> UI
-  UI --> Registry
-
-  Verifiers --> Registry
-  Verifiers --> IPFS
-
-  Registry --> Backend
-  Backend --> DB
-
-  UI --> Backend
-  Chain --> Registry
-
-  Institutions --> Registry
+  Admin -->|Deploys & Upgrades| Factory
+  Factory -->|Points to| Beacon
+  Beacon -->|Holds address of| Impl
+  Factory -->|Deploys| Proxy1
+  Factory -->|Deploys| Proxy2
+  Proxy1 -.->|Delegates calls to| Impl
+  Proxy2 -.->|Delegates calls to| Impl
 ```
 
-## 2) Sequence diagrams
-
-### 2.1 Issue flow (sequence diagram)
+## 3) Backend API Flow
 
 ```mermaid
 sequenceDiagram
-  participant Issuer as Institution
-  participant Backend
-  participant IPFS
-  participant Chain as TranscriptRegistry
-  participant Student
+  participant UI as Next.js Frontend
+  participant API as Hono Backend
+  participant DB as PostgreSQL
+  participant Indexer as Viem Indexer
+  participant Chain as Base Sepolia
 
-  Issuer->>Backend: Upload transcript file and metadata
-  Backend->>IPFS: Store file
-  IPFS-->>Backend: Return CID
-  Backend->>Chain: issueTranscript(CID, metadataHash, recipient)
-  Chain-->>Backend: TranscriptIssued event
-  Backend->>Student: Notify and provide proof
+  %% Background indexing
+  loop Every Block
+    Indexer->>Chain: Poll for Logs (TranscriptRegistered, etc.)
+    Chain-->>Indexer: Event Logs
+    Indexer->>DB: Insert/Update Records
+  end
+
+  %% Client request
+  UI->>API: GET /api/transcripts/by-registry/:addr
+  API->>DB: Query transcripts
+  DB-->>API: Result rows
+  API-->>UI: JSON Payload
 ```
 
-### 2.2 Verify flow (sequence diagram)
+## 4) Issue Transcript Sequence
 
 ```mermaid
 sequenceDiagram
-  participant Verifier
-  participant UI
-  participant Chain as TranscriptRegistry
-  participant IPFS
+  participant Registrar as University Registrar
+  participant UI as Frontend App
+  participant API as Backend API
+  participant Chain as TranscriptRegistry Proxy
 
-  Verifier->>UI: Request verification
-  UI->>Chain: Read transcript record
-  Chain-->>UI: Transcript data
-  UI->>IPFS: Fetch file by CID
-  IPFS-->>UI: Transcript file
-  UI->>Verifier: Present transcript
-  Verifier->>Chain: Check revocation status
-  Chain-->>Verifier: Issued or Revoked
+  Registrar->>UI: Input Student Data & Document
+  UI->>UI: Calculate SHA-256 File Hash
+  UI->>API: Upload Metadata (Simulated IPFS)
+  API-->>UI: Return CID & Metadata Hash
+  UI->>Chain: Send transaction: registerTranscript(studentHash, metadataCID, fileHash)
+  Chain-->>UI: Confirm Tx & Emit TranscriptRegistered
+  Note over API,Chain: The Indexer catches this event in the background and saves it to Postgres.
 ```
 
-## 3) Adaptations
-
-### 3.1 Fully on-chain storage (simplified)
-
-Tradeoff: higher gas and storage costs with simpler verification.
-
-```mermaid
-flowchart LR
-  RegistryOnChain["On-chain TranscriptRegistry"]
-
-  Institutions --> RegistryOnChain
-  Students --> RegistryOnChain
-  Verifiers --> RegistryOnChain
-```
-
-### 3.2 ERC-721 wrapping (transcript as NFT)
-
-```mermaid
-flowchart LR
-  Institutions --> IPFS2["IPFS"]
-  Institutions --> ERC721["ERC-721 Contract"]
-  ERC721 --> Students
-  Verifiers --> ERC721
-  ERC721 --> Backend2["Backend Indexer"]
-```
