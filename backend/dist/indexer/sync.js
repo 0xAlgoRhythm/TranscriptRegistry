@@ -5,6 +5,9 @@ import { universities, transcripts, transcriptStatusHistory, indexerState } from
 import { eq } from "drizzle-orm";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 const RPC_URL = process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.drpc.org";
 const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e");
