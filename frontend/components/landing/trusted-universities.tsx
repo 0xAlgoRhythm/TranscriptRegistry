@@ -6,17 +6,17 @@ const UNIVERSITIES = [
   {
     name: "Kwame Nkrumah University of Science and Technology",
     short: "KNUST",
-    logo: "https://upload.wikimedia.org/wikipedia/en/5/5f/Kwame_Nkrumah_University_of_Science_and_Technology_logo.png",
+    logo: "/knust.jpg",
   },
   {
     name: "University of Cape Coast",
     short: "UCC",
-    logo: "https://upload.wikimedia.org/wikipedia/en/4/4e/University_of_Cape_Coast_logo.png",
+    logo: "/ucc.png",
   },
   {
     name: "University of Education, Winneba",
     short: "UEW",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/c/cd/University_of_Education_Winneba.png",
+    logo: "/uew.png",
   },
 ]
 
