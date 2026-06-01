@@ -105,7 +105,7 @@ export default function IssuePage() {
 
   const isStepValid = () => {
     if (currentStep === 1) return registryAddress && registryAddress.startsWith("0x") && registryAddress.length === 42
-    if (currentStep === 2) return studentAddress.startsWith("0x") && studentAddress.length === 42 && studentName && studentId
+    if (currentStep === 2) return studentStatus === "approved" && !!studentName && !!studentId
     if (currentStep === 3) return !!calculatedFileHash
     if (currentStep === 4) return !!gpa && !!major && !!gradYear
     return false
@@ -202,6 +202,18 @@ export default function IssuePage() {
                 placeholder="0x..."
                 className="md:col-span-2"
               />
+
+              {studentStatus !== "idle" && (
+                <div className={`md:col-span-2 p-3 rounded font-mono text-xs border ${
+                  studentStatus === "approved"
+                    ? "bg-[oklch(var(--ca-success)/0.08)] text-[oklch(var(--ca-success))] border-[oklch(var(--ca-success)/0.2)]"
+                    : studentStatus === "checking"
+                    ? "bg-muted/40 text-muted-foreground border-border/40 animate-pulse"
+                    : "bg-[oklch(var(--ca-destructive)/0.08)] text-[oklch(var(--ca-destructive))] border-[oklch(var(--ca-destructive)/0.2)]"
+                }`}>
+                  {studentStatusMsg}
+                </div>
+              )}
               
               <div className="space-y-1.5">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student Full Name</label>
@@ -210,7 +222,10 @@ export default function IssuePage() {
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  readOnly={studentStatus === "approved"}
+                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none ${
+                    studentStatus === "approved" ? "text-muted-foreground opacity-80 cursor-not-allowed" : ""
+                  }`}
                 />
               </div>
 
@@ -221,7 +236,10 @@ export default function IssuePage() {
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
                   placeholder="e.g. student@university.edu"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  readOnly={studentStatus === "approved"}
+                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none ${
+                    studentStatus === "approved" ? "text-muted-foreground opacity-80 cursor-not-allowed" : ""
+                  }`}
                 />
               </div>
             </div>
