@@ -27,6 +27,7 @@ function IssuedRow({ id, registryAddress }: { id: bigint; registryAddress: Addre
 
 export default function IssuedPage() {
   const { address } = useAccount()
+  const [registryAddress, setRegistryAddress] = useState("")
   const [transcripts, setTranscripts] = useState<any[]>([])
   const [transcriptsLoading, setTranscriptsLoading] = useState(false)
 
