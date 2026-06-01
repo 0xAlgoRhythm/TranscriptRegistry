@@ -1,11 +1,15 @@
 "use client"
 
+import React, { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { useRoleStore } from "@/lib/stores/role-store"
 import { usePlatformStats, usePlatformAdmin } from "@/hooks/use-university-factory"
 import { StatCard } from "@/components/ui/stat-card"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { FileDropZone } from "@/components/ui/file-drop-zone"
 import { truncateAddress } from "@/lib/utils"
 import { 
   Building2, 
@@ -15,9 +19,397 @@ import {
   Lock, 
   ShieldCheck, 
   Send,
-  PlusCircle
+  PlusCircle,
+  RefreshCw,
+  Check,
+  X,
+  AlertTriangle,
+  Upload,
+  Eye
 } from "lucide-react"
 import Link from "next/link"
+
+interface StudentRequest {
+  id: number
+  walletAddress: string | null
+  fullName: string
+  studentId: string
+  universityId: number
+  status: "pending" | "approved" | "rejected"
+  email: string
+  createdAt: string
+}
+
+function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string }) {
+  const [students, setStudents] = useState<StudentRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  
+  // Bulk upload states
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [csvText, setCsvText] = useState("")
+  const [bulkStatus, setBulkStatus] = useState("")
+  const [bulkError, setBulkError] = useState("")
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState<"requests" | "bulk">("requests")
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const fetchStudents = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_URL}/api/registrar/students/${registrarAddress.toLowerCase()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setStudents(data)
+      } else {
+        setError("Failed to load student profiles.")
+      }
+    } catch (e) {
+      setError("Failed to connect to database server.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (registrarAddress) {
+      fetchStudents()
+    }
+  }, [registrarAddress])
+
+  const handleUpdateStatus = async (walletAddr: string | null, newStatus: "approved" | "rejected") => {
+    if (!walletAddr) return
+    try {
+      const res = await fetch(`${API_URL}/api/students/${walletAddr.toLowerCase()}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+          registrarAddress,
+        }),
+      })
+
+      if (res.ok) {
+        fetchStudents()
+      } else {
+        alert("Failed to update student status.")
+      }
+    } catch (e) {
+      alert("Error connecting to server.")
+    }
+  }
+
+  const handleBulkUpload = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBulkLoading(true)
+    setBulkError("")
+    setBulkStatus("")
+
+    let payload: Array<{ fullName: string; studentId: string; email: string }> = []
+
+    if (csvFile) {
+      try {
+        const text = await csvFile.text()
+        payload = parseCSV(text)
+      } catch (err) {
+        setBulkError("Failed to read CSV file.")
+        setBulkLoading(false)
+        return
+      }
+    } else if (csvText.trim()) {
+      payload = parseCSV(csvText)
+    } else {
+      setBulkError("Please upload a CSV file or paste student records.")
+      setBulkLoading(false)
+      return
+    }
+
+    if (payload.length === 0) {
+      setBulkError("No valid student records found. Formats must be: Name,ID,Email")
+      setBulkLoading(false)
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/students/bulk`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          registrarAddress,
+          studentsList: payload,
+        }),
+      })
+
+      if (res.ok) {
+        const result = await res.json()
+        setBulkStatus(`Successfully whitelisted ${result.processed} students!`)
+        setCsvFile(null)
+        setCsvText("")
+        fetchStudents()
+      } else {
+        const errData = await res.json()
+        setBulkError(errData.error || "Failed to submit bulk onboarding request.")
+      }
+    } catch (e) {
+      setBulkError("Network error uploading whitelist.")
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  const parseCSV = (text: string) => {
+    const lines = text.split(/\r?\n/)
+    const parsed: Array<{ fullName: string; studentId: string; email: string }> = []
+    let startIndex = 0
+    if (lines[0] && (lines[0].toLowerCase().includes("name") || lines[0].toLowerCase().includes("id") || lines[0].toLowerCase().includes("email"))) {
+      startIndex = 1
+    }
+    for (let i = startIndex; i < lines.length; i++) {
+      const line = lines[i].trim()
+      if (!line) continue
+      const parts = line.split(",")
+      if (parts.length >= 3) {
+        parsed.push({
+          fullName: parts[0].trim(),
+          studentId: parts[1].trim(),
+          email: parts[2].trim()
+        })
+      }
+    }
+    return parsed
+  }
+
+  const pendingRequests = students.filter(s => s.status === "pending")
+  const approvedRequests = students.filter(s => s.status === "approved")
+  const rejectedRequests = students.filter(s => s.status === "rejected")
+
+  return (
+    <div className="space-y-6">
+      {/* Metrics Row */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        <div className="p-4 bg-card border border-border/60 rounded-xl space-y-2">
+          <span className="text-[10px] font-mono text-muted-foreground block uppercase">Pending Enrollments</span>
+          <span className="text-2xl font-mono font-bold text-yellow-500">{pendingRequests.length}</span>
+        </div>
+        <div className="p-4 bg-card border border-border/60 rounded-xl space-y-2">
+          <span className="text-[10px] font-mono text-muted-foreground block uppercase">Whitelisted/Approved Students</span>
+          <span className="text-2xl font-mono font-bold text-green-500">{approvedRequests.length}</span>
+        </div>
+        <div className="p-4 bg-card border border-border/60 rounded-xl space-y-2">
+          <span className="text-[10px] font-mono text-muted-foreground block uppercase">Rejected Requests</span>
+          <span className="text-2xl font-mono font-bold text-red-500">{rejectedRequests.length}</span>
+        </div>
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex border-b border-border/40 gap-4">
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "requests"
+              ? "border-[oklch(var(--ca-accent))] text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Student Requests ({students.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("bulk")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "bulk"
+              ? "border-[oklch(var(--ca-accent))] text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          CSV Bulk Whitelist
+        </button>
+      </div>
+
+      {/* Tab Contents */}
+      {activeTab === "requests" ? (
+        <GlowCard className="p-6 relative overflow-hidden" glow>
+          <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+              Verification Enrollment Requests
+            </h3>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={fetchStudents}
+              className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh List
+            </Button>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+              LOADING STUDENT PROFILES...
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 font-mono text-xs text-[oklch(var(--ca-destructive))]">
+              {error}
+            </div>
+          ) : students.length === 0 ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+              NO REGISTERED OR WHITELISTED STUDENTS FOUND
+            </div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse font-mono text-xs">
+                <thead>
+                  <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+                    <th className="p-3 font-bold">Student Name</th>
+                    <th className="p-3 font-bold">Student ID</th>
+                    <th className="p-3 font-bold">Email</th>
+                    <th className="p-3 font-bold">Wallet Address</th>
+                    <th className="p-3 font-bold">Status</th>
+                    <th className="p-3 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.map((s) => (
+                    <tr key={s.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                      <td className="p-3 text-foreground font-semibold">{s.fullName}</td>
+                      <td className="p-3">{s.studentId}</td>
+                      <td className="p-3 text-muted-foreground">{s.email}</td>
+                      <td className="p-3 text-muted-foreground">
+                        {s.walletAddress ? truncateAddress(s.walletAddress, 4) : "No Wallet Linked (Whitelisted)"}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                          s.status === "approved"
+                            ? "bg-green-500/10 text-green-400 border border-green-500/30"
+                            : s.status === "pending"
+                            ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 animate-pulse"
+                            : "bg-red-500/10 text-red-400 border border-red-500/30"
+                        }`}>
+                          {s.status}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        {s.status === "pending" && s.walletAddress && (
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
+                              className="bg-green-600 hover:bg-green-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                            >
+                              APPROVE
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateStatus(s.walletAddress, "rejected")}
+                              className="bg-red-600 hover:bg-red-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                            >
+                              REJECT
+                            </Button>
+                          </div>
+                        )}
+                        {s.status === "approved" && s.walletAddress && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleUpdateStatus(s.walletAddress, "rejected")}
+                            className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6"
+                          >
+                            REVOKE
+                          </Button>
+                        )}
+                        {s.status === "rejected" && s.walletAddress && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
+                            className="bg-green-950/20 hover:bg-green-950/45 text-green-400 border border-green-900/50 font-mono text-[9px] px-2 py-1 h-6"
+                          >
+                            APPROVE
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </GlowCard>
+      ) : (
+        <GlowCard className="p-6 relative overflow-hidden" glow>
+          <div className="space-y-1 mb-6 border-b border-border/40 pb-3">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+              CSV Bulk Whitelist Onboarding
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Batch-import students to pre-approve them. Format must be one student per line: <span className="font-mono text-[10px] text-foreground bg-muted/40 px-1 py-0.5 rounded">FullName,StudentID,Email</span>
+            </p>
+          </div>
+
+          <form onSubmit={handleBulkUpload} className="space-y-6">
+            <FileDropZone
+              onFileSelect={setCsvFile}
+              selectedFile={csvFile}
+              accept=".csv"
+              maxSizeMB={5}
+            />
+
+            <div className="relative flex py-2 items-center">
+              <div className="flex-grow border-t border-border/40"></div>
+              <span className="flex-shrink mx-4 text-muted-foreground font-mono text-[10px] uppercase">OR PASTE RECORDS</span>
+              <div className="flex-grow border-t border-border/40"></div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="csvText" className="text-xs font-mono font-bold uppercase tracking-wider">Comma Separated Text</Label>
+              <textarea
+                id="csvText"
+                rows={5}
+                placeholder="John Doe,10931293,john.doe@university.edu&#10;Alice Smith,29304822,alice.smith@university.edu"
+                value={csvText}
+                onChange={(e) => setCsvText(e.target.value)}
+                disabled={!!csvFile}
+                className="w-full rounded-lg border border-border/60 bg-background py-2.5 px-4 text-xs font-mono focus:border-[oklch(var(--ca-accent))] focus:outline-none disabled:opacity-50"
+              />
+            </div>
+
+            {bulkError && (
+              <div className="p-3 bg-[oklch(var(--ca-destructive)/0.08)] border border-[oklch(var(--ca-destructive)/0.2)] rounded text-[11px] font-mono text-[oklch(var(--ca-destructive))] flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                <span>{bulkError}</span>
+              </div>
+            )}
+
+            {bulkStatus && (
+              <div className="p-3 bg-green-500/10 border border-green-500/30 rounded text-[11px] font-mono text-green-400 flex items-center gap-2">
+                <span className="size-2 rounded-full bg-green-400" />
+                <span>{bulkStatus}</span>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={bulkLoading}
+              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs py-4 flex items-center justify-center gap-1.5"
+            >
+              {bulkLoading ? (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" /> WHITELISTING STUDENTS...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" /> UPLOAD & WHITELIST
+                </>
+              )}
+            </Button>
+          </form>
+        </GlowCard>
+      )}
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   const { address } = useAccount()
@@ -54,186 +446,192 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Main Metric Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Registered Universities"
-          value={String(totalUniversities)}
-          icon={<Building2 className="h-4.5 w-4.5" />}
-          accent="default"
-          trend="All instances"
-        />
-        <StatCard
-          label="Active Networks"
-          value={String(activeCount)}
-          icon={<ShieldCheck className="h-4.5 w-4.5" />}
-          accent="success"
-          trend={`${totalUniversities - activeCount} suspended`}
-        />
-        <StatCard
-          label="Transcripts Issued"
-          value="1,492"
-          icon={<FileText className="h-4.5 w-4.5" />}
-          accent="teal"
-          trend="+12% this month"
-        />
-        <StatCard
-          label="Verifications Done"
-          value="4,821"
-          icon={<CheckCircle2 className="h-4.5 w-4.5" />}
-          accent="success"
-          trend="99.9% uptime"
-        />
-      </div>
+      {role === "registrar" ? (
+        <RegistrarDashboardView registrarAddress={address || ""} />
+      ) : (
+        <>
+          {/* Main Metric Cards */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              label="Registered Universities"
+              value={String(totalUniversities)}
+              icon={<Building2 className="h-4.5 w-4.5" />}
+              accent="default"
+              trend="All instances"
+            />
+            <StatCard
+              label="Active Networks"
+              value={String(activeCount)}
+              icon={<ShieldCheck className="h-4.5 w-4.5" />}
+              accent="success"
+              trend={`${totalUniversities - activeCount} suspended`}
+            />
+            <StatCard
+              label="Transcripts Issued"
+              value="1,492"
+              icon={<FileText className="h-4.5 w-4.5" />}
+              accent="teal"
+              trend="+12% this month"
+            />
+            <StatCard
+              label="Verifications Done"
+              value="4,821"
+              icon={<CheckCircle2 className="h-4.5 w-4.5" />}
+              accent="success"
+              trend="99.9% uptime"
+            />
+          </div>
 
-      {/* Dynamic Content Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Quick Actions Column */}
-        <div className="md:col-span-1 space-y-6">
-          <SectionLabel index={2} label="QUICK ACTIONS" />
-          
-          <div className="space-y-3">
-            {role === "admin" && (
-              <Link href="/admin" className="block group">
-                <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[oklch(var(--ca-destructive)/0.1)] rounded-lg text-[oklch(var(--ca-destructive))]">
-                      <Building2 className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
-                        Deploy University
-                      </h4>
-                      <p className="text-[10px] text-muted-foreground">Register new institutions on-chain</p>
-                    </div>
-                  </div>
-                </GlowCard>
-              </Link>
-            )}
-
-            {(role === "registrar" || !role) && (
-              <Link href="/issue" className="block group">
-                <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
-                      <PlusCircle className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
-                        Issue Credentials
-                      </h4>
-                      <p className="text-[10px] text-muted-foreground">Register transcript record for a student</p>
-                    </div>
-                  </div>
-                </GlowCard>
-              </Link>
-            )}
-
-            {(role === "student" || !role) && (
-              <>
-                <Link href="/transcripts" className="block group">
-                  <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
-                        <FileText className="h-5 w-5" />
+          {/* Dynamic Content Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Quick Actions Column */}
+            <div className="md:col-span-1 space-y-6">
+              <SectionLabel index={2} label="QUICK ACTIONS" />
+              
+              <div className="space-y-3">
+                {role === "admin" && (
+                  <Link href="/admin" className="block group">
+                    <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[oklch(var(--ca-destructive)/0.1)] rounded-lg text-[oklch(var(--ca-destructive))]">
+                          <Building2 className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                            Deploy University
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground">Register new institutions on-chain</p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
-                          My Transcripts
-                        </h4>
-                        <p className="text-[10px] text-muted-foreground">View your academic records on-chain</p>
-                      </div>
-                    </div>
-                  </GlowCard>
-                </Link>
+                    </GlowCard>
+                  </Link>
+                )}
 
-                <Link href="/access" className="block group">
+                {(role === "registrar" || !role) && (
+                  <Link href="/issue" className="block group">
+                    <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+                          <PlusCircle className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                            Issue Credentials
+                          </h4>
+                          <p className="text-[10px] text-muted-foreground">Register transcript record for a student</p>
+                        </div>
+                      </div>
+                    </GlowCard>
+                  </Link>
+                )}
+
+                {(role === "student" || !role) && (
+                  <>
+                    <Link href="/transcripts" className="block group">
+                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                              My Transcripts
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground">View your academic records on-chain</p>
+                          </div>
+                        </div>
+                      </GlowCard>
+                    </Link>
+
+                    <Link href="/access" className="block group">
+                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
+                            <Lock className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                              Access Delegation
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground">Grant & revoke verifier permissions</p>
+                          </div>
+                        </div>
+                      </GlowCard>
+                    </Link>
+                  </>
+                )}
+
+                <Link href="/verify" className="block group">
                   <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
-                        <Lock className="h-5 w-5" />
+                        <UserCheck className="h-5 w-5" />
                       </div>
                       <div>
                         <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
-                          Access Delegation
+                          On-Chain Verification
                         </h4>
-                        <p className="text-[10px] text-muted-foreground">Grant & revoke verifier permissions</p>
+                        <p className="text-[10px] text-muted-foreground">Verify transcript cryptographic hashes</p>
                       </div>
                     </div>
                   </GlowCard>
                 </Link>
-              </>
-            )}
+              </div>
+            </div>
 
-            <Link href="/verify" className="block group">
-              <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
-                    <UserCheck className="h-5 w-5" />
+            {/* Dynamic Activity/News Section */}
+            <div className="md:col-span-2 space-y-6">
+              <SectionLabel index={3} label="REALTIME NETWORK METRICS" />
+              
+              <GlowCard className="p-6 relative overflow-hidden" glow>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                      Recent Activities
+                    </h3>
+                    <span className="text-[10px] font-mono text-muted-foreground">LIVE STREAMING</span>
                   </div>
-                  <div>
-                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
-                      On-Chain Verification
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground">Verify transcript cryptographic hashes</p>
+
+                  <div className="space-y-4 font-mono">
+                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
+                      <div className="space-y-1">
+                        <p className="text-foreground font-semibold flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-success))]" />
+                          TRANSCRIPT_REGISTERED
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">MIT Registry Address: 0x82c...12A</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">2m ago</span>
+                    </div>
+
+                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
+                      <div className="space-y-1">
+                        <p className="text-foreground font-semibold flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
+                          ACCESS_GRANTED
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Student 0x43b...98d to Verifier: 0x931...bde</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">15m ago</span>
+                    </div>
+
+                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
+                      <div className="space-y-1">
+                        <p className="text-foreground font-semibold flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
+                          UNIVERSITY_DEPLOYED
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Stanford Registry Contract Created</p>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">1h ago</span>
+                    </div>
                   </div>
                 </div>
               </GlowCard>
-            </Link>
-          </div>
-        </div>
-
-        {/* Dynamic Activity/News Section */}
-        <div className="md:col-span-2 space-y-6">
-          <SectionLabel index={3} label="REALTIME NETWORK METRICS" />
-          
-          <GlowCard className="p-6 relative overflow-hidden" glow>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
-                  Recent Activities
-                </h3>
-                <span className="text-[10px] font-mono text-muted-foreground">LIVE STREAMING</span>
-              </div>
-
-              <div className="space-y-4 font-mono">
-                <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                  <div className="space-y-1">
-                    <p className="text-foreground font-semibold flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-success))]" />
-                      TRANSCRIPT_REGISTERED
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">MIT Registry Address: 0x82c...12A</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">2m ago</span>
-                </div>
-
-                <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                  <div className="space-y-1">
-                    <p className="text-foreground font-semibold flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
-                      ACCESS_GRANTED
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Student 0x43b...98d to Verifier: 0x931...bde</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">15m ago</span>
-                </div>
-
-                <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                  <div className="space-y-1">
-                    <p className="text-foreground font-semibold flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
-                      UNIVERSITY_DEPLOYED
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">Stanford Registry Contract Created</p>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">1h ago</span>
-                </div>
-              </div>
             </div>
-          </GlowCard>
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
