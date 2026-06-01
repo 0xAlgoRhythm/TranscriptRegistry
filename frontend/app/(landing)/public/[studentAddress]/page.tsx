@@ -78,7 +78,7 @@ export default function PublicProfilePage() {
                 <div className="space-y-4">
                   <div className="space-y-1.5">
                     <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Record ID</p>
-                    <HashDisplay hash={t.recordId} showCopy />
+                    <HashDisplay hash={t.recordId} />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
