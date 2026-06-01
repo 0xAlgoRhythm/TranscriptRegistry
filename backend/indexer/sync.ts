@@ -177,6 +177,6 @@ export async function startIndexer() {
 }
 
 // Enable running direct from cmd
-if (require.main === module) {
+if (process.argv[1] === __filename) {
   startIndexer().catch(console.error)
 }
