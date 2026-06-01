@@ -7,8 +7,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "noEmit": true,
+    "outDir": "./dist",
     "types": ["node"]
   },
   "include": ["**/*.ts"]
 }
+
