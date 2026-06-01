@@ -3,7 +3,6 @@ import { sepolia } from "viem/chains"
 import { db } from "../db/connection.js"
 import { universities, transcripts, transcriptStatusHistory, indexerState } from "../db/schema.js"
 import { eq } from "drizzle-orm"
-import { universityFactoryAbi, transcriptRegistryAbi } from "../../frontend/lib/contracts/abis.js"
 import dotenv from "dotenv"
 import path from "path"
 
