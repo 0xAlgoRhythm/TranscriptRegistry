@@ -187,8 +187,15 @@ export default function AdminPage() {
             UNAUTHORIZED ACCESS
           </h2>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Administrative console restricted. Connect the platform administrator deployer wallet or switch the simulator role to Platform Admin.
+            Administrative console restricted. Connect the platform administrator deployer wallet via Metamask, or use the quick-test bypass below to simulate admin privileges on your current embedded wallet.
           </p>
+          <Button 
+            onClick={() => useRoleStore.getState().setRole("admin")}
+            variant="outline"
+            className="w-full mt-2 font-mono text-[10px] tracking-widest uppercase border-[oklch(var(--ca-accent)/0.3)] text-[oklch(var(--ca-accent))] hover:bg-[oklch(var(--ca-accent)/0.1)]"
+          >
+            SIMULATE ADMIN PRIVILEGES
+          </Button>
         </GlowCard>
       </div>
     )
