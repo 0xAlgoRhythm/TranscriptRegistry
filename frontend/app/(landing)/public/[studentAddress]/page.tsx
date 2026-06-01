@@ -60,7 +60,7 @@ export default function PublicProfilePage() {
           </div>
         ) : transcripts.length === 0 ? (
           <EmptyState
-            icon={GraduationCap}
+            icon={<GraduationCap className="h-8 w-8 stroke-[1.5]" />}
             title="No records found"
             description="There are no verified transcripts associated with this public address."
           />
