@@ -1,4 +1,5 @@
 import { pgTable, serial, integer, text, boolean, timestamp, jsonb, bigint } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 export const universities = pgTable("universities", {
     id: serial("id").primaryKey(),
     universityId: integer("university_id").unique().notNull(),
@@ -67,4 +68,16 @@ export const indexerState = pgTable("indexer_state", {
     chainId: integer("chain_id").primaryKey(),
     lastBlock: bigint("last_block", { mode: "bigint" }).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull(),
+});
+export const students = pgTable("students", {
+    id: serial("id").primaryKey(),
+    walletAddress: text("wallet_address").unique(),
+    fullName: text("full_name").notNull(),
+    studentId: text("student_id").notNull(),
+    universityId: integer("university_id").references(() => universities.universityId).notNull(),
+    status: text("status").default("pending").notNull(), // pending | approved | rejected
+    email: text("email").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
+    actionAt: timestamp("action_at", { withTimezone: true }),
 });
