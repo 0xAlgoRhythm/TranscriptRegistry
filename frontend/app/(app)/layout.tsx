@@ -53,7 +53,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Topbar />
                 
                 {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto bg-card/10 p-6 md:p-8">
+                <main className="flex-1 overflow-y-auto bg-background p-6 md:p-8">
                   {children}
                 </main>
               </div>

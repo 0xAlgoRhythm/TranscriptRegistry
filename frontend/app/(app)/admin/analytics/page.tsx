@@ -71,28 +71,28 @@ export default function AdminAnalyticsPage() {
         <StatCard
           label="Total Issued Records"
           value={dbStats ? String(dbStats.totalTranscripts) : "..."}
-          icon={<BarChart className="h-4.5 w-4.5" />}
+          icon={<BarChart className="h-5 w-5" />}
           accent="default"
           trend="Live database count"
         />
         <StatCard
           label="Verification Requests"
           value={dbStats ? String(dbStats.totalVerifications) : "..."}
-          icon={<ShieldCheck className="h-4.5 w-4.5" />}
+          icon={<ShieldCheck className="h-5 w-5" />}
           accent="success"
           trend="Successful audits"
         />
         <StatCard
           label="Active Universities"
           value={dbStats ? String(dbStats.activeUniversities) : "..."}
-          icon={<Landmark className="h-4.5 w-4.5" />}
+          icon={<Landmark className="h-5 w-5" />}
           accent="teal"
           trend={`${(dbStats?.totalUniversities || 0) - (dbStats?.activeUniversities || 0)} suspended`}
         />
         <StatCard
           label="Verification Volume"
           value={dbStats ? `${((dbStats.totalVerifications || 0) * 1.0).toFixed(1)}` : "..."}
-          icon={<TrendingUp className="h-4.5 w-4.5" />}
+          icon={<TrendingUp className="h-5 w-5" />}
           accent="success"
           trend="Dynamic load"
         />

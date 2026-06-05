@@ -35,7 +35,7 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border/40 bg-card/10 backdrop-blur-md px-6">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card shadow-sm px-6">
       <div className="flex items-center gap-3">
         {/* Mobile menu trigger */}
         <button
@@ -53,9 +53,9 @@ export function Topbar() {
           title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
         >
           {sidebarOpen ? (
-            <PanelLeftClose className="h-4.5 w-4.5" />
+            <PanelLeftClose className="h-5 w-5" />
           ) : (
-            <PanelLeft className="h-4.5 w-4.5" />
+            <PanelLeft className="h-5 w-5" />
           )}
         </button>
 
@@ -75,9 +75,9 @@ export function Topbar() {
           title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
         >
           {theme === "light" ? (
-            <Moon className="h-4.5 w-4.5" />
+            <Moon className="h-5 w-5" />
           ) : (
-            <Sun className="h-4.5 w-4.5" />
+            <Sun className="h-5 w-5" />
           )}
         </button>
 

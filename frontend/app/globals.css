@@ -52,89 +52,89 @@
 
 :root {
   /* ── Shadcn base (light mode) ── */
-  --background:           oklch(0.99 0.003 264);
-  --foreground:           oklch(0.18 0.006 264);
-  --card:                 oklch(1.0 0.0 0);
-  --card-foreground:      oklch(0.18 0.006 264);
+  --background:           oklch(0.975 0.005 264); /* Warm slate background for clean depth */
+  --foreground:           oklch(0.12 0.008 264);  /* High contrast deep rich slate-black */
+  --card:                 oklch(1.0 0.0 0);       /* Pure white card faces */
+  --card-foreground:      oklch(0.12 0.008 264);
   --popover:              oklch(1.0 0.0 0);
-  --popover-foreground:   oklch(0.18 0.006 264);
-  --primary:              oklch(0.55 0.20 275);
+  --popover-foreground:   oklch(0.12 0.008 264);
+  --primary:              oklch(0.52 0.22 280);   /* Rich royal purple/indigo */
   --primary-foreground:   oklch(0.99 0.003 264);
-  --secondary:            oklch(0.95 0.005 264);
-  --secondary-foreground: oklch(0.18 0.006 264);
-  --muted:                oklch(0.96 0.005 264);
-  --muted-foreground:     oklch(0.50 0.005 264);
-  --accent:               oklch(0.96 0.005 264);
-  --accent-foreground:    oklch(0.18 0.006 264);
-  --destructive:          oklch(0.60 0.22 27);
-  --border:               oklch(0.90 0.005 264);
-  --input:                oklch(0.92 0.005 264);
-  --ring:                 oklch(0.55 0.20 275 / 0.40);
-  --radius:               0.375rem;
+  --secondary:            oklch(0.93 0.008 264);  /* Defined neutral gray */
+  --secondary-foreground: oklch(0.12 0.008 264);
+  --muted:                oklch(0.94 0.006 264);  /* Soft background gray for badges */
+  --muted-foreground:     oklch(0.40 0.010 264);  /* Clearly readable secondary text */
+  --accent:               oklch(0.93 0.008 264);
+  --accent-foreground:    oklch(0.12 0.008 264);
+  --destructive:          oklch(0.55 0.20 27);
+  --border:               oklch(0.85 0.012 264);  /* Visually distinct component borders */
+  --input:                oklch(0.88 0.010 264);  /* Defined inputs */
+  --ring:                 oklch(0.52 0.22 280 / 0.40);
+  --radius:               0.5rem;                 /* Rounded borders */
 
   /* ── Sidebar ── */
-  --sidebar:                oklch(0.98 0.003 264);
-  --sidebar-foreground:     oklch(0.18 0.006 264);
-  --sidebar-primary:        oklch(0.55 0.20 275);
+  --sidebar:                oklch(1.0 0.0 0);      /* Pure white sidebar */
+  --sidebar-foreground:     oklch(0.12 0.008 264);
+  --sidebar-primary:        oklch(0.52 0.22 280);
   --sidebar-primary-foreground: oklch(0.99 0.003 264);
-  --sidebar-accent:         oklch(0.94 0.005 264);
-  --sidebar-accent-foreground: oklch(0.18 0.006 264);
-  --sidebar-border:         oklch(0.90 0.005 264);
-  --sidebar-ring:           oklch(0.55 0.20 275 / 0.30);
+  --sidebar-accent:         oklch(0.95 0.005 264);
+  --sidebar-accent-foreground: oklch(0.12 0.008 264);
+  --sidebar-border:         oklch(0.88 0.008 264);
+  --sidebar-ring:           oklch(0.52 0.22 280 / 0.30);
 
   /* ── Charts ── */
-  --chart-1: oklch(0.55 0.20 275);
-  --chart-2: oklch(0.40 0.14 190);
-  --chart-3: oklch(0.42 0.15 155);
-  --chart-4: oklch(0.55 0.15 85);
+  --chart-1: oklch(0.52 0.22 280);
+  --chart-2: oklch(0.42 0.16 195);
+  --chart-3: oklch(0.45 0.16 155);
+  --chart-4: oklch(0.58 0.16 85);
   --chart-5: oklch(0.55 0.20 27);
 
   /* ═══ CredAxis Design Tokens ═══ */
 
   /* Base surfaces */
-  --ca-bg:         oklch(0.99 0.003 264);
+  --ca-bg:         oklch(0.975 0.005 264);
   --ca-surface:    oklch(1.0 0.0 0);
-  --ca-surface-2:  oklch(0.96 0.005 264);
-  --ca-surface-3:  oklch(0.92 0.005 264);
+  --ca-surface-2:  oklch(0.94 0.006 264);
+  --ca-surface-3:  oklch(0.90 0.008 264);
 
   /* Accent — Electric Indigo */
-  --ca-accent:       oklch(0.55 0.20 275);
-  --ca-accent-dim:   oklch(0.55 0.20 275 / 0.08);
-  --ca-accent-glow:  oklch(0.55 0.20 275 / 0.15);
-  --ca-accent-hover: oklch(0.50 0.20 275);
+  --ca-accent:       oklch(0.52 0.22 280);
+  --ca-accent-dim:   oklch(0.52 0.22 280 / 0.06);
+  --ca-accent-glow:  oklch(0.52 0.22 280 / 0.15);
+  --ca-accent-hover: oklch(0.46 0.22 280);
 
   /* Secondary accent — Teal */
-  --ca-teal:       oklch(0.40 0.14 190);
-  --ca-teal-dim:   oklch(0.40 0.14 190 / 0.08);
+  --ca-teal:       oklch(0.42 0.16 195);
+  --ca-teal-dim:   oklch(0.42 0.16 195 / 0.06);
 
   /* Status colours */
-  --ca-success:    oklch(0.42 0.15 155);
-  --ca-success-dim:oklch(0.42 0.15 155 / 0.08);
-  --ca-warning:    oklch(0.55 0.15 85);
-  --ca-warning-dim:oklch(0.55 0.15 85 / 0.08);
+  --ca-success:    oklch(0.45 0.16 155);
+  --ca-success-dim:oklch(0.45 0.16 155 / 0.06);
+  --ca-warning:    oklch(0.58 0.16 85);
+  --ca-warning-dim:oklch(0.58 0.16 85 / 0.06);
   --ca-danger:     oklch(0.55 0.20 27);
-  --ca-danger-dim: oklch(0.55 0.20 27 / 0.08);
+  --ca-danger-dim: oklch(0.55 0.20 27 / 0.06);
   --ca-amended:    oklch(0.55 0.15 60);
-  --ca-amended-dim:oklch(0.55 0.15 60 / 0.08);
+  --ca-amended-dim:oklch(0.55 0.15 60 / 0.06);
 
   /* Text hierarchy */
-  --ca-text:    oklch(0.18 0.006 264);
-  --ca-text-2:  oklch(0.35 0.005 264);
-  --ca-muted:   oklch(0.55 0.005 264);
+  --ca-text:    oklch(0.12 0.008 264);
+  --ca-text-2:  oklch(0.35 0.008 264);
+  --ca-muted:   oklch(0.48 0.008 264);
 
   /* Borders */
-  --ca-border:        oklch(0.90 0.005 264);
-  --ca-border-dim:    oklch(0.94 0.005 264);
-  --ca-border-accent: oklch(0.55 0.20 275 / 0.25);
-  --ca-border-success:oklch(0.42 0.15 155 / 0.25);
+  --ca-border:        oklch(0.85 0.012 264);
+  --ca-border-dim:    oklch(0.90 0.008 264);
+  --ca-border-accent: oklch(0.52 0.22 280 / 0.25);
+  --ca-border-success:oklch(0.45 0.16 155 / 0.25);
   --ca-border-danger: oklch(0.55 0.20 27 / 0.25);
 
   /* Shadows */
-  --ca-shadow-card:    0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --ca-shadow-accent:  0 4px 12px -2px oklch(0.55 0.20 275 / 0.12), 0 0 0 1px oklch(0.55 0.20 275 / 0.15);
-  --ca-shadow-success: 0 4px 12px -2px oklch(0.42 0.15 155 / 0.12), 0 0 0 1px oklch(0.42 0.15 155 / 0.15);
+  --ca-shadow-card:    0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --ca-shadow-accent:  0 4px 12px -2px oklch(0.52 0.22 280 / 0.12), 0 0 0 1px oklch(0.52 0.22 280 / 0.15);
+  --ca-shadow-success: 0 4px 12px -2px oklch(0.45 0.16 155 / 0.12), 0 0 0 1px oklch(0.45 0.16 155 / 0.15);
   --ca-shadow-danger:  0 4px 12px -2px oklch(0.55 0.20 27 / 0.12), 0 0 0 1px oklch(0.55 0.20 27 / 0.15);
-  --ca-shadow-elevated:0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  --ca-shadow-elevated:0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
 
   /* Gradients */
   --ca-gradient-hero:   radial-gradient(ellipse 120% 80% at 50% 0%, oklch(0.55 0.20 275 / 0.05) 0%, transparent 60%);

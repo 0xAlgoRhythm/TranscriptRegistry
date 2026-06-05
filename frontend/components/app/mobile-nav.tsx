@@ -61,7 +61,7 @@ export function MobileNav() {
                       : "text-muted-foreground hover:bg-muted/20 hover:text-foreground border-transparent",
                   )}
                 >
-                  <item.icon className="h-4.5 w-4.5" />
+                  <item.icon className="h-5 w-5" />
                   <span className="font-mono tracking-tight">{item.label}</span>
                 </Link>
               )

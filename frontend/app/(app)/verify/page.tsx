@@ -291,7 +291,7 @@ export default function VerifyPage() {
             </div>
 
             <div className="pt-6 border-t border-border/40 text-[10px] text-muted-foreground flex gap-1.5 items-start mt-6 font-mono">
-              <HelpCircle className="h-4.5 w-4.5 shrink-0" />
+              <HelpCircle className="h-5 w-5 shrink-0" />
               <span>Checking validation writes an immutable verification receipt log on-chain.</span>
             </div>
           </GlowCard>

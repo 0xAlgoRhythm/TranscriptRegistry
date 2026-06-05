@@ -504,28 +504,28 @@ export default function DashboardPage() {
             <StatCard
               label="Registered Universities"
               value={String(totalUniversities)}
-              icon={<Building2 className="h-4.5 w-4.5" />}
+              icon={<Building2 className="h-5 w-5" />}
               accent="default"
               trend="All instances"
             />
             <StatCard
               label="Active Networks"
               value={String(activeCount)}
-              icon={<ShieldCheck className="h-4.5 w-4.5" />}
+              icon={<ShieldCheck className="h-5 w-5" />}
               accent="success"
               trend={`${totalUniversities - activeCount} suspended`}
             />
             <StatCard
               label="Transcripts Issued"
               value={dbStats ? String(dbStats.totalTranscripts) : "..."}
-              icon={<FileText className="h-4.5 w-4.5" />}
+              icon={<FileText className="h-5 w-5" />}
               accent="teal"
               trend="From live database"
             />
             <StatCard
               label="Verifications Done"
               value={dbStats ? String(dbStats.totalVerifications) : "..."}
-              icon={<CheckCircle2 className="h-4.5 w-4.5" />}
+              icon={<CheckCircle2 className="h-5 w-5" />}
               accent="success"
               trend="Verified on-chain"
             />

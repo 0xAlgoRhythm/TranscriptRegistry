@@ -250,7 +250,7 @@ function DeployUniversityForm() {
           disabled={isPending || isConfirming}
           className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5"
         >
-          <Plus className="h-4.5 w-4.5" /> DEPLOY REGISTRY CONTRACT
+          <Plus className="h-5 w-5" /> DEPLOY REGISTRY CONTRACT
         </Button>
 
         <TxPanel
@@ -310,13 +310,13 @@ export default function AdminPage() {
         <StatCard
           label="Total Universities"
           value={String(totalUniversities)}
-          icon={<Building2 className="h-4.5 w-4.5" />}
+          icon={<Building2 className="h-5 w-5" />}
           accent="default"
         />
         <StatCard
           label="Active Networks"
           value={String(activeCount)}
-          icon={<Shield className="h-4.5 w-4.5" />}
+          icon={<Shield className="h-5 w-5" />}
           accent="success"
         />
       </div>

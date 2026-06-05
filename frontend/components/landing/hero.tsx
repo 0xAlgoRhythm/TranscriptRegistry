@@ -143,7 +143,7 @@ export function Hero() {
               asChild
               size="lg"
               variant="outline"
-              className="border-border/60 hover:border-[oklch(var(--ca-accent)/0.5)] text-foreground bg-card/25 backdrop-blur-md font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all duration-200"
+              className="border-border hover:border-[oklch(var(--ca-accent)/0.5)] text-foreground bg-card font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all duration-200 shadow-sm"
             >
               <Link href="/verify">VERIFY A RECORD</Link>
             </Button>

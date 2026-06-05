@@ -113,7 +113,7 @@ export default function PublicVerifyDetailPage() {
             </div>
 
             <div className="pt-6 border-t border-border/40 text-[10px] text-muted-foreground flex gap-1.5 items-start font-mono">
-              <HelpCircle className="h-4.5 w-4.5 shrink-0 text-[oklch(var(--ca-accent))]" />
+              <HelpCircle className="h-5 w-5 shrink-0 text-[oklch(var(--ca-accent))]" />
               <span>Public verification is readable only. Modifying permissions requires authentication on the primary DApp interface.</span>
             </div>
           </GlowCard>

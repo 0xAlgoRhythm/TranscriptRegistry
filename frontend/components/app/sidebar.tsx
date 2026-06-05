@@ -50,8 +50,8 @@ export function Sidebar() {
   if (!sidebarOpen) return null
 
   return (
-    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col border-r border-border/60 bg-card/15 backdrop-blur-sm transition-all duration-300">
-      <div className="flex h-16 items-center px-6 border-b border-border/40">
+    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 shadow-sm">
+      <div className="flex h-16 items-center px-6 border-b border-sidebar-border">
         <Link href="/">
           <Logo size="sm" />
         </Link>
@@ -75,7 +75,7 @@ export function Sidebar() {
               {isActive && (
                 <div className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r bg-[oklch(var(--ca-accent))]" />
               )}
-              <item.icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-105" />
+              <item.icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-105" />
               <span className="font-mono tracking-tight">{item.label}</span>
             </Link>
           )
