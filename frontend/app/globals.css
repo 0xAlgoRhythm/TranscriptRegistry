@@ -78,38 +78,38 @@
 
 :root {
   /* ── Shadcn base (light mode) ── */
-  --background:           oklch(0.96 0.008 260); /* Clean cool off-white slate background */
-  --foreground:           oklch(0.15 0.012 260);  /* Soft premium dark slate black */
+  --background:           oklch(0.985 0.01 255); /* Clean cool soft white with slight blue tint */
+  --foreground:           oklch(0.12 0.01 260);  /* Soft premium dark slate black */
   --card:                 oklch(1.0 0.0 0);       /* Pure white card faces */
-  --card-foreground:      oklch(0.15 0.012 260);
+  --card-foreground:      oklch(0.12 0.01 260);
   --popover:              oklch(1.0 0.0 0);
-  --popover-foreground:   oklch(0.15 0.012 260);
-  --primary:              oklch(0.52 0.22 280);   /* Rich royal purple/indigo */
+  --popover-foreground:   oklch(0.12 0.01 260);
+  --primary:              oklch(0.45 0.24 280);   /* Rich vibrant purple/indigo */
   --primary-foreground:   oklch(0.99 0.003 264);
-  --secondary:            oklch(0.93 0.01 260);  /* Defined neutral gray */
-  --secondary-foreground: oklch(0.15 0.012 260);
-  --muted:                oklch(0.93 0.01 260);  /* Soft background gray for badges */
-  --muted-foreground:     oklch(0.38 0.015 260);  /* Clearly readable secondary text */
-  --accent:               oklch(0.93 0.01 260);
-  --accent-foreground:    oklch(0.15 0.012 260);
+  --secondary:            oklch(0.95 0.01 260);  /* Defined neutral gray */
+  --secondary-foreground: oklch(0.12 0.01 260);
+  --muted:                oklch(0.94 0.01 260);  /* Soft background gray for badges */
+  --muted-foreground:     oklch(0.35 0.01 260);  /* Clearly readable secondary text */
+  --accent:               oklch(0.94 0.01 260);
+  --accent-foreground:    oklch(0.12 0.01 260);
   --destructive:          oklch(0.55 0.20 27);
-  --border:               oklch(0.85 0.015 260);  /* Visually distinct component borders */
-  --input:                oklch(0.85 0.015 260);  /* Defined inputs */
-  --ring:                 oklch(0.52 0.22 280 / 0.40);
+  --border:               oklch(0.85 0.02 260);  /* Visually distinct component borders */
+  --input:                oklch(0.85 0.02 260);  /* Defined inputs */
+  --ring:                 oklch(0.45 0.24 280 / 0.40);
   --radius:               0.5rem;                 /* Rounded borders */
 
   /* ── Sidebar ── */
   --sidebar:                oklch(1.0 0.0 0);      /* Pure white sidebar */
-  --sidebar-foreground:     oklch(0.15 0.012 260);
-  --sidebar-primary:        oklch(0.52 0.22 280);
+  --sidebar-foreground:     oklch(0.12 0.01 260);
+  --sidebar-primary:        oklch(0.45 0.24 280);
   --sidebar-primary-foreground: oklch(0.99 0.003 264);
-  --sidebar-accent:         oklch(0.95 0.005 264);
-  --sidebar-accent-foreground: oklch(0.15 0.012 260);
-  --sidebar-border:         oklch(0.85 0.015 260);
-  --sidebar-ring:           oklch(0.52 0.22 280 / 0.30);
+  --sidebar-accent:         oklch(0.95 0.01 260);
+  --sidebar-accent-foreground: oklch(0.12 0.01 260);
+  --sidebar-border:         oklch(0.85 0.02 260);
+  --sidebar-ring:           oklch(0.45 0.24 280 / 0.30);
 
   /* ── Charts ── */
-  --chart-1: oklch(0.52 0.22 280);
+  --chart-1: oklch(0.45 0.24 280);
   --chart-2: oklch(0.42 0.16 195);
   --chart-3: oklch(0.45 0.16 155);
   --chart-4: oklch(0.58 0.16 85);
@@ -118,26 +118,26 @@
   /* ═══ CredAxis Design Tokens ═══ */
 
   /* Base surfaces */
-  --ca-bg:         oklch(0.96 0.008 260);
+  --ca-bg:         oklch(0.985 0.01 255);
   --ca-surface:    oklch(1.0 0.0 0);
-  --ca-surface-2:  oklch(0.93 0.01 260);
-  --ca-surface-3:  oklch(0.88 0.012 260);
+  --ca-surface-2:  oklch(0.96 0.01 260);
+  --ca-surface-3:  oklch(0.92 0.01 260);
 
   /* Accent — Electric Indigo */
-  --ca-accent:       oklch(0.52 0.22 280);
-  --ca-accent-dim:   oklch(0.52 0.22 280 / 0.06);
-  --ca-accent-glow:  oklch(0.52 0.22 280 / 0.15);
-  --ca-accent-hover: oklch(0.46 0.22 280);
+  --ca-accent:       oklch(0.45 0.24 280);
+  --ca-accent-dim:   oklch(0.45 0.24 280 / 0.08);
+  --ca-accent-glow:  oklch(0.45 0.24 280 / 0.20);
+  --ca-accent-hover: oklch(0.40 0.24 280);
 
   /* Secondary accent — Teal */
   --ca-teal:       oklch(0.42 0.16 195);
-  --ca-teal-dim:   oklch(0.42 0.16 195 / 0.06);
+  --ca-teal-dim:   oklch(0.42 0.16 195 / 0.08);
 
   /* Status colours */
   --ca-success:    oklch(0.45 0.16 155);
-  --ca-success-dim:oklch(0.45 0.16 155 / 0.06);
+  --ca-success-dim:oklch(0.45 0.16 155 / 0.08);
   --ca-warning:    oklch(0.58 0.16 85);
-  --ca-warning-dim:oklch(0.58 0.16 85 / 0.06);
+  --ca-warning-dim:oklch(0.58 0.16 85 / 0.08);
   --ca-danger:     oklch(0.55 0.20 27);
   --ca-danger-dim: oklch(0.55 0.20 27 / 0.06);
   --ca-destructive:     oklch(0.55 0.20 27);
