@@ -1,12 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "../lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+
 /**
  * @title TranscriptRegistry
  * @dev Smart contract for managing university transcripts on blockchain
- * @notice MVP version - focuses on core functionality without payment
+ * @notice Optimized with proxy clones and custom revert errors
  */
-contract TranscriptRegistry {
+contract TranscriptRegistry is Initializable {
+    // ============ Custom Errors ============
+    
+    error InvalidRegistrarAddress();
+    error InvalidAdminAddress();
+    error OnlyAdmin();
+    error OnlyRegistrar();
+    error ContractInactive();
+    error TranscriptDoesNotExist();
+    error InvalidStudentHash();
+    error InvalidMetadataCID();
+    error InvalidFileHash();
+    error RecordCollision();
+    error InvalidVerifierAddress();
+    error InvalidDuration();
+    error NotTranscriptOwner();
+    error AccessNotGrantedOrRevoked();
+    error AccessDeniedOrExpired();
+    error StatusAlreadySet();
+    error InvalidAddress();
+    error SameRegistrar();
+
     // ============ State Variables ============
     
     address public admin; // Platform admin
@@ -95,34 +118,49 @@ contract TranscriptRegistry {
     // ============ Modifiers ============
     
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can call this");
+        if (msg.sender != admin) revert OnlyAdmin();
         _;
     }
     
     modifier onlyRegistrar() {
-        require(msg.sender == registrar, "Only registrar can call this");
+        if (msg.sender != registrar) revert OnlyRegistrar();
         _;
     }
     
     modifier onlyActiveContract() {
-        require(isActive, "Contract is not active");
+        if (!isActive) revert ContractInactive();
         _;
     }
     
     modifier transcriptExists(bytes32 recordId) {
-        require(transcripts[recordId].exists, "Transcript does not exist");
+        if (!transcripts[recordId].exists) revert TranscriptDoesNotExist();
         _;
     }
     
-    // ============ Constructor ============
+    // ============ Constructor (Disables Direct Initialization of Master template) ============
     
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+    
+    // ============ Initializer (Called by Factory clone) ============
+    
+    /**
+     * @dev Initialize a new cloned instance
+     * @param _universityName Name of the university
+     * @param _registrar Wallet address of the university registrar
+     * @param _admin Address of the platform admin/factory
+     */
+    function initialize(
         string memory _universityName,
-        address _registrar
-    ) {
-        require(_registrar != address(0), "Invalid registrar address");
+        address _registrar,
+        address _admin
+    ) external initializer {
+        if (_registrar == address(0)) revert InvalidRegistrarAddress();
+        if (_admin == address(0)) revert InvalidAdminAddress();
         
-        admin = msg.sender; // Platform admin who deploys
+        admin = _admin;
         registrar = _registrar;
         universityName = _universityName;
         isActive = true;
@@ -142,9 +180,9 @@ contract TranscriptRegistry {
         string memory metadataCID,
         bytes32 fileHash
     ) external onlyRegistrar onlyActiveContract returns (bytes32) {
-        require(studentHash != bytes32(0), "Invalid student hash");
-        require(bytes(metadataCID).length > 0, "Invalid metadata CID");
-        require(fileHash != bytes32(0), "Invalid file hash");
+        if (studentHash == bytes32(0)) revert InvalidStudentHash();
+        if (bytes(metadataCID).length == 0) revert InvalidMetadataCID();
+        if (fileHash == bytes32(0)) revert InvalidFileHash();
         
         // Generate unique record ID
         bytes32 recordId = keccak256(
@@ -156,7 +194,7 @@ contract TranscriptRegistry {
             )
         );
         
-        require(!transcripts[recordId].exists, "Record ID collision");
+        if (transcripts[recordId].exists) revert RecordCollision();
         
         // Create transcript
         transcripts[recordId] = Transcript({
@@ -197,14 +235,13 @@ contract TranscriptRegistry {
         address verifier,
         uint256 duration
     ) external transcriptExists(recordId) {
-        require(verifier != address(0), "Invalid verifier address");
-        require(duration > 0 && duration <= 365 days, "Invalid duration");
+        if (verifier == address(0)) revert InvalidVerifierAddress();
+        if (duration == 0 || duration > 365 days) revert InvalidDuration();
         
         // Verify caller owns this transcript
-        require(
-            transcripts[recordId].studentHash == keccak256(abi.encodePacked(msg.sender)),
-            "Not the transcript owner"
-        );
+        if (transcripts[recordId].studentHash != keccak256(abi.encodePacked(msg.sender))) {
+            revert NotTranscriptOwner();
+        }
         
         uint256 expiresAt = block.timestamp + duration;
         
@@ -227,15 +264,13 @@ contract TranscriptRegistry {
         bytes32 recordId,
         address verifier
     ) external transcriptExists(recordId) {
-        require(
-            transcripts[recordId].studentHash == keccak256(abi.encodePacked(msg.sender)),
-            "Not the transcript owner"
-        );
+        if (transcripts[recordId].studentHash != keccak256(abi.encodePacked(msg.sender))) {
+            revert NotTranscriptOwner();
+        }
         
-        require(
-            accessControl[recordId][verifier].isActive,
-            "Access not granted or already revoked"
-        );
+        if (!accessControl[recordId][verifier].isActive) {
+            revert AccessNotGrantedOrRevoked();
+        }
         
         accessControl[recordId][verifier].isActive = false;
         
@@ -254,10 +289,9 @@ contract TranscriptRegistry {
     ) external transcriptExists(recordId) returns (bool) {
         // Check if verifier has access (or if transcript is public)
         AccessGrant memory access = accessControl[recordId][msg.sender];
-        require(
-            access.isActive && block.timestamp < access.expiresAt,
-            "Access denied or expired"
-        );
+        if (!access.isActive || block.timestamp >= access.expiresAt) {
+            revert AccessDeniedOrExpired();
+        }
         
         bool isValid = transcripts[recordId].fileHash == fileHash;
         
@@ -346,7 +380,7 @@ contract TranscriptRegistry {
         string memory reason
     ) external onlyRegistrar transcriptExists(recordId) {
         Status oldStatus = transcripts[recordId].status;
-        require(oldStatus != newStatus, "Status already set");
+        if (oldStatus == newStatus) revert StatusAlreadySet();
         
         transcripts[recordId].status = newStatus;
         
@@ -358,8 +392,8 @@ contract TranscriptRegistry {
      * @param newRegistrar New registrar wallet address
      */
     function updateRegistrar(address newRegistrar) external onlyAdmin {
-        require(newRegistrar != address(0), "Invalid address");
-        require(newRegistrar != registrar, "Same as current registrar");
+        if (newRegistrar == address(0)) revert InvalidAddress();
+        if (newRegistrar == registrar) revert SameRegistrar();
         
         address oldRegistrar = registrar;
         registrar = newRegistrar;
@@ -400,3 +434,4 @@ contract TranscriptRegistry {
     {
         return (transcriptCount, verificationCount, isActive);
     }
+}

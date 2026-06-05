@@ -1,176 +1,351 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.20;
 
-import "forge-std/Script.sol";
-import "../src/TranscriptRegistry.sol";
+import "../lib/openzeppelin-contracts-upgradeable/contracts/proxy/utils/Initializable.sol";
 
-contract TestGrantAccess is Script {
-    function run() external {
-        // Load environment variables
-        address studentAddress = vm.envAddress("TEST_STUDENT_ADDRESS");
-        uint256 studentPrivateKey = vm.envUint("TEST_STUDENT_PRIVATE_KEY");
-        address registryAddress = vm.envAddress("REGISTRY_ADDRESS_KNUST");
-        address verifierAddress = vm.envAddress("TEST_VERIFIER_ADDRESS");
-        
-        // Use the Record ID from the previous successful registration
-        bytes32 recordId = 0xf49acb04f4b936b04fcfd6e981a985ed7f2500c9bfc932cc44dcdd2a0ac134e8;
-        
-        console.log("==============================================");
-        console.log("TESTING ACCESS GRANT ON BLOCKCHAIN");
-        console.log("==============================================");
-        console.log("Registry:", registryAddress);
-        console.log("Student:", studentAddress);
-        console.log("Verifier:", verifierAddress);
-        console.log("Record ID:", vm.toString(recordId));
-        console.log("==============================================");
-        
-        TranscriptRegistry registry = TranscriptRegistry(registryAddress);
-        
-        // Start broadcasting transactions as the student
-        vm.startBroadcast(studentPrivateKey);
-        
-        console.log("\nGranting access to verifier...");
-        
-        // Grant access to the verifier for 30 days (2592000 seconds)
-        uint256 duration = 30 days;
-        registry.grantAccess(recordId, verifierAddress, duration);
-        
-        vm.stopBroadcast();
-        
-        console.log("\n==============================================");
-        console.log("ACCESS GRANTED SUCCESSFULLY!");
-        console.log("==============================================");
-        
-        // Verify the access was granted using checkAccess instead of hasAccess
-        bool hasAccess = registry.checkAccess(recordId, verifierAddress);
-        console.log("\nVerification:");
-        console.log("  Verifier has access:", hasAccess);
-        console.log("==============================================");
+/**
+ * @title TranscriptRegistryUpgradeable
+ * @dev Upgradeable version of TranscriptRegistry using OpenZeppelin's Initializable
+ * @notice This contract will be deployed once as implementation, then used via BeaconProxy
+ */
+contract TranscriptRegistryUpgradeable is Initializable {
+    // ============ State Variables ============
+    
+    address public admin;
+    address public registrar;
+    string public universityName;
+    bool public isActive;
+    
+    uint256 public transcriptCount;
+    uint256 public verificationCount;
+    
+    // Transcript status enum
+    enum Status { Active, Revoked, Amended }
+    
+    // Transcript structure
+    struct Transcript {
+        bytes32 studentHash;
+        string metadataCID;
+        bytes32 fileHash;
+        address issuer;
+        uint256 timestamp;
+        Status status;
+        bool exists;
     }
-}
-
-contract TestVerifyTranscript is Script {
-    function run() external {
-        // Load environment variables
-        address verifierAddress = vm.envAddress("TEST_VERIFIER_ADDRESS");
-        uint256 verifierPrivateKey = vm.envUint("TEST_VERIFIER_PRIVATE_KEY");
-        address registryAddress = vm.envAddress("REGISTRY_ADDRESS_KNUST");
+    
+    // Access control structure
+    struct AccessGrant {
+        address verifier;
+        uint256 grantedAt;
+        uint256 expiresAt;
+        bool isActive;
+    }
+    
+    // ============ Mappings ============
+    
+    mapping(bytes32 => Transcript) public transcripts;
+    mapping(bytes32 => mapping(address => AccessGrant)) public accessControl;
+    mapping(bytes32 => bytes32[]) public studentTranscripts;
+    
+    // ============ Events ============
+    
+    event TranscriptRegistered(
+        bytes32 indexed recordId,
+        bytes32 indexed studentHash,
+        string metadataCID,
+        bytes32 fileHash,
+        address indexed issuer,
+        uint256 timestamp
+    );
+    
+    event AccessGranted(
+        bytes32 indexed recordId,
+        address indexed verifier,
+        address indexed student,
+        uint256 expiresAt
+    );
+    
+    event AccessRevoked(
+        bytes32 indexed recordId,
+        address indexed verifier,
+        address indexed student
+    );
+    
+    event TranscriptStatusUpdated(
+        bytes32 indexed recordId,
+        Status oldStatus,
+        Status newStatus,
+        string reason
+    );
+    
+    event TranscriptVerified(
+        bytes32 indexed recordId,
+        address indexed verifier,
+        uint256 timestamp
+    );
+    
+    event RegistrarUpdated(
+        address indexed oldRegistrar,
+        address indexed newRegistrar
+    );
+    
+    // ============ Modifiers ============
+    
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin can call this");
+        _;
+    }
+    
+    modifier onlyRegistrar() {
+        require(msg.sender == registrar, "Only registrar can call this");
+        _;
+    }
+    
+    modifier onlyActiveContract() {
+        require(isActive, "Contract is not active");
+        _;
+    }
+    
+    modifier transcriptExists(bytes32 recordId) {
+        require(transcripts[recordId].exists, "Transcript does not exist");
+        _;
+    }
+    
+    // ============ Constructor (Disabled for Upgradeable) ============
+    
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+    
+    // ============ Initializer (Replaces Constructor) ============
+    
+    /**
+     * @dev Initialize the contract (called once per proxy)
+     * @param _universityName Name of the university
+     * @param _registrar Address of the university registrar
+     * @param _admin Address of the platform admin
+     */
+    function initialize(
+        string memory _universityName,
+        address _registrar,
+        address _admin
+    ) external initializer {
+        require(_registrar != address(0), "Invalid registrar address");
+        require(_admin != address(0), "Invalid admin address");
         
-        // Use the Record ID from the previous successful registration
-        bytes32 recordId = 0xf49acb04f4b936b04fcfd6e981a985ed7f2500c9bfc932cc44dcdd2a0ac134e8;
+        admin = _admin;
+        registrar = _registrar;
+        universityName = _universityName;
+        isActive = true;
+    }
+    
+    // ============ Core Functions ============
+    
+    function registerTranscript(
+        bytes32 studentHash,
+        string memory metadataCID,
+        bytes32 fileHash
+    ) external onlyRegistrar onlyActiveContract returns (bytes32) {
+        require(studentHash != bytes32(0), "Invalid student hash");
+        require(bytes(metadataCID).length > 0, "Invalid metadata CID");
+        require(fileHash != bytes32(0), "Invalid file hash");
         
-        console.log("==============================================");
-        console.log("TESTING TRANSCRIPT VERIFICATION");
-        console.log("==============================================");
-        console.log("Registry:", registryAddress);
-        console.log("Verifier:", verifierAddress);
-        console.log("Record ID:", vm.toString(recordId));
-        console.log("==============================================");
+        bytes32 recordId = keccak256(
+            abi.encodePacked(
+                studentHash,
+                fileHash,
+                block.timestamp,
+                transcriptCount
+            )
+        );
         
-        TranscriptRegistry registry = TranscriptRegistry(registryAddress);
+        require(!transcripts[recordId].exists, "Record ID collision");
         
-        // Check if verifier has access using checkAccess
-        bool hasAccess = registry.checkAccess(recordId, verifierAddress);
-        console.log("\nAccess Check:");
-        console.log("  Verifier has access:", hasAccess);
+        transcripts[recordId] = Transcript({
+            studentHash: studentHash,
+            metadataCID: metadataCID,
+            fileHash: fileHash,
+            issuer: msg.sender,
+            timestamp: block.timestamp,
+            status: Status.Active,
+            exists: true
+        });
         
-        if (!hasAccess) {
-            console.log("\nERROR: Verifier does not have access to this record!");
-            console.log("Please run TestGrantAccess first.");
-            return;
+        studentTranscripts[studentHash].push(recordId);
+        
+        transcriptCount++;
+        
+        emit TranscriptRegistered(
+            recordId,
+            studentHash,
+            metadataCID,
+            fileHash,
+            msg.sender,
+            block.timestamp
+        );
+        
+        return recordId;
+    }
+    
+    function grantAccess(
+        bytes32 recordId,
+        address verifier,
+        uint256 duration
+    ) external transcriptExists(recordId) {
+        require(verifier != address(0), "Invalid verifier address");
+        require(duration > 0 && duration <= 365 days, "Invalid duration");
+        
+        require(
+            transcripts[recordId].studentHash == keccak256(abi.encodePacked(msg.sender)),
+            "Not the transcript owner"
+        );
+        
+        uint256 expiresAt = block.timestamp + duration;
+        
+        accessControl[recordId][verifier] = AccessGrant({
+            verifier: verifier,
+            grantedAt: block.timestamp,
+            expiresAt: expiresAt,
+            isActive: true
+        });
+        
+        emit AccessGranted(recordId, verifier, msg.sender, expiresAt);
+    }
+    
+    function revokeAccess(
+        bytes32 recordId,
+        address verifier
+    ) external transcriptExists(recordId) {
+        require(
+            transcripts[recordId].studentHash == keccak256(abi.encodePacked(msg.sender)),
+            "Not the transcript owner"
+        );
+        
+        require(
+            accessControl[recordId][verifier].isActive,
+            "Access not granted or already revoked"
+        );
+        
+        accessControl[recordId][verifier].isActive = false;
+        
+        emit AccessRevoked(recordId, verifier, msg.sender);
+    }
+    
+    function verifyTranscript(
+        bytes32 recordId,
+        bytes32 fileHash
+    ) external transcriptExists(recordId) returns (bool) {
+        AccessGrant memory access = accessControl[recordId][msg.sender];
+        require(
+            access.isActive && block.timestamp < access.expiresAt,
+            "Access denied or expired"
+        );
+        
+        bool isValid = transcripts[recordId].fileHash == fileHash;
+        
+        if (isValid) {
+            verificationCount++;
+            emit TranscriptVerified(recordId, msg.sender, block.timestamp);
         }
         
-        // Get the transcript to get the fileHash
-        (
+        return isValid;
+    }
+    
+    function getTranscript(bytes32 recordId)
+        external
+        view
+        transcriptExists(recordId)
+        returns (
             bytes32 studentHash,
             string memory metadataCID,
             bytes32 fileHash,
             address issuer,
             uint256 timestamp,
-            
-        ) = registry.getTranscript(recordId);
-        
-        console.log("\nTranscript Details Before Verification:");
-        console.log("  Student Hash:", vm.toString(studentHash));
-        console.log("  Metadata CID:", metadataCID);
-        console.log("  File Hash:", vm.toString(fileHash));
-        console.log("  Issuer:", issuer);
-        console.log("  Timestamp:", timestamp);
-        
-        // Start broadcasting transactions as the verifier
-        vm.startBroadcast(verifierPrivateKey);
-        
-        console.log("\nVerifying transcript...");
-        
-        // Verify the transcript with the fileHash
-        bool isValid = registry.verifyTranscript(recordId, fileHash);
-        
-        vm.stopBroadcast();
-        
-        console.log("\n==============================================");
-        if (isValid) {
-            console.log("TRANSCRIPT VERIFIED SUCCESSFULLY!");
-        } else {
-            console.log("TRANSCRIPT VERIFICATION FAILED!");
-        }
-        console.log("==============================================");
-        
-        // Get the updated stats
-        (uint256 totalTranscripts, uint256 totalVerifications, bool contractActive) = registry.getContractStats();
-        
-        console.log("\nContract Statistics:");
-        console.log("  Total Transcripts:", totalTranscripts);
-        console.log("  Total Verifications:", totalVerifications);
-        console.log("  Contract Active:", contractActive);
-        console.log("==============================================");
+            Status status
+        )
+    {
+        Transcript memory t = transcripts[recordId];
+        return (
+            t.studentHash,
+            t.metadataCID,
+            t.fileHash,
+            t.issuer,
+            t.timestamp,
+            t.status
+        );
     }
-}
-
-contract TestRevokeAccess is Script {
-    function run() external {
-        // Load environment variables
-        address studentAddress = vm.envAddress("TEST_STUDENT_ADDRESS");
-        uint256 studentPrivateKey = vm.envUint("TEST_STUDENT_PRIVATE_KEY");
-        address registryAddress = vm.envAddress("REGISTRY_ADDRESS_KNUST");
-        address verifierAddress = vm.envAddress("TEST_VERIFIER_ADDRESS");
+    
+    function checkAccess(bytes32 recordId, address verifier)
+        external
+        view
+        transcriptExists(recordId)
+        returns (bool)
+    {
+        AccessGrant memory access = accessControl[recordId][verifier];
+        return access.isActive && block.timestamp < access.expiresAt;
+    }
+    
+    function getStudentTranscripts(bytes32 studentHash)
+        external
+        view
+        returns (bytes32[] memory)
+    {
+        return studentTranscripts[studentHash];
+    }
+    
+    // ============ Admin Functions ============
+    
+    function updateTranscriptStatus(
+        bytes32 recordId,
+        Status newStatus,
+        string memory reason
+    ) external onlyRegistrar transcriptExists(recordId) {
+        Status oldStatus = transcripts[recordId].status;
+        require(oldStatus != newStatus, "Status already set");
         
-        // Use the Record ID from the previous successful registration
-        bytes32 recordId = 0xf49acb04f4b936b04fcfd6e981a985ed7f2500c9bfc932cc44dcdd2a0ac134e8;
+        transcripts[recordId].status = newStatus;
         
-        console.log("==============================================");
-        console.log("TESTING ACCESS REVOCATION");
-        console.log("==============================================");
-        console.log("Registry:", registryAddress);
-        console.log("Student:", studentAddress);
-        console.log("Verifier:", verifierAddress);
-        console.log("Record ID:", vm.toString(recordId));
-        console.log("==============================================");
+        emit TranscriptStatusUpdated(recordId, oldStatus, newStatus, reason);
+    }
+    
+    function updateRegistrar(address newRegistrar) external onlyAdmin {
+        require(newRegistrar != address(0), "Invalid address");
+        require(newRegistrar != registrar, "Same as current registrar");
         
-        TranscriptRegistry registry = TranscriptRegistry(registryAddress);
+        address oldRegistrar = registrar;
+        registrar = newRegistrar;
         
-        // Check current access using checkAccess
-        bool hasAccessBefore = registry.checkAccess(recordId, verifierAddress);
-        console.log("\nBefore Revocation:");
-        console.log("  Verifier has access:", hasAccessBefore);
-        
-        // Start broadcasting transactions as the student
-        vm.startBroadcast(studentPrivateKey);
-        
-        console.log("\nRevoking access from verifier...");
-        
-        // Revoke access from the verifier
-        registry.revokeAccess(recordId, verifierAddress);
-        
-        vm.stopBroadcast();
-        
-        console.log("\n==============================================");
-        console.log("ACCESS REVOKED SUCCESSFULLY!");
-        console.log("==============================================");
-        
-        // Verify the access was revoked using checkAccess
-        bool hasAccessAfter = registry.checkAccess(recordId, verifierAddress);
-        console.log("\nAfter Revocation:");
-        console.log("  Verifier has access:", hasAccessAfter);
-        console.log("==============================================");
+        emit RegistrarUpdated(oldRegistrar, newRegistrar);
+    }
+    
+    function deactivateContract() external onlyAdmin {
+        isActive = false;
+    }
+    
+    function activateContract() external onlyAdmin {
+        isActive = true;
+    }
+    
+    // ============ View Functions ============
+    
+    function getContractStats()
+        external
+        view
+        returns (
+            uint256 totalTranscripts,
+            uint256 totalVerifications,
+            bool contractActive
+        )
+    {
+        return (transcriptCount, verificationCount, isActive);
+    }
+    
+    /**
+     * @dev Returns the version of the implementation
+     * @return Version string
+     */
+    function version() external pure returns (string memory) {
+        return "1.0.0";
     }
 }

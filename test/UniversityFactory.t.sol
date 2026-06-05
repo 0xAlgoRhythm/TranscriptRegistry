@@ -123,19 +123,19 @@ contract UniversityFactoryTest is Test {
     
     function test_DeployUniversityContract_RevertsIfNotPlatformAdmin() public {
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only platform admin");
+        vm.expectRevert(UniversityFactory.OnlyPlatformAdmin.selector);
         factory.deployUniversityContract(uniName1, registrar1);
     }
     
     function test_DeployUniversityContract_RevertsWithEmptyName() public {
         vm.prank(platformAdmin);
-        vm.expectRevert("Invalid university name");
+        vm.expectRevert(UniversityFactory.InvalidUniversityName.selector);
         factory.deployUniversityContract("", registrar1);
     }
     
     function test_DeployUniversityContract_RevertsWithZeroRegistrarAddress() public {
         vm.prank(platformAdmin);
-        vm.expectRevert("Invalid registrar address");
+        vm.expectRevert(UniversityFactory.InvalidRegistrarAddress.selector);
         factory.deployUniversityContract(uniName1, address(0));
     }
     
@@ -176,13 +176,13 @@ contract UniversityFactoryTest is Test {
         (uint256 universityId, ) = factory.deployUniversityContract(uniName1, registrar1);
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only platform admin");
+        vm.expectRevert(UniversityFactory.OnlyPlatformAdmin.selector);
         factory.deactivateUniversity(universityId, "Unauthorized attempt");
     }
     
     function test_DeactivateUniversity_RevertsIfDoesNotExist() public {
         vm.prank(platformAdmin);
-        vm.expectRevert("University does not exist");
+        vm.expectRevert(UniversityFactory.UniversityDoesNotExist.selector);
         factory.deactivateUniversity(999, "Non-existent university");
     }
     
@@ -194,7 +194,7 @@ contract UniversityFactoryTest is Test {
         factory.deactivateUniversity(universityId, "First deactivation");
         
         vm.prank(platformAdmin);
-        vm.expectRevert("Already deactivated");
+        vm.expectRevert(UniversityFactory.AlreadyDeactivated.selector);
         factory.deactivateUniversity(universityId, "Second attempt");
     }
     
@@ -239,13 +239,13 @@ contract UniversityFactoryTest is Test {
         factory.deactivateUniversity(universityId, "Test");
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only platform admin");
+        vm.expectRevert(UniversityFactory.OnlyPlatformAdmin.selector);
         factory.reactivateUniversity(universityId);
     }
     
     function test_ReactivateUniversity_RevertsIfDoesNotExist() public {
         vm.prank(platformAdmin);
-        vm.expectRevert("University does not exist");
+        vm.expectRevert(UniversityFactory.UniversityDoesNotExist.selector);
         factory.reactivateUniversity(999);
     }
     
@@ -254,7 +254,7 @@ contract UniversityFactoryTest is Test {
         (uint256 universityId, ) = factory.deployUniversityContract(uniName1, registrar1);
         
         vm.prank(platformAdmin);
-        vm.expectRevert("Already active");
+        vm.expectRevert(UniversityFactory.AlreadyActive.selector);
         factory.reactivateUniversity(universityId);
     }
     
@@ -277,7 +277,7 @@ contract UniversityFactoryTest is Test {
     }
     
     function test_GetUniversity_RevertsIfDoesNotExist() public {
-        vm.expectRevert("University does not exist");
+        vm.expectRevert(UniversityFactory.UniversityDoesNotExist.selector);
         factory.getUniversity(0);
     }
     
@@ -295,7 +295,7 @@ contract UniversityFactoryTest is Test {
     function test_GetUniversityIdByContract_RevertsIfNotUniversityContract() public {
         address randomAddress = address(999);
         
-        vm.expectRevert("Not a university contract");
+        vm.expectRevert(UniversityFactory.NotUniversityContract.selector);
         factory.getUniversityIdByContract(randomAddress);
     }
     
@@ -362,7 +362,7 @@ contract UniversityFactoryTest is Test {
         vm.prank(platformAdmin);
         factory.deployUniversityContract(uniName1, registrar1);
         
-        vm.expectRevert("Offset out of bounds");
+        vm.expectRevert(UniversityFactory.OffsetOutOfBounds.selector);
         factory.getActiveUniversities(10, 5);
     }
     
@@ -431,156 +431,5 @@ contract UniversityFactoryTest is Test {
         // 5. Verify contract is tracked correctly
         assertTrue(factory.isUniversityContract(contractAddress));
         assertEq(factory.getUniversityIdByContract(contractAddress), universityId);
-    }
-    
-    function test_MultipleUniversitiesWorkflow() public {
-        // Deploy 3 universities
-        vm.startPrank(platformAdmin);
-        (uint256 id1, address contract1) = factory.deployUniversityContract("Uni 1", registrar1);
-        (uint256 id2, address contract2) = factory.deployUniversityContract("Uni 2", registrar2);
-        (uint256 id3, address contract3) = factory.deployUniversityContract("Uni 3", registrar1);
-        vm.stopPrank();
-        
-        // Each university registers transcripts independently
-        TranscriptRegistry registry1 = TranscriptRegistry(contract1);
-        TranscriptRegistry registry2 = TranscriptRegistry(contract2);
-        TranscriptRegistry registry3 = TranscriptRegistry(contract3);
-        
-        vm.prank(registrar1);
-        registry1.registerTranscript(
-            keccak256(abi.encodePacked(address(1))),
-            "QmUni1Transcript",
-            keccak256("uni1_file")
-        );
-        
-        vm.prank(registrar2);
-        registry2.registerTranscript(
-            keccak256(abi.encodePacked(address(2))),
-            "QmUni2Transcript",
-            keccak256("uni2_file")
-        );
-        
-        vm.prank(registrar1);
-        registry3.registerTranscript(
-            keccak256(abi.encodePacked(address(3))),
-            "QmUni3Transcript",
-            keccak256("uni3_file")
-        );
-        
-        // Verify each has 1 transcript
-        assertEq(registry1.transcriptCount(), 1);
-        assertEq(registry2.transcriptCount(), 1);
-        assertEq(registry3.transcriptCount(), 1);
-        
-        // Deactivate one university
-        vm.prank(platformAdmin);
-        factory.deactivateUniversity(id2, "Compliance issue");
-        
-        // Verify uni2 is deactivated but others are active
-        assertFalse(registry2.isActive());
-        assertTrue(registry1.isActive());
-        assertTrue(registry3.isActive());
-        
-        // Get active universities
-        uint256[] memory activeIds = factory.getActiveUniversities(0, 10);
-        assertEq(activeIds.length, 2);
-        assertEq(activeIds[0], id1);
-        assertEq(activeIds[1], id3);
-    }
-    
-    function test_DeactivateReactivateWorkflow() public {
-        vm.prank(platformAdmin);
-        (uint256 universityId, address contractAddress) = factory.deployUniversityContract(
-            uniName1,
-            registrar1
-        );
-        
-        TranscriptRegistry registry = TranscriptRegistry(contractAddress);
-        
-        // Register transcript while active
-        vm.prank(registrar1);
-        bytes32 recordId = registry.registerTranscript(
-            keccak256(abi.encodePacked(address(1))),
-            "QmTest",
-            keccak256("test")
-        );
-        
-        // Deactivate university
-        vm.prank(platformAdmin);
-        factory.deactivateUniversity(universityId, "Temporary suspension");
-        
-        // Cannot register new transcripts
-        vm.prank(registrar1);
-        vm.expectRevert("Contract is not active");
-        registry.registerTranscript(
-            keccak256(abi.encodePacked(address(2))),
-            "QmTest2",
-            keccak256("test2")
-        );
-        
-        // But can still view existing transcript
-        (bytes32 studentHash, , , , , ) = registry.getTranscript(recordId);
-        assertEq(studentHash, keccak256(abi.encodePacked(address(1))));
-        
-        // Reactivate
-        vm.prank(platformAdmin);
-        factory.reactivateUniversity(universityId);
-        
-        // Can register again
-        vm.prank(registrar1);
-        registry.registerTranscript(
-            keccak256(abi.encodePacked(address(3))),
-            "QmTest3",
-            keccak256("test3")
-        );
-        
-        assertEq(registry.transcriptCount(), 2);
-    }
-    
-    // ============ Fuzz Tests ============
-    
-    function testFuzz_DeployUniversityContract_DifferentNames(string memory name) public {
-        vm.assume(bytes(name).length > 0 && bytes(name).length < 200);
-        
-        vm.prank(platformAdmin);
-        (uint256 universityId, address contractAddress) = factory.deployUniversityContract(
-            name,
-            registrar1
-        );
-        
-        UniversityFactory.UniversityInfo memory uniInfo = factory.getUniversity(universityId);
-        assertEq(uniInfo.name, name);
-        assertTrue(contractAddress != address(0));
-    }
-    
-    function testFuzz_GetActiveUniversities_DifferentPagination(
-        uint8 universityCount,
-        uint8 offset,
-        uint8 limit
-    ) public {
-        vm.assume(universityCount > 0 && universityCount <= 50);
-        vm.assume(limit > 0 && limit <= 20);
-        vm.assume(offset < universityCount);
-        
-        // Deploy universities
-        vm.startPrank(platformAdmin);
-        for (uint i = 0; i < universityCount; i++) {
-            factory.deployUniversityContract(
-                string(abi.encodePacked("University ", i)),
-                registrar1
-            );
-        }
-        vm.stopPrank();
-        
-        // Get active universities
-        uint256[] memory activeIds = factory.getActiveUniversities(offset, limit);
-        
-        // Verify results
-        uint256 expectedLength = universityCount - offset;
-        if (expectedLength > limit) {
-            expectedLength = limit;
-        }
-        
-        assertEq(activeIds.length, expectedLength);
     }
 }

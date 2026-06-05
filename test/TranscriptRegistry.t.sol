@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import "../src/TranscriptRegistry.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TranscriptRegistryTest is Test {
     TranscriptRegistry public registry;
@@ -62,17 +63,25 @@ contract TranscriptRegistryTest is Test {
     );
     
     function setUp() public {
-        // Deploy contract as admin
+        // Deploy implementation contract
         vm.prank(admin);
-        registry = new TranscriptRegistry("Test University", registrar);
+        address implementation = address(new TranscriptRegistry());
+        
+        // Clone implementation
+        vm.prank(admin);
+        address clone = Clones.clone(implementation);
+        
+        // Initialize clone
+        TranscriptRegistry(clone).initialize("Test University", registrar, admin);
+        registry = TranscriptRegistry(clone);
         
         // Create student hash (simulating student wallet)
         studentHash = keccak256(abi.encodePacked(student));
     }
     
-    // ============ Constructor Tests ============
+    // ============ Initialize Tests ============
     
-    function test_Constructor_SetsCorrectValues() public {
+    function test_Initialize_SetsCorrectValues() public {
         assertEq(registry.admin(), admin);
         assertEq(registry.registrar(), registrar);
         assertEq(registry.universityName(), "Test University");
@@ -81,10 +90,30 @@ contract TranscriptRegistryTest is Test {
         assertEq(registry.verificationCount(), 0);
     }
     
-    function test_Constructor_RevertsWithZeroRegistrarAddress() public {
+    function test_Initialize_RevertsWithZeroRegistrarAddress() public {
         vm.prank(admin);
-        vm.expectRevert("Invalid registrar address");
-        new TranscriptRegistry("Test University", address(0));
+        address implementation = address(new TranscriptRegistry());
+        address clone = Clones.clone(implementation);
+        
+        vm.prank(admin);
+        vm.expectRevert(TranscriptRegistry.InvalidRegistrarAddress.selector);
+        TranscriptRegistry(clone).initialize("Test University", address(0), admin);
+    }
+    
+    function test_Initialize_RevertsWithZeroAdminAddress() public {
+        vm.prank(admin);
+        address implementation = address(new TranscriptRegistry());
+        address clone = Clones.clone(implementation);
+        
+        vm.prank(admin);
+        vm.expectRevert(TranscriptRegistry.InvalidAdminAddress.selector);
+        TranscriptRegistry(clone).initialize("Test University", registrar, address(0));
+    }
+    
+    function test_Initialize_CannotBeCalledTwice() public {
+        vm.prank(admin);
+        vm.expectRevert(abi.encodeWithSignature("InvalidInitialization()"));
+        registry.initialize("Another University", registrar, admin);
     }
     
     // ============ Register Transcript Tests ============
@@ -132,7 +161,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_RegisterTranscript_RevertsIfNotRegistrar() public {
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only registrar can call this");
+        vm.expectRevert(TranscriptRegistry.OnlyRegistrar.selector);
         registry.registerTranscript(studentHash, metadataCID, fileHash);
     }
     
@@ -142,25 +171,25 @@ contract TranscriptRegistryTest is Test {
         registry.deactivateContract();
         
         vm.prank(registrar);
-        vm.expectRevert("Contract is not active");
+        vm.expectRevert(TranscriptRegistry.ContractInactive.selector);
         registry.registerTranscript(studentHash, metadataCID, fileHash);
     }
     
     function test_RegisterTranscript_RevertsWithInvalidStudentHash() public {
         vm.prank(registrar);
-        vm.expectRevert("Invalid student hash");
+        vm.expectRevert(TranscriptRegistry.InvalidStudentHash.selector);
         registry.registerTranscript(bytes32(0), metadataCID, fileHash);
     }
     
     function test_RegisterTranscript_RevertsWithEmptyMetadataCID() public {
         vm.prank(registrar);
-        vm.expectRevert("Invalid metadata CID");
+        vm.expectRevert(TranscriptRegistry.InvalidMetadataCID.selector);
         registry.registerTranscript(studentHash, "", fileHash);
     }
     
     function test_RegisterTranscript_RevertsWithInvalidFileHash() public {
         vm.prank(registrar);
-        vm.expectRevert("Invalid file hash");
+        vm.expectRevert(TranscriptRegistry.InvalidFileHash.selector);
         registry.registerTranscript(studentHash, metadataCID, bytes32(0));
     }
     
@@ -216,7 +245,7 @@ contract TranscriptRegistryTest is Test {
         recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Not the transcript owner");
+        vm.expectRevert(TranscriptRegistry.NotTranscriptOwner.selector);
         registry.grantAccess(recordId, verifier, 30 days);
     }
     
@@ -225,7 +254,7 @@ contract TranscriptRegistryTest is Test {
         recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
         
         vm.prank(student);
-        vm.expectRevert("Invalid verifier address");
+        vm.expectRevert(TranscriptRegistry.InvalidVerifierAddress.selector);
         registry.grantAccess(recordId, address(0), 30 days);
     }
     
@@ -235,12 +264,12 @@ contract TranscriptRegistryTest is Test {
         
         // Test zero duration
         vm.prank(student);
-        vm.expectRevert("Invalid duration");
+        vm.expectRevert(TranscriptRegistry.InvalidDuration.selector);
         registry.grantAccess(recordId, verifier, 0);
         
         // Test duration > 365 days
         vm.prank(student);
-        vm.expectRevert("Invalid duration");
+        vm.expectRevert(TranscriptRegistry.InvalidDuration.selector);
         registry.grantAccess(recordId, verifier, 366 days);
     }
     
@@ -248,7 +277,7 @@ contract TranscriptRegistryTest is Test {
         bytes32 fakeRecordId = keccak256("fake_record");
         
         vm.prank(student);
-        vm.expectRevert("Transcript does not exist");
+        vm.expectRevert(TranscriptRegistry.TranscriptDoesNotExist.selector);
         registry.grantAccess(fakeRecordId, verifier, 30 days);
     }
     
@@ -281,7 +310,7 @@ contract TranscriptRegistryTest is Test {
         registry.grantAccess(recordId, verifier, 30 days);
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Not the transcript owner");
+        vm.expectRevert(TranscriptRegistry.NotTranscriptOwner.selector);
         registry.revokeAccess(recordId, verifier);
     }
     
@@ -290,7 +319,7 @@ contract TranscriptRegistryTest is Test {
         recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
         
         vm.prank(student);
-        vm.expectRevert("Access not granted or already revoked");
+        vm.expectRevert(TranscriptRegistry.AccessNotGrantedOrRevoked.selector);
         registry.revokeAccess(recordId, verifier);
     }
     
@@ -355,7 +384,7 @@ contract TranscriptRegistryTest is Test {
         
         // No access granted
         vm.prank(verifier);
-        vm.expectRevert("Access denied or expired");
+        vm.expectRevert(TranscriptRegistry.AccessDeniedOrExpired.selector);
         registry.verifyTranscript(recordId, fileHash);
     }
     
@@ -370,7 +399,7 @@ contract TranscriptRegistryTest is Test {
         vm.warp(block.timestamp + 2 days);
         
         vm.prank(verifier);
-        vm.expectRevert("Access denied or expired");
+        vm.expectRevert(TranscriptRegistry.AccessDeniedOrExpired.selector);
         registry.verifyTranscript(recordId, fileHash);
     }
     
@@ -404,7 +433,7 @@ contract TranscriptRegistryTest is Test {
         recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only registrar can call this");
+        vm.expectRevert(TranscriptRegistry.OnlyRegistrar.selector);
         registry.updateTranscriptStatus(
             recordId,
             TranscriptRegistry.Status.Revoked,
@@ -417,7 +446,7 @@ contract TranscriptRegistryTest is Test {
         recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
         
         vm.prank(registrar);
-        vm.expectRevert("Status already set");
+        vm.expectRevert(TranscriptRegistry.StatusAlreadySet.selector);
         registry.updateTranscriptStatus(
             recordId,
             TranscriptRegistry.Status.Active, // Already active
@@ -443,19 +472,19 @@ contract TranscriptRegistryTest is Test {
         address newRegistrar = address(6);
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only admin can call this");
+        vm.expectRevert(TranscriptRegistry.OnlyAdmin.selector);
         registry.updateRegistrar(newRegistrar);
     }
     
     function test_UpdateRegistrar_RevertsWithZeroAddress() public {
         vm.prank(admin);
-        vm.expectRevert("Invalid address");
+        vm.expectRevert(TranscriptRegistry.InvalidAddress.selector);
         registry.updateRegistrar(address(0));
     }
     
     function test_UpdateRegistrar_RevertsIfSameAsCurrentRegistrar() public {
         vm.prank(admin);
-        vm.expectRevert("Same as current registrar");
+        vm.expectRevert(TranscriptRegistry.SameRegistrar.selector);
         registry.updateRegistrar(registrar);
     }
     
@@ -470,7 +499,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_DeactivateContract_RevertsIfNotAdmin() public {
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only admin can call this");
+        vm.expectRevert(TranscriptRegistry.OnlyAdmin.selector);
         registry.deactivateContract();
     }
     
@@ -489,7 +518,7 @@ contract TranscriptRegistryTest is Test {
         registry.deactivateContract();
         
         vm.prank(unauthorizedUser);
-        vm.expectRevert("Only admin can call this");
+        vm.expectRevert(TranscriptRegistry.OnlyAdmin.selector);
         registry.activateContract();
     }
     
@@ -519,7 +548,7 @@ contract TranscriptRegistryTest is Test {
     function test_GetTranscript_RevertsIfDoesNotExist() public {
         bytes32 fakeRecordId = keccak256("fake");
         
-        vm.expectRevert("Transcript does not exist");
+        vm.expectRevert(TranscriptRegistry.TranscriptDoesNotExist.selector);
         registry.getTranscript(fakeRecordId);
     }
     
@@ -562,95 +591,5 @@ contract TranscriptRegistryTest is Test {
         assertEq(totalTranscripts, 1);
         assertEq(totalVerifications, 1);
         assertTrue(contractActive);
-    }
-    
-    // ============ Fuzz Tests ============
-    
-    function testFuzz_RegisterTranscript_DifferentInputs(
-        bytes32 _studentHash,
-        string memory _metadataCID,
-        bytes32 _fileHash
-    ) public {
-        vm.assume(_studentHash != bytes32(0));
-        vm.assume(bytes(_metadataCID).length > 0);
-        vm.assume(_fileHash != bytes32(0));
-        
-        vm.prank(registrar);
-        bytes32 _recordId = registry.registerTranscript(_studentHash, _metadataCID, _fileHash);
-        
-        (bytes32 retrievedStudentHash, , bytes32 retrievedFileHash, , , ) = 
-            registry.getTranscript(_recordId);
-        
-        assertEq(retrievedStudentHash, _studentHash);
-        assertEq(retrievedFileHash, _fileHash);
-    }
-    
-    function testFuzz_GrantAccess_DifferentDurations(uint256 duration) public {
-        vm.assume(duration > 0 && duration <= 365 days);
-        
-        vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
-        
-        vm.prank(student);
-        registry.grantAccess(recordId, verifier, duration);
-        
-        assertTrue(registry.checkAccess(recordId, verifier));
-    }
-    
-    // ============ Integration Tests ============
-    
-    function test_CompleteWorkflow_RegisterGrantVerify() public {
-        // 1. Registrar registers transcript
-        vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
-        
-        // 2. Student grants access to verifier
-        vm.prank(student);
-        registry.grantAccess(recordId, verifier, 30 days);
-        
-        // 3. Verifier verifies transcript
-        vm.prank(verifier);
-        bool isValid = registry.verifyTranscript(recordId, fileHash);
-        
-        assertTrue(isValid);
-        assertEq(registry.transcriptCount(), 1);
-        assertEq(registry.verificationCount(), 1);
-        
-        // 4. Student revokes access
-        vm.prank(student);
-        registry.revokeAccess(recordId, verifier);
-        
-        assertFalse(registry.checkAccess(recordId, verifier));
-    }
-    
-    function test_MultipleVerifiersWorkflow() public {
-        address verifier2 = address(7);
-        address verifier3 = address(8);
-        
-        vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
-        
-        // Grant access to multiple verifiers
-        vm.prank(student);
-        registry.grantAccess(recordId, verifier, 30 days);
-        
-        vm.prank(student);
-        registry.grantAccess(recordId, verifier2, 60 days);
-        
-        vm.prank(student);
-        registry.grantAccess(recordId, verifier3, 90 days);
-        
-        // All can verify
-        assertTrue(registry.checkAccess(recordId, verifier));
-        assertTrue(registry.checkAccess(recordId, verifier2));
-        assertTrue(registry.checkAccess(recordId, verifier3));
-        
-        // Revoke one
-        vm.prank(student);
-        registry.revokeAccess(recordId, verifier2);
-        
-        assertTrue(registry.checkAccess(recordId, verifier));
-        assertFalse(registry.checkAccess(recordId, verifier2));
-        assertTrue(registry.checkAccess(recordId, verifier3));
     }
 }

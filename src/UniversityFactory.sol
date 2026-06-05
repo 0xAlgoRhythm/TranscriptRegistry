@@ -2,16 +2,29 @@
 pragma solidity ^0.8.20;
 
 import "./TranscriptRegistry.sol";
+import "../lib/openzeppelin-contracts/contracts/proxy/Clones.sol";
 
 /**
  * @title UniversityFactory
- * @dev Factory contract to deploy and manage university-specific transcript registries
+ * @dev Factory contract to deploy and manage university-specific transcript registries using minimal proxy clones
  * @notice Only platform admin can deploy new university contracts
  */
 contract UniversityFactory {
+    // ============ Custom Errors ============
+    
+    error OnlyPlatformAdmin();
+    error InvalidUniversityName();
+    error InvalidRegistrarAddress();
+    error UniversityDoesNotExist();
+    error AlreadyDeactivated();
+    error AlreadyActive();
+    error NotUniversityContract();
+    error OffsetOutOfBounds();
+
     // ============ State Variables ============
     
     address public immutable platformAdmin;
+    address public immutable implementation;
     uint256 public universityCount;
     
     // University information
@@ -58,7 +71,7 @@ contract UniversityFactory {
     // ============ Modifiers ============
     
     modifier onlyPlatformAdmin() {
-        require(msg.sender == platformAdmin, "Only platform admin");
+        if (msg.sender != platformAdmin) revert OnlyPlatformAdmin();
         _;
     }
     
@@ -66,16 +79,18 @@ contract UniversityFactory {
     
     constructor() {
         platformAdmin = msg.sender;
+        // Deploy single TranscriptRegistry master implementation contract
+        implementation = address(new TranscriptRegistry());
     }
     
     // ============ Core Functions ============
     
     /**
-     * @dev Deploy a new university transcript registry contract
+     * @dev Deploy a new university transcript registry contract using minimal proxy clones
      * @param universityName Name of the university
      * @param registrar Wallet address of the university registrar
      * @return universityId Unique ID for the university
-     * @return contractAddress Address of deployed TranscriptRegistry
+     * @return contractAddress Address of deployed TranscriptRegistry clone
      */
     function deployUniversityContract(
         string memory universityName,
@@ -85,16 +100,16 @@ contract UniversityFactory {
         onlyPlatformAdmin
         returns (uint256 universityId, address contractAddress)
     {
-        require(bytes(universityName).length > 0, "Invalid university name");
-        require(registrar != address(0), "Invalid registrar address");
+        if (bytes(universityName).length == 0) revert InvalidUniversityName();
+        if (registrar == address(0)) revert InvalidRegistrarAddress();
         
-        // Deploy new TranscriptRegistry contract
-        TranscriptRegistry newRegistry = new TranscriptRegistry(
-            universityName,
-            registrar
-        );
+        // Clone the master implementation using Clones.clone
+        address clone = Clones.clone(implementation);
         
-        contractAddress = address(newRegistry);
+        // Initialize the clone, setting admin to the factory contract
+        TranscriptRegistry(clone).initialize(universityName, registrar, address(this));
+        
+        contractAddress = clone;
         universityId = universityCount;
         
         // Store university information
@@ -131,8 +146,8 @@ contract UniversityFactory {
         uint256 universityId,
         string memory reason
     ) external onlyPlatformAdmin {
-        require(universityId < universityCount, "University does not exist");
-        require(universities[universityId].isActive, "Already deactivated");
+        if (universityId >= universityCount) revert UniversityDoesNotExist();
+        if (!universities[universityId].isActive) revert AlreadyDeactivated();
         
         universities[universityId].isActive = false;
         
@@ -157,8 +172,8 @@ contract UniversityFactory {
         external
         onlyPlatformAdmin
     {
-        require(universityId < universityCount, "University does not exist");
-        require(!universities[universityId].isActive, "Already active");
+        if (universityId >= universityCount) revert UniversityDoesNotExist();
+        if (universities[universityId].isActive) revert AlreadyActive();
         
         universities[universityId].isActive = true;
         
@@ -186,7 +201,7 @@ contract UniversityFactory {
         view
         returns (UniversityInfo memory)
     {
-        require(universityId < universityCount, "University does not exist");
+        if (universityId >= universityCount) revert UniversityDoesNotExist();
         return universities[universityId];
     }
     
@@ -200,7 +215,7 @@ contract UniversityFactory {
         view
         returns (uint256)
     {
-        require(isUniversityContract[contractAddress], "Not a university contract");
+        if (!isUniversityContract[contractAddress]) revert NotUniversityContract();
         return contractToUniversityId[contractAddress];
     }
     
@@ -215,7 +230,7 @@ contract UniversityFactory {
         view
         returns (uint256[] memory)
     {
-        require(offset < universityCount, "Offset out of bounds");
+        if (offset >= universityCount) revert OffsetOutOfBounds();
         
         // Calculate actual limit
         uint256 actualLimit = limit;
