@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { truncateAddress } from "@/lib/utils"
 import { useUIStore } from "@/lib/stores/ui-store"
 import { useRoleStore } from "@/lib/stores/role-store"
-import { Menu, PanelLeftClose, PanelLeft, ShieldAlert, Sparkles } from "lucide-react"
+import { Menu, PanelLeftClose, PanelLeft, ShieldAlert, Sparkles, Sun, Moon } from "lucide-react"
 
 export function Topbar() {
   const { login, logout, authenticated, ready } = usePrivy()
   const { address } = useAccount()
-  const { sidebarOpen, toggleSidebar, toggleMobileMenu } = useUIStore()
+  const { sidebarOpen, toggleSidebar, toggleMobileMenu, theme, toggleTheme } = useUIStore()
   const { role } = useRoleStore()
 
   const getRoleLabel = () => {
@@ -68,6 +68,19 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+          title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+        >
+          {theme === "light" ? (
+            <Moon className="h-4.5 w-4.5" />
+          ) : (
+            <Sun className="h-4.5 w-4.5" />
+          )}
+        </button>
+
         {!ready ? (
           <div className="h-8 w-24 animate-pulse rounded-lg bg-muted/40" />
         ) : !authenticated ? (
@@ -97,3 +110,4 @@ export function Topbar() {
     </header>
   )
 }
+

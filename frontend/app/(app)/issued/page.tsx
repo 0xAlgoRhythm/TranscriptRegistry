@@ -16,13 +16,46 @@ import { formatTimestamp, truncateAddress } from "@/lib/utils"
 import { ListFilter, ChevronRight, School, RefreshCw } from "lucide-react"
 import Link from "next/link"
 
-function IssuedRow({ id, registryAddress }: { id: bigint; registryAddress: Address }) {
-  // Compute record hash by index if needed or just use id. In our smart contracts:
-  // transcriptCount returns the total transcripts registered. We get transcripts.
-  // Wait, let's load record details using index or recordId. Let's see: TranscriptRegistry.sol has:
-  // getTranscriptByIndex(uint256 index) or similar? Let's check transcriptRegistryAbi.
-  // Wait! Let's search the transcriptRegistryAbi in abis.ts to check.
-  return null
+function IssuedRow({ t, registryAddress }: { t: any; registryAddress: string }) {
+  const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#"
+  return (
+    <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all font-mono text-xs">
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-foreground">Record: {t.recordId.slice(0, 10)}...{t.recordId.slice(-6)}</span>
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+            t.status === "Active"
+              ? "bg-[oklch(var(--ca-success)/0.15)] text-[oklch(var(--ca-success))] border border-[oklch(var(--ca-success)/0.25)]"
+              : t.status === "Suspended"
+              ? "bg-[oklch(var(--ca-warning)/0.15)] text-[oklch(var(--ca-warning))] border border-[oklch(var(--ca-warning)/0.25)]"
+              : "bg-[oklch(var(--ca-danger)/0.15)] text-[oklch(var(--ca-danger))] border border-[oklch(var(--ca-danger)/0.25)]"
+          }`}>
+            {t.status || "Active"}
+          </span>
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Student Hash: {t.studentHash.slice(0, 12)}... · Date: {new Date(t.issuedAt || t.createdAt).toISOString().split('T')[0]}
+        </p>
+      </div>
+      <div className="flex items-center gap-4">
+        {t.metadataCid && (
+          <a 
+            href={ipfsUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-[10px] font-bold text-[oklch(var(--ca-success))] hover:underline"
+          >
+            IPFS VIEWER
+          </a>
+        )}
+        <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
+          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
+            DETAILS <ChevronRight className="h-3.5 w-3.5" />
+          </a>
+        </Link>
+      </div>
+    </div>
+  )
 }
 
 export default function IssuedPage() {
@@ -137,29 +170,7 @@ export default function IssuedPage() {
                   
                   <div className="space-y-2 pt-4">
                     {transcripts.map((t) => (
-                      <div key={t.recordId} className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all">
-                        <div className="space-y-1">
-                          <span className="font-bold text-foreground">Record ID: {t.recordId.slice(0, 6)}...{t.recordId.slice(-4)}</span>
-                          <p className="text-[10px] text-muted-foreground">Student Hash: {t.studentHash.slice(0, 10)}... · Date: {new Date(t.createdAt).toISOString().split('T')[0]}</p>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          {t.metadataCid && (
-                            <a 
-                              href={`https://ipfs.io/ipfs/${t.metadataCid}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-[10px] font-bold text-green-400 hover:underline"
-                            >
-                              VIEW DOCUMENT
-                            </a>
-                          )}
-                          <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
-                            <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
-                              DETAILS <ChevronRight className="h-3.5 w-3.5" />
-                            </a>
-                          </Link>
-                        </div>
-                      </div>
+                      <IssuedRow key={t.recordId} t={t} registryAddress={registryAddress} />
                     ))}
                   </div>
                 </div>

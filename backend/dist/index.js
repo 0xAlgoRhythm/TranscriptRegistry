@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { db } from "./db/connection.js";
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory } from "./db/schema.js";
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications } from "./db/schema.js";
+import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq, and, sql } from "drizzle-orm";
 import { startIndexer } from "./indexer/sync.js";
 import { serve } from "@hono/node-server";
@@ -20,11 +21,55 @@ app.use("/*", cors({
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
 }));
-// Auth Middleware Stub (can check Privy JWTs)
+const PRIVY_APP_ID = process.env.PRIVY_APP_ID || process.env.NEXT_PUBLIC_PRIVY_APP_ID;
+let jwks = null;
+if (PRIVY_APP_ID && PRIVY_APP_ID !== "your_privy_app_id_here" && !PRIVY_APP_ID.includes("placeholder")) {
+    jwks = createRemoteJWKSet(new URL(`https://auth.privy.io/api/v1/apps/${PRIVY_APP_ID}/.well-known/jwks.json`));
+    console.log(`[AUTH] Privy JWKS initialized for App ID: ${PRIVY_APP_ID}`);
+}
+else {
+    console.warn("⚠️ [AUTH] PRIVY_APP_ID is not configured. Backend verification will bypass signature check for demo/dev mode.");
+}
+// Auth Middleware (verifies Privy JWTs)
 const verifyAuth = async (c, next) => {
     const authHeader = c.req.header("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return c.json({ error: "Unauthorized" }, 401);
+    }
+    const token = authHeader.split(" ")[1];
+    if (jwks) {
+        try {
+            const { payload } = await jwtVerify(token, jwks, {
+                issuer: "privy.io",
+                audience: PRIVY_APP_ID,
+            });
+            c.set("user", payload);
+        }
+        catch (err) {
+            console.error("Privy JWT verify failed:", err);
+            return c.json({ error: "Invalid or expired Privy JWT token" }, 401);
+        }
+    }
+    else {
+        // Development fallback
+        if (!token || token.split(".").length !== 3) {
+            if (token === "demo_token" || token === "credaxis-registrar") {
+                c.set("user", { sub: "did:privy:demo" });
+            }
+            else {
+                return c.json({ error: "Unauthorized: Invalid token format" }, 401);
+            }
+        }
+        else {
+            try {
+                const parts = token.split(".");
+                const payload = JSON.parse(Buffer.from(parts[1], "base64").toString());
+                c.set("user", payload);
+            }
+            catch (e) {
+                c.set("user", { sub: "did:privy:demo" });
+            }
+        }
     }
     await next();
 };
@@ -35,11 +80,12 @@ app.get("/api/stats/platform", async (c) => {
         const totalUnisResult = await db.select({ count: sql `count(*)` }).from(universities);
         const activeUnisResult = await db.select({ count: sql `count(*)` }).from(universities).where(eq(universities.isActive, true));
         const totalTranscriptsResult = await db.select({ count: sql `count(*)` }).from(transcripts);
+        const totalVerificationsResult = await db.select({ count: sql `count(*)` }).from(verifications);
         return c.json({
             totalUniversities: Number(totalUnisResult[0]?.count || 0),
             activeUniversities: Number(activeUnisResult[0]?.count || 0),
             totalTranscripts: Number(totalTranscriptsResult[0]?.count || 0),
-            totalVerifications: 28, // mock stat
+            totalVerifications: Number(totalVerificationsResult[0]?.count || 0),
         });
     }
     catch (err) {
@@ -231,6 +277,21 @@ app.post("/api/ipfs/upload", verifyAuth, async (c) => {
     }
     catch (err) {
         console.error("IPFS upload error:", err);
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Get IPFS upload metadata by CID
+app.get("/api/ipfs/metadata/:cid", async (c) => {
+    try {
+        const cid = c.req.param("cid");
+        const record = await db.query.ipfsUploads.findFirst({
+            where: eq(ipfsUploads.cid, cid)
+        });
+        if (!record)
+            return c.json({ error: "Metadata record not found" }, 404);
+        return c.json(record);
+    }
+    catch (err) {
         return c.json({ error: err.message }, 500);
     }
 });

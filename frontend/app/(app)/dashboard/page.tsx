@@ -417,9 +417,58 @@ export default function DashboardPage() {
   const { data: stats } = usePlatformStats()
   const { data: adminAddress } = usePlatformAdmin()
 
+  // State for live DB stats
+  const [dbStats, setDbStats] = useState<any>(null)
+
+  // State for live logs
+  const [logs, setLogs] = useState<any[]>([])
+  const [logsLoading, setLogsLoading] = useState(false)
+
   const isAdmin = address && adminAddress && address.toLowerCase() === adminAddress.toLowerCase()
   const totalUniversities = stats ? Number(stats[0]) : 0
   const activeCount = stats ? Number(stats[1]) : 0
+
+  useEffect(() => {
+    const fetchDbStats = async () => {
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+        const res = await fetch(`${API_URL}/api/stats/platform`)
+        if (res.ok) {
+          const data = await res.json()
+          setDbStats(data)
+        }
+      } catch (err) {
+        console.error("Failed to load db stats:", err)
+      }
+    }
+
+    const fetchLogs = async () => {
+      try {
+        setLogsLoading(true)
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+        const res = await fetch(`${API_URL}/api/logs`)
+        if (res.ok) {
+          const data = await res.json()
+          setLogs(data)
+        }
+      } catch (e) {
+        console.error("Failed to load logs:", e)
+      } finally {
+        setLogsLoading(false)
+      }
+    }
+
+    fetchDbStats()
+    fetchLogs()
+    
+    // Poll every 10 seconds for real-time vibe
+    const interval = setInterval(() => {
+      fetchDbStats()
+      fetchLogs()
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   const getDashboardTitle = () => {
     switch (role) {
@@ -468,17 +517,17 @@ export default function DashboardPage() {
             />
             <StatCard
               label="Transcripts Issued"
-              value="1,492"
+              value={dbStats ? String(dbStats.totalTranscripts) : "..."}
               icon={<FileText className="h-4.5 w-4.5" />}
               accent="teal"
-              trend="+12% this month"
+              trend="From live database"
             />
             <StatCard
               label="Verifications Done"
-              value="4,821"
+              value={dbStats ? String(dbStats.totalVerifications) : "..."}
               icon={<CheckCircle2 className="h-4.5 w-4.5" />}
               accent="success"
-              trend="99.9% uptime"
+              trend="Verified on-chain"
             />
           </div>
 
@@ -528,7 +577,7 @@ export default function DashboardPage() {
                 {(role === "student" || !role) && (
                   <>
                     <Link href="/transcripts" className="block group">
-                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-teal)/0.1)] hover:bg-card/45 transition-all">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
                             <FileText className="h-5 w-5" />
@@ -593,38 +642,59 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="space-y-4 font-mono">
-                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                      <div className="space-y-1">
-                        <p className="text-foreground font-semibold flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-success))]" />
-                          TRANSCRIPT_REGISTERED
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">MIT Registry Address: 0x82c...12A</p>
+                    {logsLoading && logs.length === 0 ? (
+                      <div className="text-center py-8 text-xs text-muted-foreground animate-pulse">
+                        LOADING NETWORK STREAM...
                       </div>
-                      <span className="text-[10px] text-muted-foreground">2m ago</span>
-                    </div>
+                    ) : logs.length === 0 ? (
+                      <div className="text-center py-8 text-xs text-muted-foreground">
+                        NO RECENT ACTIVITIES DETECTED
+                      </div>
+                    ) : (
+                      logs.slice(0, 5).map((log, index) => {
+                        const timeAgo = (dateStr: string) => {
+                          const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000)
+                          if (seconds < 60) return `${seconds}s ago`
+                          const minutes = Math.floor(seconds / 60)
+                          if (minutes < 60) return `${minutes}m ago`
+                          const hours = Math.floor(minutes / 60)
+                          if (hours < 24) return `${hours}h ago`
+                          return new Date(dateStr).toLocaleDateString()
+                        }
 
-                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                      <div className="space-y-1">
-                        <p className="text-foreground font-semibold flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
-                          ACCESS_GRANTED
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">Student 0x43b...98d to Verifier: 0x931...bde</p>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">15m ago</span>
-                    </div>
+                        const getBulletColor = () => {
+                          switch (log.type) {
+                            case "university_registered": return "bg-[oklch(var(--ca-accent))]"
+                            case "transcript_issued": return "bg-[oklch(var(--ca-success))]"
+                            case "status_changed": return "bg-[oklch(var(--ca-destructive))]"
+                            default: return "bg-muted"
+                          }
+                        }
 
-                    <div className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                      <div className="space-y-1">
-                        <p className="text-foreground font-semibold flex items-center gap-1.5">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[oklch(var(--ca-accent))]" />
-                          UNIVERSITY_DEPLOYED
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">Stanford Registry Contract Created</p>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground">1h ago</span>
-                    </div>
+                        return (
+                          <div key={index} className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
+                            <div className="space-y-1">
+                              <p className="text-foreground font-semibold flex items-center gap-1.5 uppercase text-[9px] tracking-wider">
+                                <span className={cn("h-1.5 w-1.5 rounded-full", getBulletColor())} />
+                                {log.type.replace(/_/g, " ")}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground leading-normal">{log.description}</p>
+                              {log.txHash && (
+                                <a
+                                  href={`https://sepolia.etherscan.io/tx/${log.txHash}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-[9px] text-[oklch(var(--ca-accent))] hover:underline block pt-0.5"
+                                >
+                                  TX: {log.txHash.slice(0, 10)}...{log.txHash.slice(-6)}
+                                </a>
+                              )}
+                            </div>
+                            <span className="text-[9px] text-muted-foreground shrink-0 pl-4">{timeAgo(log.timestamp)}</span>
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
                 </div>
               </GlowCard>

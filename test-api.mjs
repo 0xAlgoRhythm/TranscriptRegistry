@@ -306,6 +306,15 @@ await test("Pinata gateway — pinned CID is accessible via IPFS gateway", async
   return `${res.status} at ${gatewayUrl}`
 })
 
+await test("GET /api/ipfs/metadata/:cid — returns upload metadata from DB", async () => {
+  if (!realCID) throw new Error("No real CID from previous test — skipping")
+  const { res, data } = await apiGet(`/api/ipfs/metadata/${realCID}`)
+  assert(res.ok, `Expected 200, got ${res.status}`)
+  assert(data.cid === realCID, "CID mismatch")
+  assert(data.metadataJson.studentName === "Test Graduate CI", "Metadata name mismatch")
+  return `Successfully fetched metadata for student "${data.metadataJson.studentName}"`
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUMMARY
 // ─────────────────────────────────────────────────────────────────────────────

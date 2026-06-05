@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useUIStore } from "@/lib/stores/ui-store"
-import { useRoleStore } from "@/lib/stores/role-store"
+import { useRoleStore, type UserRole } from "@/lib/stores/role-store"
 import { Logo } from "@/components/ui/logo"
 import { cn } from "@/lib/utils"
 import { 
@@ -37,7 +37,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname()
   const { sidebarOpen } = useUIStore()
-  const { role } = useRoleStore()
+  const { role, isDemoMode, setRole } = useRoleStore()
 
   // Filter items based on active role if set, otherwise show all for simulation
   const filteredNav = NAV_ITEMS.filter(item => {
@@ -82,6 +82,31 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Role Switcher in Demo Mode */}
+      {isDemoMode && (
+        <div className="mx-4 mb-4 p-3 rounded-lg border border-dashed border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.02)] space-y-2">
+          <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider block font-bold">
+            ⚙️ Demo Role Switcher
+          </span>
+          <div className="grid grid-cols-2 gap-1.5 font-mono text-[9px]">
+            {(["student", "registrar", "verifier", "admin"] as UserRole[]).map((r) => (
+              <button
+                key={r}
+                onClick={() => setRole(r)}
+                className={cn(
+                  "py-1 rounded border uppercase text-center transition-all font-semibold",
+                  role === r
+                    ? "bg-[oklch(var(--ca-accent))] text-white border-[oklch(var(--ca-accent))]"
+                    : "border-border/60 hover:bg-muted text-muted-foreground hover:text-foreground bg-card/40"
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="p-4 border-t border-border/40 bg-card/25 space-y-4">
         <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/40 px-3 py-1.5 w-fit">
           <span className="size-1.5 rounded-full bg-[oklch(var(--ca-teal))]" />
@@ -93,3 +118,4 @@ export function Sidebar() {
     </aside>
   )
 }
+

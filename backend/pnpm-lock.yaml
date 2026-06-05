@@ -26,6 +26,9 @@ importers:
       hono:
         specifier: ^4.12.23
         version: 4.12.23
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
       viem:
         specifier: ^2.51.3
         version: 2.51.3(typescript@6.0.3)
@@ -871,6 +874,9 @@ packages:
     peerDependencies:
       ws: '*'
 
+  jose@6.2.3:
+    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
+
   mafmt@7.1.0:
     resolution: {integrity: sha512-vpeo9S+hepT3k2h5iFxzEHvvR0GPBx9uKaErmnRzYNcaKb03DgOArjEMlgG4a9LcuZZ89a3I8xbeto487n26eA==}
 
@@ -1651,6 +1657,8 @@ snapshots:
   isows@1.0.7(ws@8.20.1):
     dependencies:
       ws: 8.20.1
+
+  jose@6.2.3: {}
 
   mafmt@7.1.0:
     dependencies:

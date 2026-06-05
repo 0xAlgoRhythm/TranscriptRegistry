@@ -1,7 +1,7 @@
 import { createPublicClient, http, parseAbiItem } from "viem"
 import { sepolia } from "viem/chains"
 import { db } from "../db/connection.js"
-import { universities, transcripts, transcriptStatusHistory, indexerState } from "../db/schema.js"
+import { universities, transcripts, transcriptStatusHistory, indexerState, verifications } from "../db/schema.js"
 import { eq } from "drizzle-orm"
 import dotenv from "dotenv"
 import path from "path"
@@ -154,6 +154,28 @@ export async function startIndexer() {
               changedAt: new Date(),
               txHash: log.transactionHash,
             })
+          }
+        }
+
+        // 4. Fetch TranscriptVerified events
+        const verifiedLogs = await publicClient.getLogs({
+          address: registryAddresses,
+          event: parseAbiItem("event TranscriptVerified(bytes32 indexed recordId, address indexed verifier, uint256 timestamp)"),
+          fromBlock: currentBlock,
+          toBlock: toBlock,
+        })
+
+        for (const log of verifiedLogs) {
+          const { recordId, verifier, timestamp } = log.args
+          if (recordId && verifier && timestamp) {
+            console.log(`[EVENT] Verified transcript: ${recordId} by verifier ${verifier}`)
+            await db.insert(verifications).values({
+              recordId: recordId,
+              verifier: verifier.toLowerCase(),
+              verifiedAt: new Date(Number(timestamp) * 1000),
+              txHash: log.transactionHash,
+              blockNumber: log.blockNumber,
+            }).onConflictDoNothing()
           }
         }
       }
