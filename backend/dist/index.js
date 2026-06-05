@@ -12,6 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const app = new Hono();
+BigInt.prototype.toJSON = function () {
+    return this.toString();
+};
 app.use("/*", cors({
     origin: "*",
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -160,20 +163,18 @@ app.post("/api/ipfs/upload", verifyAuth, async (c) => {
         if (!pinataJWT && !(pinataApiKey && pinataSecretKey)) {
             return c.json({ error: "Pinata credentials not configured on server" }, 503);
         }
-        // Build the structured metadata JSON to pin
+        // Build the structured metadata JSON — max 10 keyvalues for Pinata
         const metadataPayload = {
             name: `CredAxis Transcript — ${body.studentName || "Student"} @ ${body.universityName || "University"}`,
             keyvalues: {
-                studentAddress: body.studentAddress || "",
+                studentAddr: (body.studentAddress || "").slice(0, 20),
                 studentName: body.studentName || "",
-                studentId: body.studentId || "",
-                universityName: body.universityName || "",
-                registryAddress: body.registryAddress || "",
+                university: body.universityName || "",
+                registry: (body.registryAddress || "").slice(0, 20),
                 gpa: body.gpa || "",
                 major: body.major || "",
-                graduationYear: body.gradYear || "",
-                fileHash: body.fileHash || "",
-                issuedAt: new Date().toISOString(),
+                gradYear: body.gradYear || "",
+                fileHash: (body.fileHash || "").slice(0, 20),
                 platform: "CredAxis",
             },
         };
