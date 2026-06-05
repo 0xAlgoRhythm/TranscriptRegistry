@@ -8,7 +8,7 @@ import { SectionLabel } from "@/components/ui/section-label"
 
 export function CTASection() {
   return (
-    <section className="bg-card/10 border-t border-border/40 py-24 md:py-32">
+    <section className="bg-ca-surface-2 border-t border-border py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 32 }}
@@ -39,7 +39,7 @@ export function CTASection() {
                   asChild
                   size="lg"
                   variant="outline"
-                  className="border-border/60 hover:border-border text-foreground bg-card/25 backdrop-blur-md font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all"
+                  className="border-border hover:border-ca-accent/50 text-foreground bg-card font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all shadow-sm"
                 >
                   <Link href="/verify">VERIFY RECORD</Link>
                 </Button>
