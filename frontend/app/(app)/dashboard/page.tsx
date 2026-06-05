@@ -10,7 +10,7 @@ import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { FileDropZone } from "@/components/ui/file-drop-zone"
-import { truncateAddress } from "@/lib/utils"
+import { truncateAddress, cn } from "@/lib/utils"
 import { 
   Building2, 
   FileText, 

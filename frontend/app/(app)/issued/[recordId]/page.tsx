@@ -38,7 +38,7 @@ export default function IssuedDetailPage() {
   const statusStr = transcript ? TRANSCRIPT_STATUS[status as TranscriptStatus] : "Unknown"
 
   useEffect(() => {
-    if (transcript) {
+    if (transcript && status !== undefined && status !== null) {
       setSelectedStatus(status.toString())
     }
   }, [transcript, status])
