@@ -16,7 +16,7 @@ export function AuthGate({ children }: AuthGateProps) {
   if (!ready) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
       </div>
     )
   }
@@ -36,7 +36,7 @@ export function AuthGate({ children }: AuthGateProps) {
           
           <div className="relative z-10 space-y-6">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.05)] px-3 py-1 text-xs font-mono text-[oklch(var(--ca-accent))] w-fit">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-ca-accent/30 bg-ca-accent/5 px-3 py-1 text-xs font-mono text-ca-accent w-fit">
                 <Network className="h-3.5 w-3.5" /> SECURED BY ETHEREUM
               </div>
               <h2 className="text-4xl font-display font-light leading-[1.15] tracking-tight text-foreground max-w-lg">
@@ -79,7 +79,7 @@ export function AuthGate({ children }: AuthGateProps) {
             <div className="space-y-4">
               <Button
                 onClick={login}
-                className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider py-5 rounded-lg border border-transparent shadow-lg shadow-[oklch(var(--ca-accent)/0.15)] flex items-center justify-center gap-2 group transition-all"
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider py-5 rounded-lg border border-transparent shadow-lg shadow-ca-accent/15 flex items-center justify-center gap-2 group transition-all"
                 size="lg"
               >
                 <Lock className="h-4 w-4 transition-transform group-hover:scale-110" />
@@ -87,7 +87,7 @@ export function AuthGate({ children }: AuthGateProps) {
               </Button>
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] font-mono text-muted-foreground/80">
-                <Sparkles className="h-3 w-3 text-[oklch(var(--ca-accent))]" />
+                <Sparkles className="h-3 w-3 text-ca-accent" />
                 Supports Email, Socials, or Passkeys
               </div>
             </div>

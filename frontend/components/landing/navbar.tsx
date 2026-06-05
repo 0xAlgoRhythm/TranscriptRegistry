@@ -4,6 +4,8 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Logo } from "@/components/ui/logo"
 import { Button } from "@/components/ui/button"
+import { useUIStore } from "@/lib/stores/ui-store"
+import { Sun, Moon } from "lucide-react"
 
 const NAV_LINKS = [
   { label: "How it Works", href: "#how-it-works" },
@@ -12,6 +14,8 @@ const NAV_LINKS = [
 ]
 
 export function Navbar() {
+  const { theme, toggleTheme } = useUIStore()
+
   return (
     <motion.nav
       initial={{ y: -16, opacity: 0 }}
@@ -34,9 +38,24 @@ export function Navbar() {
           ))}
         </div>
 
-        <Button asChild size="sm" className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs px-4">
-          <Link href="/dashboard">LAUNCH DAPP</Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
+          >
+            {theme === "light" ? (
+              <Moon className="h-5 w-5" />
+            ) : (
+              <Sun className="h-5 w-5" />
+            )}
+          </button>
+
+          <Button asChild size="sm" className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-4">
+            <Link href="/dashboard">LAUNCH DAPP</Link>
+          </Button>
+        </div>
       </div>
     </motion.nav>
   )

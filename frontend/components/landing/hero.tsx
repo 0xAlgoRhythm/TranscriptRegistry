@@ -101,7 +101,7 @@ export function Hero() {
       >
         {/* Badge */}
         <motion.div variants={item} className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/25 backdrop-blur-md px-3 py-1.5">
-          <span className="size-1.5 animate-pulse rounded-full bg-[oklch(var(--ca-accent))]" />
+          <span className="size-1.5 animate-pulse rounded-full bg-ca-accent" />
           <span className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground">
             INTRODUCING CREDAXIS V2.0
           </span>
@@ -114,7 +114,7 @@ export function Hero() {
         >
           Academic Transcripts,
           <br />
-          <em className="not-italic font-semibold text-[oklch(var(--ca-accent))]">
+          <em className="not-italic font-semibold text-ca-accent">
             Forged on Blockchain.
           </em>
         </motion.h1>
@@ -133,7 +133,7 @@ export function Hero() {
             <Button
               asChild
               size="lg"
-              className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs px-6 py-5 rounded-lg border border-transparent shadow-lg shadow-[oklch(var(--ca-accent)/0.20)] transition-all duration-200"
+              className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-6 py-5 rounded-lg border border-transparent shadow-lg shadow-ca-accent/20 transition-all duration-200"
             >
               <Link href="/dashboard">LAUNCH APPLICATION</Link>
             </Button>
@@ -143,7 +143,7 @@ export function Hero() {
               asChild
               size="lg"
               variant="outline"
-              className="border-border hover:border-[oklch(var(--ca-accent)/0.5)] text-foreground bg-card font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all duration-200 shadow-sm"
+              className="border-border hover:border-ca-accent/50 text-foreground bg-card font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all duration-200 shadow-sm"
             >
               <Link href="/verify">VERIFY A RECORD</Link>
             </Button>

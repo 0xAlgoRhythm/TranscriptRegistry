@@ -31,8 +31,8 @@ export function TxPanel({
   return (
     <div className={cn(
       "w-full rounded-xl border border-border/80 bg-card/60 backdrop-blur-md p-6 relative overflow-hidden transition-all duration-300",
-      status === "error" && "border-[oklch(var(--ca-destructive)/0.5)] bg-[oklch(var(--ca-destructive)/0.02)]",
-      status === "success" && "border-[oklch(var(--ca-success)/0.5)] bg-[oklch(var(--ca-success)/0.02)]",
+      status === "error" && "border-ca-danger/50 bg-ca-danger/2",
+      status === "success" && "border-ca-success/50 bg-ca-success/2",
       className
     )}>
       {/* Corner Bracket Decorators */}
@@ -44,13 +44,13 @@ export function TxPanel({
       <div className="flex gap-4">
         <div className="flex-shrink-0 mt-0.5">
           {(status === "pending" || status === "preparing" || status === "signing") && (
-            <Loader2 className="h-6 w-6 text-[oklch(var(--ca-accent))] animate-spin" />
+            <Loader2 className="h-6 w-6 text-ca-accent animate-spin" />
           )}
           {status === "success" && (
-            <CheckCircle2 className="h-6 w-6 text-[oklch(var(--ca-success))]" />
+            <CheckCircle2 className="h-6 w-6 text-ca-success" />
           )}
           {status === "error" && (
-            <XCircle className="h-6 w-6 text-[oklch(var(--ca-destructive))]" />
+            <XCircle className="h-6 w-6 text-ca-danger" />
           )}
         </div>
 
@@ -75,8 +75,8 @@ export function TxPanel({
 
           {error && (
             <div className="pt-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[oklch(var(--ca-destructive))]">Error Details</span>
-              <p className="text-xs font-mono text-[oklch(var(--ca-destructive))] bg-[oklch(var(--ca-destructive)/0.05)] border border-[oklch(var(--ca-destructive)/0.15)] rounded p-2.5 mt-1 overflow-x-auto whitespace-pre-wrap max-h-32">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-ca-danger">Error Details</span>
+              <p className="text-xs font-mono text-ca-danger bg-ca-danger/5 border border-ca-danger/15 rounded p-2.5 mt-1 overflow-x-auto whitespace-pre-wrap max-h-32">
                 {error}
               </p>
             </div>

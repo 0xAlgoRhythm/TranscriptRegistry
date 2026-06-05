@@ -42,7 +42,7 @@ export default function SettingsPage() {
           {/* Identity settings */}
           <GlowCard className="p-6 md:p-8 space-y-5" glow>
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+              <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
                 <User className="h-5 w-5" />
               </div>
               <div>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
           {/* Alert settings */}
           <GlowCard className="p-6 md:p-8 space-y-5">
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
+              <div className="p-2 bg-ca-teal/10 rounded-lg text-ca-teal">
                 <Bell className="h-5 w-5" />
               </div>
               <div>
@@ -97,7 +97,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={notifyIssue}
                   onChange={(e) => setNotifyIssue(e.target.checked)}
-                  className="rounded border-border/60 text-[oklch(var(--ca-accent))] focus:ring-0 w-4 h-4 bg-transparent"
+                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
                 />
               </div>
 
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={notifyAccess}
                   onChange={(e) => setNotifyAccess(e.target.checked)}
-                  className="rounded border-border/60 text-[oklch(var(--ca-accent))] focus:ring-0 w-4 h-4 bg-transparent"
+                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
                 />
               </div>
 
@@ -123,7 +123,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   checked={notifyVerify}
                   onChange={(e) => setNotifyVerify(e.target.checked)}
-                  className="rounded border-border/60 text-[oklch(var(--ca-accent))] focus:ring-0 w-4 h-4 bg-transparent"
+                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
                 />
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function SettingsPage() {
         <div className="md:col-span-1 space-y-6">
           <SectionLabel index={2} label="SIMULATOR OPTIONS" />
           <GlowCard className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-[oklch(var(--ca-accent))]">
+            <div className="flex items-center gap-2 text-ca-accent">
               <Shield className="h-5 w-5" />
               <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">
                 Developer Prototyping
@@ -148,7 +148,8 @@ export default function SettingsPage() {
             <div className="pt-4 border-t border-border/40">
               <Button
                 onClick={toggleDemoMode}
-                className="w-full bg-card hover:bg-muted border border-border/60 font-mono text-xs py-3.5"
+                variant="outline"
+                className="w-full font-mono text-xs py-3.5"
               >
                 {isDemoMode ? "DISABLE SIMULATION" : "ENABLE SIMULATION"}
               </Button>

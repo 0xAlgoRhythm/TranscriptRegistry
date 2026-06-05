@@ -19,16 +19,16 @@ import Link from "next/link"
 function IssuedRow({ t, registryAddress }: { t: any; registryAddress: string }) {
   const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#"
   return (
-    <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-[oklch(var(--ca-accent))] transition-all font-mono text-xs">
+    <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-ca-accent transition-all font-mono text-xs">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
           <span className="font-bold text-foreground">Record: {t.recordId.slice(0, 10)}...{t.recordId.slice(-6)}</span>
           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
             t.status === "Active"
-              ? "bg-[oklch(var(--ca-success)/0.15)] text-[oklch(var(--ca-success))] border border-[oklch(var(--ca-success)/0.25)]"
+              ? "bg-ca-success/15 text-ca-success border border-ca-success/25"
               : t.status === "Suspended"
-              ? "bg-[oklch(var(--ca-warning)/0.15)] text-[oklch(var(--ca-warning))] border border-[oklch(var(--ca-warning)/0.25)]"
-              : "bg-[oklch(var(--ca-danger)/0.15)] text-[oklch(var(--ca-danger))] border border-[oklch(var(--ca-danger)/0.25)]"
+              ? "bg-ca-warning/15 text-ca-warning border border-ca-warning/25"
+              : "bg-ca-danger/15 text-ca-danger border border-ca-danger/25"
           }`}>
             {t.status || "Active"}
           </span>
@@ -43,13 +43,13 @@ function IssuedRow({ t, registryAddress }: { t: any; registryAddress: string }) 
             href={ipfsUrl} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-[10px] font-bold text-[oklch(var(--ca-success))] hover:underline"
+            className="text-[10px] font-bold text-ca-success hover:underline"
           >
             IPFS VIEWER
           </a>
         )}
         <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
-          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline">
+          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline">
             DETAILS <ChevronRight className="h-3.5 w-3.5" />
           </a>
         </Link>
@@ -138,7 +138,7 @@ export default function IssuedPage() {
           />
         ) : statsLoading || transcriptsLoading ? (
           <div className="py-12 flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
           </div>
         ) : (
           <GlowCard className="p-4 overflow-hidden">

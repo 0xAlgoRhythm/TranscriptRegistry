@@ -109,13 +109,13 @@ export default function VerifyPage() {
         <div className="flex bg-card/50 p-1 rounded-lg border border-border/40 backdrop-blur-sm self-start">
           <button
             onClick={() => setVerifyMode("single")}
-            className={`px-4 py-2 text-xs font-mono rounded-md transition-colors ${verifyMode === "single" ? "bg-[oklch(var(--ca-accent))] text-white" : "text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-xs font-mono rounded-md transition-colors ${verifyMode === "single" ? "bg-ca-accent text-white" : "text-muted-foreground hover:text-foreground"}`}
           >
             SINGLE RECORD
           </button>
           <button
             onClick={() => setVerifyMode("batch")}
-            className={`px-4 py-2 text-xs font-mono rounded-md transition-colors ${verifyMode === "batch" ? "bg-[oklch(var(--ca-accent))] text-white" : "text-muted-foreground hover:text-foreground"}`}
+            className={`px-4 py-2 text-xs font-mono rounded-md transition-colors ${verifyMode === "batch" ? "bg-ca-accent text-white" : "text-muted-foreground hover:text-foreground"}`}
           >
             BATCH LOOKUP
           </button>
@@ -130,7 +130,7 @@ export default function VerifyPage() {
         <div className="md:col-span-2 space-y-6">
           <GlowCard className="p-6 md:p-8 space-y-5" glow>
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+              <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
                 <Search className="h-5 w-5" />
               </div>
               <div>
@@ -162,7 +162,7 @@ export default function VerifyPage() {
                     setLooked(false)
                   }}
                   placeholder="0x... (32-byte hash)"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none"
                   required
                 />
               </div>
@@ -170,7 +170,7 @@ export default function VerifyPage() {
               <Button
                 type="submit"
                 disabled={transcriptLoading}
-                className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
               >
                 <Search className="h-4 w-4" /> LOOKUP RECORD ID
               </Button>
@@ -181,7 +181,7 @@ export default function VerifyPage() {
           {looked && transcript && hasAccess && (
             <GlowCard className="p-6 md:p-8 space-y-5 animate-fade-in">
               <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-                <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
+                <div className="p-2 bg-ca-teal/10 rounded-lg text-ca-teal">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
                 <div>
@@ -199,7 +199,7 @@ export default function VerifyPage() {
                 />
 
                 {isCalculating && (
-                  <p className="text-xs font-mono text-[oklch(var(--ca-accent))] animate-pulse">
+                  <p className="text-xs font-mono text-ca-accent animate-pulse">
                     Calculating file cryptographic signature...
                   </p>
                 )}
@@ -214,7 +214,7 @@ export default function VerifyPage() {
                 <Button
                   onClick={handleVerify}
                   disabled={isPending || isConfirming || !calculatedFileHash}
-                  className="w-full bg-[oklch(var(--ca-success))] text-white hover:opacity-90 font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
+                  className="w-full bg-ca-success text-white hover:opacity-90 font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle2 className="h-4 w-4" /> EXECUTE ON-CHAIN VERIFICATION
                 </Button>
@@ -246,11 +246,11 @@ export default function VerifyPage() {
                 </p>
               ) : transcriptLoading ? (
                 <div className="flex justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
                 </div>
               ) : !transcript ? (
                 <div className="space-y-2 text-center text-xs">
-                  <AlertTriangle className="h-8 w-8 text-[oklch(var(--ca-destructive))] mx-auto animate-bounce" />
+                  <AlertTriangle className="h-8 w-8 text-ca-danger mx-auto animate-bounce" />
                   <p className="font-bold text-foreground">NOT FOUND</p>
                   <p className="text-muted-foreground text-[10px]">No record with the specified ID exists in this registry.</p>
                 </div>
@@ -275,12 +275,12 @@ export default function VerifyPage() {
 
                   <div className="pt-4 border-t border-border/40">
                     {hasAccess ? (
-                      <div className="p-2.5 bg-[oklch(var(--ca-success)/0.05)] border border-[oklch(var(--ca-success)/0.3)] rounded text-[11px] text-[oklch(var(--ca-success))] flex gap-1.5">
+                      <div className="p-2.5 bg-ca-success/5 border border-ca-success/30 rounded text-[11px] text-ca-success flex gap-1.5">
                         <ShieldCheck className="h-4 w-4 shrink-0" />
                         <span>Verification permission is ACTIVE for your wallet.</span>
                       </div>
                     ) : (
-                      <div className="p-2.5 bg-[oklch(var(--ca-destructive)/0.05)] border border-[oklch(var(--ca-destructive)/0.3)] rounded text-[11px] text-[oklch(var(--ca-destructive))] flex gap-1.5">
+                      <div className="p-2.5 bg-ca-danger/5 border border-ca-danger/30 rounded text-[11px] text-ca-danger flex gap-1.5">
                         <AlertTriangle className="h-4 w-4 shrink-0" />
                         <span>Permission DENIED. Request access from the student.</span>
                       </div>
@@ -301,7 +301,7 @@ export default function VerifyPage() {
       ) : (
         <GlowCard className="p-6 md:p-8 space-y-6 animate-fade-in" glow>
           <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-            <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+            <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -313,7 +313,7 @@ export default function VerifyPage() {
           </div>
           <div className="space-y-4">
             <textarea
-              className="w-full h-48 rounded-lg border border-border/60 bg-background py-3 px-4 text-xs font-mono focus:border-[oklch(var(--ca-accent))] focus:outline-none resize-none"
+              className="w-full h-48 rounded-lg border border-border/60 bg-background py-3 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none resize-none"
               placeholder="0xabc123... (one ID per line)"
               value={batchInput}
               onChange={e => setBatchInput(e.target.value)}
@@ -321,7 +321,7 @@ export default function VerifyPage() {
             <Button
               onClick={handleBatchVerify}
               disabled={isBatchVerifying || !batchInput.trim()}
-              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
+              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
             >
               {isBatchVerifying ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />

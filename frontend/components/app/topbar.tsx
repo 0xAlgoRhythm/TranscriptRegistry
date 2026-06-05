@@ -26,10 +26,10 @@ export function Topbar() {
 
   const getRoleColor = () => {
     switch (role) {
-      case "admin": return "border-[oklch(var(--ca-destructive)/0.3)] bg-[oklch(var(--ca-destructive)/0.05)] text-[oklch(var(--ca-destructive))]"
-      case "registrar": return "border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.05)] text-[oklch(var(--ca-accent))]"
-      case "student": return "border-[oklch(var(--ca-teal)/0.3)] bg-[oklch(var(--ca-teal)/0.05)] text-[oklch(var(--ca-teal))]"
-      case "verifier": return "border-[oklch(var(--ca-success)/0.3)] bg-[oklch(var(--ca-success)/0.05)] text-[oklch(var(--ca-success))]"
+      case "admin": return "border-ca-danger/30 bg-ca-danger/5 text-ca-danger"
+      case "registrar": return "border-ca-accent/30 bg-ca-accent/5 text-ca-accent"
+      case "student": return "border-ca-teal/30 bg-ca-teal/5 text-ca-teal"
+      case "verifier": return "border-ca-success/30 bg-ca-success/5 text-ca-success"
       default: return "border-border/60 bg-muted/40 text-muted-foreground"
     }
   }
@@ -87,7 +87,7 @@ export function Topbar() {
           <Button
             onClick={login}
             size="sm"
-            className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs px-4"
+            className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-4"
           >
             CONNECT WALLET
           </Button>

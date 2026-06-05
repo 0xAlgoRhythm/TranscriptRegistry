@@ -33,8 +33,8 @@ export function AddressInput({
             <span className={cn(
               "text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-1 transition-all duration-300",
               isValid 
-                ? "bg-[oklch(var(--ca-success)/0.1)] text-[oklch(var(--ca-success))]" 
-                : "bg-[oklch(var(--ca-destructive)/0.1)] text-[oklch(var(--ca-destructive))]"
+                ? "bg-ca-success/10 text-ca-success" 
+                : "bg-ca-danger/10 text-ca-danger"
             )}>
               {isValid ? (
                 <>
@@ -53,9 +53,9 @@ export function AddressInput({
         className={cn(
           "relative flex items-center rounded-lg border bg-card transition-all duration-300 shadow-sm",
           focused 
-            ? "border-[oklch(var(--ca-accent))] ring-1 ring-[oklch(var(--ca-accent))]" 
+            ? "border-ca-accent ring-1 ring-ca-accent" 
             : error 
-              ? "border-[oklch(var(--ca-destructive))]" 
+              ? "border-ca-danger" 
               : "border-border/60 hover:border-border"
         )}
       >
@@ -64,11 +64,11 @@ export function AddressInput({
           className={cn(
             "absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r transition-all duration-300",
             focused 
-              ? "bg-[oklch(var(--ca-accent))]" 
+              ? "bg-ca-accent" 
               : isValid 
-                ? "bg-[oklch(var(--ca-success))]" 
+                ? "bg-ca-success" 
                 : error 
-                  ? "bg-[oklch(var(--ca-destructive))]" 
+                  ? "bg-ca-danger" 
                   : "bg-muted/40"
           )}
         />
@@ -86,12 +86,12 @@ export function AddressInput({
 
         <div className="absolute right-3 flex items-center justify-center pointer-events-none">
           {isValid ? (
-            <Sparkles className="h-4 w-4 text-[oklch(var(--ca-accent))] animate-pulse" />
+            <Sparkles className="h-4 w-4 text-ca-accent animate-pulse" />
           ) : null}
         </div>
       </div>
       {error && (
-        <p className="text-xs font-mono text-[oklch(var(--ca-destructive))] mt-1 pl-1">
+        <p className="text-xs font-mono text-ca-danger mt-1 pl-1">
           {error}
         </p>
       )}

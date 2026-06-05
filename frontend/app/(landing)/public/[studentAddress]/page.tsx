@@ -39,7 +39,7 @@ export default function PublicProfilePage() {
       <div className="flex-1 w-full max-w-5xl mx-auto px-6 py-24 md:py-32">
         <div className="mb-12 space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-            <Lock className="h-3.5 w-3.5 text-[oklch(var(--ca-accent))]" />
+            <Lock className="h-3.5 w-3.5 text-ca-accent" />
             Public Blockchain Portfolio
           </div>
           <h1 className="text-4xl font-display font-light md:text-5xl">
@@ -54,7 +54,7 @@ export default function PublicProfilePage() {
         {loading ? (
           <div className="flex h-48 items-center justify-center rounded-xl border border-border/50 bg-card/20 backdrop-blur-md">
             <div className="flex flex-col items-center gap-3">
-              <div className="size-6 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+              <div className="size-6 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
               <p className="font-mono text-xs text-muted-foreground">Fetching records from blockchain index...</p>
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function PublicProfilePage() {
             {transcripts.map((t, index) => (
               <GlowCard key={index} className="flex flex-col gap-6 p-6">
                 <div className="flex items-start justify-between">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[oklch(var(--ca-accent)/0.15)] text-[oklch(var(--ca-accent))]">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-ca-accent/15 text-ca-accent">
                     <FileText className="h-6 w-6" />
                   </div>
                   <StatusBadge status={t.status} />
@@ -108,7 +108,7 @@ export default function PublicProfilePage() {
                       href={`https://ipfs.io/ipfs/${t.metadataCid}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-medium text-[oklch(var(--ca-accent))] hover:underline"
+                      className="flex items-center gap-1.5 text-xs font-medium text-ca-accent hover:underline"
                     >
                       View Document <ExternalLink className="h-3 w-3" />
                     </a>

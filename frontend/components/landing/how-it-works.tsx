@@ -7,7 +7,7 @@ import { SectionLabel } from "@/components/ui/section-label"
 const HOW_IT_WORKS = [
   {
     role: "Universities",
-    accent: "oklch(var(--ca-accent))",
+    accent: "var(--ca-accent)",
     steps: [
       "Deploy your institution's isolated registry",
       "Upload transcript files to IPFS",
@@ -16,7 +16,7 @@ const HOW_IT_WORKS = [
   },
   {
     role: "Students",
-    accent: "oklch(var(--ca-teal))",
+    accent: "var(--ca-teal)",
     steps: [
       "Receive your on-chain transcript",
       "Grant time-limited access to verifiers",
@@ -25,7 +25,7 @@ const HOW_IT_WORKS = [
   },
   {
     role: "Verifiers",
-    accent: "oklch(var(--ca-success))",
+    accent: "var(--ca-success)",
     steps: [
       "Request access from the student",
       "Query the smart contract on-chain",
@@ -36,7 +36,7 @@ const HOW_IT_WORKS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="bg-card/10 border-y border-border/40 py-24 md:py-32">
+    <section id="how-it-works" className="bg-ca-surface-2 border-y border-border py-24 md:py-32">
       <div className="mx-auto flex flex-col max-w-6xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

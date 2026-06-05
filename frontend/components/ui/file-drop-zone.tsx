@@ -82,9 +82,9 @@ export function FileDropZone({
         className={cn(
           "relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 min-h-[200px] bg-card/25 backdrop-blur-sm",
           isDragActive 
-            ? "border-[oklch(var(--ca-accent))] bg-[oklch(var(--ca-accent)/0.02)] scale-[1.01]" 
+            ? "border-ca-accent bg-ca-accent/2 scale-[1.01]" 
             : selectedFile 
-              ? "border-[oklch(var(--ca-success)/0.4)] bg-[oklch(var(--ca-success)/0.01)]" 
+              ? "border-ca-success/40 bg-ca-success/1" 
               : "border-border/60 hover:border-border/100 hover:bg-card/45"
         )}
       >
@@ -97,8 +97,8 @@ export function FileDropZone({
 
         {selectedFile ? (
           <div className="flex flex-col items-center space-y-3 animate-fade-in">
-            <div className="p-3 bg-[oklch(var(--ca-success)/0.15)] rounded-xl border border-[oklch(var(--ca-success)/0.3)]">
-              <FileText className="h-8 w-8 text-[oklch(var(--ca-success))]" />
+            <div className="p-3 bg-ca-success/15 rounded-xl border border-ca-success/30">
+              <FileText className="h-8 w-8 text-ca-success" />
             </div>
             <div>
               <p className="text-sm font-mono font-semibold max-w-[280px] truncate text-foreground">
@@ -110,7 +110,7 @@ export function FileDropZone({
             </div>
             <button
               onClick={handleRemove}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-mono tracking-wider text-muted-foreground hover:text-[oklch(var(--ca-destructive))] border border-border/40 hover:border-[oklch(var(--ca-destructive)/0.4)] px-2.5 py-1 rounded transition-all"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-mono tracking-wider text-muted-foreground hover:text-ca-danger border border-border/40 hover:border-ca-danger/40 px-2.5 py-1 rounded transition-all"
             >
               <X className="h-3 w-3" /> REMOVE FILE
             </button>
@@ -133,7 +133,7 @@ export function FileDropZone({
       </div>
 
       {error && (
-        <p className="text-xs font-mono text-[oklch(var(--ca-destructive))] mt-2 pl-1 text-center">
+        <p className="text-xs font-mono text-ca-danger mt-2 pl-1 text-center">
           {error}
         </p>
       )}

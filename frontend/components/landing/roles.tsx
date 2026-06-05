@@ -11,19 +11,19 @@ const ROLES_DATA = [
     title: "Students",
     description: "Take absolute ownership of your academic records. Keep your credentials safe in your own wallet, grant temporary verification tokens to potential employers, and easily revoke access when no longer required.",
     icon: GraduationCap,
-    accent: "oklch(var(--ca-teal))",
+    accent: "var(--ca-teal)",
   },
   {
     title: "Universities",
     description: "Modernize credential distribution. Lower operations overhead by deploying isolated registries on Ethereum, issuing transcripts in seconds, and completely eliminating verification email backlogs.",
     icon: Landmark,
-    accent: "oklch(var(--ca-accent))",
+    accent: "var(--ca-accent)",
   },
   {
     title: "Verifiers",
     description: "Instantly check qualifications with complete cryptographic certainty. Skip institutional delays and administrative waitlists, verify record hashes in real time, and query verified on-chain proof.",
     icon: ShieldCheck,
-    accent: "oklch(var(--ca-success))",
+    accent: "var(--ca-success)",
   },
 ]
 

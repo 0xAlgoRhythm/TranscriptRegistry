@@ -80,7 +80,7 @@ function ActivityLogs() {
             LOADING EVENT INDEXER LOGS...
           </div>
         ) : error ? (
-          <div className="text-center py-8 font-mono text-xs text-[oklch(var(--ca-destructive))]">
+          <div className="text-center py-8 font-mono text-xs text-ca-danger">
             {error}
           </div>
         ) : logs.length === 0 ? (
@@ -90,9 +90,9 @@ function ActivityLogs() {
         ) : (
           <div className="space-y-4 font-mono text-xs max-h-[400px] overflow-y-auto pr-2">
             {logs.map((log, index) => {
-              let dotColor = "bg-[oklch(var(--ca-accent))]"
-              if (log.type === "university_registered") dotColor = "bg-[oklch(var(--ca-success))]"
-              if (log.type === "status_changed") dotColor = "bg-[oklch(var(--ca-destructive))]"
+              let dotColor = "bg-ca-accent"
+              if (log.type === "university_registered") dotColor = "bg-ca-success"
+              if (log.type === "status_changed") dotColor = "bg-ca-danger"
 
               return (
                 <div key={index} className="flex items-start justify-between border-b border-border/20 pb-3 last:border-0 last:pb-0">
@@ -149,7 +149,7 @@ function UniversityRow({ id }: { id: bigint }) {
             size="sm"
             onClick={() => deactivate.deactivate(id, "Administrative Suspension")}
             disabled={deactivate.isPending || deactivate.isConfirming}
-            className="bg-[oklch(var(--ca-destructive)/0.15)] text-[oklch(var(--ca-destructive))] hover:bg-[oklch(var(--ca-destructive)/0.25)] border border-[oklch(var(--ca-destructive)/0.3)] font-mono text-[10px] py-1 h-7"
+            className="bg-ca-danger/15 text-ca-danger hover:bg-ca-danger/25 border border-ca-danger/30 font-mono text-[10px] py-1 h-7"
           >
             <Pause className="h-3 w-3 mr-1" /> SUSPEND
           </Button>
@@ -158,7 +158,7 @@ function UniversityRow({ id }: { id: bigint }) {
             size="sm"
             onClick={() => reactivate.reactivate(id)}
             disabled={reactivate.isPending || reactivate.isConfirming}
-            className="bg-[oklch(var(--ca-success)/0.15)] text-[oklch(var(--ca-success))] hover:bg-[oklch(var(--ca-success)/0.25)] border border-[oklch(var(--ca-success)/0.3)] font-mono text-[10px] py-1 h-7"
+            className="bg-ca-success/15 text-ca-success hover:bg-ca-success/25 border border-ca-success/30 font-mono text-[10px] py-1 h-7"
           >
             <Play className="h-3 w-3 mr-1" /> REACTIVATE
           </Button>
@@ -233,7 +233,7 @@ function DeployUniversityForm() {
             placeholder="e.g. Massachusetts Institute of Technology"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+            className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
             required
           />
         </div>
@@ -248,7 +248,7 @@ function DeployUniversityForm() {
         <Button
           type="submit"
           disabled={isPending || isConfirming}
-          className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5"
+          className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5"
         >
           <Plus className="h-5 w-5" /> DEPLOY REGISTRY CONTRACT
         </Button>
@@ -275,7 +275,7 @@ export default function AdminPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center animate-fade-in">
         <GlowCard className="p-8 max-w-md text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-destructive)/0.15)] flex items-center justify-center text-[oklch(var(--ca-destructive))]">
+          <div className="mx-auto w-12 h-12 rounded-full bg-ca-danger/15 flex items-center justify-center text-ca-danger">
             <AlertTriangle className="h-6 w-6" />
           </div>
           <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-foreground">

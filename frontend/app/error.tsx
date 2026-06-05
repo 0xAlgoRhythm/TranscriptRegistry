@@ -20,14 +20,14 @@ export default function Error({
       {/* Decorative backdrop */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(239,68,68,0.1),transparent_35%)]" />
       
-      <div className="w-full max-w-md text-center space-y-6 bg-card/25 backdrop-blur-md p-8 rounded-2xl border border-[oklch(var(--ca-destructive)/0.25)] relative">
+      <div className="w-full max-w-md text-center space-y-6 bg-card/25 backdrop-blur-md p-8 rounded-2xl border border-ca-danger/25 relative">
         {/* Corner Decorators */}
-        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-[oklch(var(--ca-destructive)/0.4)]" />
-        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-[oklch(var(--ca-destructive)/0.4)]" />
-        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-[oklch(var(--ca-destructive)/0.4)]" />
-        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-[oklch(var(--ca-destructive)/0.4)]" />
+        <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-ca-danger/40" />
+        <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-ca-danger/40" />
+        <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-ca-danger/40" />
+        <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-ca-danger/40" />
 
-        <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-destructive)/0.15)] flex items-center justify-center text-[oklch(var(--ca-destructive))]">
+        <div className="mx-auto w-12 h-12 rounded-full bg-ca-danger/15 flex items-center justify-center text-ca-danger">
           <AlertOctagon className="h-6 w-6" />
         </div>
 
@@ -49,7 +49,7 @@ export default function Error({
         <div className="pt-2">
           <Button
             onClick={() => reset()}
-            className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
+            className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
           >
             <RotateCcw className="h-3.5 w-3.5" /> RESTART INSTANCE
           </Button>

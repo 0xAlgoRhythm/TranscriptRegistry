@@ -43,7 +43,7 @@ export function HashDisplay({ hash, label, explorerUrl, className, chars = 6 }: 
           title="Copy to clipboard"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-[oklch(var(--ca-success))]" />
+            <Check className="h-3.5 w-3.5 text-ca-success" />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}

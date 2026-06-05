@@ -34,7 +34,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
     return (
       <div className="flex min-h-[70vh] items-center justify-center p-6 animate-fade-in">
         <GlowCard className="p-8 max-w-md text-center space-y-6" glow>
-          <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-destructive)/0.15)] flex items-center justify-center text-[oklch(var(--ca-destructive))]">
+          <div className="mx-auto w-12 h-12 rounded-full bg-ca-danger/15 flex items-center justify-center text-ca-danger">
             <ShieldAlert className="h-6 w-6" />
           </div>
 
@@ -57,7 +57,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
             </Button>
             <Button
               onClick={() => router.push("/dashboard")}
-              className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs flex items-center gap-1.5"
+              className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs flex items-center gap-1.5"
             >
               <Home className="h-3.5 w-3.5" /> DASHBOARD
             </Button>

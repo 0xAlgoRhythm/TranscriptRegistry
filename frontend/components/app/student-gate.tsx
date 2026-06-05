@@ -149,7 +149,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
           <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest animate-pulse">Resolving Profile...</p>
         </div>
       </div>
@@ -222,7 +222,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
             )}
 
             {error && (
-              <div className="p-3 bg-[oklch(var(--ca-destructive)/0.08)] border border-[oklch(var(--ca-destructive)/0.2)] rounded text-[11px] font-mono text-[oklch(var(--ca-destructive))] flex items-center gap-2">
+              <div className="p-3 bg-ca-danger/8 border border-ca-danger/20 rounded text-[11px] font-mono text-ca-danger flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -240,7 +240,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
               <Button
                 type="submit"
                 disabled={submitting}
-                className="w-2/3 bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs flex items-center justify-center gap-1.5"
+                className="w-2/3 bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs flex items-center justify-center gap-1.5"
               >
                 {submitting ? (
                   <>
@@ -264,7 +264,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-[75vh] items-center justify-center p-6 animate-fade-in">
         <GlowCard className="p-8 max-w-md text-center space-y-6" glow>
-          <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-accent)/0.15)] flex items-center justify-center text-[oklch(var(--ca-accent))] animate-pulse">
+          <div className="mx-auto w-12 h-12 rounded-full bg-ca-accent/15 flex items-center justify-center text-ca-accent animate-pulse">
             <Clock className="h-6 w-6" />
           </div>
 
@@ -303,7 +303,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
             <Button
               onClick={handleRefresh}
               disabled={checking}
-              className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs flex items-center gap-1.5"
+              className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs flex items-center gap-1.5"
             >
               {checking ? (
                 <>
@@ -326,12 +326,12 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-[75vh] items-center justify-center p-6 animate-fade-in">
         <GlowCard className="p-8 max-w-md text-center space-y-6" glow>
-          <div className="mx-auto w-12 h-12 rounded-full bg-[oklch(var(--ca-destructive)/0.15)] flex items-center justify-center text-[oklch(var(--ca-destructive))]">
+          <div className="mx-auto w-12 h-12 rounded-full bg-ca-danger/15 flex items-center justify-center text-ca-danger">
             <ShieldAlert className="h-6 w-6" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-[oklch(var(--ca-destructive))]">
+            <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-ca-danger">
               Application Rejected
             </h2>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -349,7 +349,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
             </Button>
             <Button
               onClick={handleResetApplication}
-              className="bg-[oklch(var(--ca-destructive))] text-white hover:bg-[oklch(var(--ca-destructive))/0.8] font-mono text-xs flex items-center gap-1.5"
+              className="bg-ca-danger text-white hover:bg-[var(--ca-destructive)/0.8] font-mono text-xs flex items-center gap-1.5"
             >
               <RefreshCw className="h-3.5 w-3.5" /> RE-SUBMIT REQUEST
             </Button>

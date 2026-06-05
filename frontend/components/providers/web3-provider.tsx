@@ -4,7 +4,8 @@ import { PrivyProvider } from "@privy-io/react-auth"
 import { WagmiProvider, createConfig, http } from "wagmi"
 import { sepolia } from "viem/chains"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import type { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
+import { useUIStore } from "@/lib/stores/ui-store"
 
 const sepoliaRpc = process.env.NEXT_PUBLIC_SEPOLIA_RPC_URL
 
@@ -30,6 +31,28 @@ interface Web3ProviderProps {
 
 export function Web3Provider({ children }: Web3ProviderProps) {
   const appId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
+  const { theme, setTheme } = useUIStore()
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme") as "light" | "dark" | null
+    if (storedTheme) {
+      setTheme(storedTheme)
+    } else {
+      setTheme("light")
+    }
+  }, [setTheme])
+
+  useEffect(() => {
+    const root = window.document.documentElement
+    if (theme === "dark") {
+      root.classList.add("dark")
+      root.classList.remove("light")
+    } else {
+      root.classList.add("light")
+      root.classList.remove("dark")
+    }
+    localStorage.setItem("theme", theme)
+  }, [theme])
 
   if (!appId) {
     // Dev mode: no Privy, just Wagmi + TanStack Query
@@ -46,7 +69,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
       config={{
         loginMethods: ["email", "wallet", "google"],
         appearance: {
-          theme: "dark",
+          theme: theme,
           accentColor: "#7c6bf0", // --ca-accent electric indigo
           logo: "/icon.svg",
         },

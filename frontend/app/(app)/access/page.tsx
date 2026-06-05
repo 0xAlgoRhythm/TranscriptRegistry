@@ -112,7 +112,7 @@ export default function AccessHubPage() {
           onClick={() => setActiveTab("check")}
           className={`px-6 py-3 border-b-2 font-bold uppercase transition-all ${
             activeTab === "check"
-              ? "border-[oklch(var(--ca-accent))] text-[oklch(var(--ca-accent))]"
+              ? "border-ca-accent text-ca-accent"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -122,7 +122,7 @@ export default function AccessHubPage() {
           onClick={() => setActiveTab("grant")}
           className={`px-6 py-3 border-b-2 font-bold uppercase transition-all ${
             activeTab === "grant"
-              ? "border-[oklch(var(--ca-accent))] text-[oklch(var(--ca-accent))]"
+              ? "border-ca-accent text-ca-accent"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -132,7 +132,7 @@ export default function AccessHubPage() {
           onClick={() => setActiveTab("revoke")}
           className={`px-6 py-3 border-b-2 font-bold uppercase transition-all ${
             activeTab === "revoke"
-              ? "border-[oklch(var(--ca-accent))] text-[oklch(var(--ca-accent))]"
+              ? "border-ca-accent text-ca-accent"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -147,7 +147,7 @@ export default function AccessHubPage() {
           <div className="md:col-span-2 space-y-6">
             <GlowCard className="p-6 md:p-8 space-y-5" glow>
               <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-                <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+                <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
                   <Key className="h-5 w-5" />
                 </div>
                 <div>
@@ -173,7 +173,7 @@ export default function AccessHubPage() {
                     value={recordId}
                     onChange={(e) => setRecordId(e.target.value)}
                     placeholder="0x... (32-byte Record Hash)"
-                    className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                    className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none"
                   />
                 </div>
 
@@ -203,7 +203,7 @@ export default function AccessHubPage() {
                   </p>
                 ) : checkLoading ? (
                   <div className="flex justify-center py-6">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -245,7 +245,7 @@ export default function AccessHubPage() {
       {activeTab === "grant" && (
         <GlowCard className="p-6 md:p-8 space-y-6 max-w-2xl mx-auto animate-fade-in" glow>
           <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-            <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
+            <div className="p-2 bg-ca-success/10 rounded-lg text-ca-success">
               <UserCheck className="h-5 w-5" />
             </div>
             <div>
@@ -273,7 +273,7 @@ export default function AccessHubPage() {
                 onChange={(e) => setGrantRecordId(e.target.value)}
                 placeholder="0x... (32-byte Record Hash)"
                 required
-                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none"
               />
             </div>
 
@@ -290,7 +290,7 @@ export default function AccessHubPage() {
               <select
                 value={grantDuration}
                 onChange={(e) => setGrantDuration(e.target.value)}
-                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-[oklch(var(--ca-accent))] focus:outline-none text-foreground"
+                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none text-foreground"
               >
                 <option value="604800">7 Days</option>
                 <option value="2592000">30 Days</option>
@@ -302,7 +302,7 @@ export default function AccessHubPage() {
             <Button
               type="submit"
               disabled={grantPending || grantConfirming || !isGrantFormValid}
-              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2"
+              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2"
             >
               {grantPending
                 ? "CONFIRM IN WALLET..."
@@ -324,7 +324,7 @@ export default function AccessHubPage() {
       {activeTab === "revoke" && (
         <GlowCard className="p-6 md:p-8 space-y-6 max-w-2xl mx-auto animate-fade-in" glow>
           <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-            <div className="p-2 bg-[oklch(var(--ca-danger)/0.1)] rounded-lg text-[oklch(var(--ca-danger))]">
+            <div className="p-2 bg-ca-danger/10 rounded-lg text-ca-danger">
               <UserX className="h-5 w-5" />
             </div>
             <div>
@@ -352,7 +352,7 @@ export default function AccessHubPage() {
                 onChange={(e) => setRevokeRecordId(e.target.value)}
                 placeholder="0x... (32-byte Record Hash)"
                 required
-                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none"
               />
             </div>
 
@@ -367,7 +367,7 @@ export default function AccessHubPage() {
             <Button
               type="submit"
               disabled={revokePending || revokeConfirming || !isRevokeFormValid}
-              className="w-full bg-[oklch(var(--ca-danger))] hover:bg-red-600 text-white font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2"
+              className="w-full bg-ca-danger hover:bg-red-600 text-white font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2"
             >
               {revokePending
                 ? "CONFIRM IN WALLET..."

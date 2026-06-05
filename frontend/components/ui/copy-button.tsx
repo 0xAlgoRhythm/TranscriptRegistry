@@ -35,8 +35,8 @@ export function CopyButton({ value, label, className }: CopyButtonProps) {
     >
       {copied ? (
         <>
-          <Check className="h-3 w-3 text-[oklch(var(--ca-success))]" />
-          <span className="text-[oklch(var(--ca-success))]">{label ? `${label} COPIED` : "COPIED"}</span>
+          <Check className="h-3 w-3 text-ca-success" />
+          <span className="text-ca-success">{label ? `${label} COPIED` : "COPIED"}</span>
         </>
       ) : (
         <>

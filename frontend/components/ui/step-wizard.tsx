@@ -30,8 +30,8 @@ export function StepWizard({ steps, currentStep, className }: StepWizardProps) {
                 <div 
                   className={cn(
                     "h-8 w-8 rounded-full border flex items-center justify-center font-mono text-xs transition-all duration-300 relative",
-                    isCompleted && "bg-[oklch(var(--ca-success)/0.15)] border-[oklch(var(--ca-success))] text-[oklch(var(--ca-success))]",
-                    isActive && "bg-[oklch(var(--ca-accent)/0.15)] border-[oklch(var(--ca-accent))] text-[oklch(var(--ca-accent))] ring-2 ring-[oklch(var(--ca-accent)/0.2)]",
+                    isCompleted && "bg-ca-success/15 border-ca-success text-ca-success",
+                    isActive && "bg-ca-accent/15 border-ca-accent text-ca-accent ring-2 ring-ca-accent/20",
                     isPending && "bg-muted/30 border-border/60 text-muted-foreground/60"
                   )}
                 >
@@ -45,7 +45,7 @@ export function StepWizard({ steps, currentStep, className }: StepWizardProps) {
                 <div className="hidden md:block text-left">
                   <p className={cn(
                     "text-xs font-mono font-semibold uppercase tracking-wider",
-                    isActive ? "text-[oklch(var(--ca-accent))]" : isCompleted ? "text-foreground/80" : "text-muted-foreground/50"
+                    isActive ? "text-ca-accent" : isCompleted ? "text-foreground/80" : "text-muted-foreground/50"
                   )}>
                     {step.title}
                   </p>
@@ -61,7 +61,7 @@ export function StepWizard({ steps, currentStep, className }: StepWizardProps) {
               {idx < steps.length - 1 && (
                 <div className="hidden md:block flex-grow mx-4 h-[1px] bg-border/40 relative">
                   <div 
-                    className="absolute top-0 left-0 bottom-0 bg-[oklch(var(--ca-accent))] transition-all duration-500"
+                    className="absolute top-0 left-0 bottom-0 bg-ca-accent transition-all duration-500"
                     style={{ width: isCompleted ? "100%" : isActive ? "50%" : "0%" }}
                   />
                 </div>

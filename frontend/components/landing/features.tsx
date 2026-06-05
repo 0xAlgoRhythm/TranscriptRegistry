@@ -67,7 +67,7 @@ export function Features() {
             >
               <GlowCard className="p-6 h-full flex flex-col justify-between" glow>
                 <div>
-                  <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-[oklch(var(--ca-accent)/0.1)] text-[oklch(var(--ca-accent))] border border-[oklch(var(--ca-accent)/0.2)]">
+                  <div className="mb-4 flex size-10 items-center justify-center rounded-lg bg-ca-accent/10 text-ca-accent border border-ca-accent/20">
                     <Icon className="h-5 w-5" />
                   </div>
                   <h3 className="mb-2 font-mono font-bold uppercase text-foreground">{title}</h3>

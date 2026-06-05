@@ -22,31 +22,31 @@ const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color:
   university_registered: {
     label: "University Registered",
     icon: <School className="h-5 w-5" />,
-    color: "oklch(var(--ca-teal))",
+    color: "var(--ca-teal)",
     filterKey: "university",
   },
   transcript_issued: {
     label: "Transcript Issued",
     icon: <Activity className="h-5 w-5 animate-pulse" />,
-    color: "oklch(var(--ca-accent))",
+    color: "var(--ca-accent)",
     filterKey: "issue",
   },
   status_changed: {
     label: "Status Updated",
     icon: <AlertTriangle className="h-5 w-5" />,
-    color: "oklch(var(--ca-warning))",
+    color: "var(--ca-warning)",
     filterKey: "status",
   },
   access_granted: {
     label: "Access Authorized",
     icon: <UserCheck className="h-5 w-5" />,
-    color: "oklch(var(--ca-success))",
+    color: "var(--ca-success)",
     filterKey: "grant",
   },
   access_revoked: {
     label: "Access Revoked",
     icon: <ShieldCheck className="h-5 w-5" />,
-    color: "oklch(var(--ca-destructive))",
+    color: "var(--ca-destructive)",
     filterKey: "revoke",
   },
 }
@@ -154,7 +154,7 @@ export default function ActivityFeedPage() {
           <span className="text-border">·</span>
           <span>Last updated: {lastRefresh.toLocaleTimeString()}</span>
           <span className="text-border">·</span>
-          <span className="text-[oklch(var(--ca-success))]">● Auto-refresh every 30s</span>
+          <span className="text-ca-success">● Auto-refresh every 30s</span>
         </div>
       )}
 
@@ -166,7 +166,7 @@ export default function ActivityFeedPage() {
             onClick={() => setFilter(f.key)}
             className={`px-3 py-1.5 rounded text-xs font-mono font-semibold uppercase tracking-wider transition-all border ${
               filter === f.key
-                ? "bg-[oklch(var(--ca-accent)/0.08)] text-[oklch(var(--ca-accent))] border-[oklch(var(--ca-accent)/0.25)]"
+                ? "bg-ca-accent/8 text-ca-accent border-ca-accent/25"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -179,14 +179,14 @@ export default function ActivityFeedPage() {
       {loading ? (
         <div className="flex h-48 items-center justify-center rounded-xl border border-border/40 bg-card/20">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
             <p className="font-mono text-xs text-muted-foreground">Fetching blockchain activity...</p>
           </div>
         </div>
       ) : error ? (
         <GlowCard className="p-8 text-center space-y-3">
-          <AlertTriangle className="h-8 w-8 text-[oklch(var(--ca-destructive))] mx-auto" />
-          <p className="font-mono text-xs text-[oklch(var(--ca-destructive))]">{error}</p>
+          <AlertTriangle className="h-8 w-8 text-ca-danger mx-auto" />
+          <p className="font-mono text-xs text-ca-danger">{error}</p>
           <button
             onClick={fetchLogs}
             className="text-xs font-mono text-muted-foreground hover:text-foreground underline"
@@ -211,7 +211,7 @@ export default function ActivityFeedPage() {
             const cfg = TYPE_CONFIG[event.type] || {
               label: event.type,
               icon: <Activity className="h-5 w-5" />,
-              color: "oklch(var(--ca-accent))",
+              color: "var(--ca-accent)",
               filterKey: "all",
             }
 
@@ -270,7 +270,7 @@ export default function ActivityFeedPage() {
                           href={`https://base-sepolia.blockscout.com/tx/${event.txHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] font-bold text-[oklch(var(--ca-accent))] hover:underline"
+                          className="text-[10px] font-bold text-ca-accent hover:underline"
                         >
                           VIEW ON EXPLORER →
                         </a>

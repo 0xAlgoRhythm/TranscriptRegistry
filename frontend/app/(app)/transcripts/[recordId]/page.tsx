@@ -36,7 +36,7 @@ export default function TranscriptDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
       </div>
     )
   }
@@ -44,10 +44,10 @@ export default function TranscriptDetailPage() {
   if (!transcript) {
     return (
       <div className="mx-auto max-w-2xl text-center space-y-4 py-12 animate-fade-in">
-        <ShieldAlert className="h-12 w-12 text-[oklch(var(--ca-destructive))] mx-auto" />
+        <ShieldAlert className="h-12 w-12 text-ca-danger mx-auto" />
         <h2 className="text-xl font-mono font-bold uppercase tracking-wider">Record Not Found</h2>
         <p className="text-xs text-muted-foreground">The specified transcript record does not exist on this registry contract.</p>
-        <Button onClick={() => router.back()} className="font-mono text-xs bg-muted">BACK</Button>
+        <Button onClick={() => router.back()} variant="secondary" className="font-mono text-xs">BACK</Button>
       </div>
     )
   }
@@ -96,7 +96,7 @@ export default function TranscriptDetailPage() {
         <div className="md:col-span-2 space-y-6">
           <GlowCard className="p-6 md:p-8 space-y-6" glow>
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2.5 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+              <div className="p-2.5 bg-ca-accent/10 rounded-lg text-ca-accent">
                 <FileText className="h-6 w-6" />
               </div>
               <div>
@@ -153,14 +153,14 @@ export default function TranscriptDetailPage() {
           <GlowCard className="p-5 bg-card/25">
             <div className="space-y-4 text-xs">
               <div className="flex gap-2">
-                <ShieldCheck className="h-5 w-5 text-[oklch(var(--ca-success))] shrink-0" />
+                <ShieldCheck className="h-5 w-5 text-ca-success shrink-0" />
                 <p className="text-muted-foreground leading-relaxed">
                   This transcript has been signed on-chain using the registrar's private key. Modification of the PDF file will alter the calculated SHA-256 fingerprint, resulting in validation failure.
                 </p>
               </div>
 
               <div className="flex gap-2">
-                <Lock className="h-5 w-5 text-[oklch(var(--ca-accent))] shrink-0" />
+                <Lock className="h-5 w-5 text-ca-accent shrink-0" />
                 <p className="text-muted-foreground leading-relaxed">
                   Only the student identity (keccak256 hashed address) and authorized verifiers can access the underlying records or verify validity.
                 </p>
@@ -199,7 +199,7 @@ export default function TranscriptDetailPage() {
                 <select
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 >
                   <option value="">Select Duration</option>
                   {DURATION_OPTIONS.map((opt) => (
@@ -213,7 +213,7 @@ export default function TranscriptDetailPage() {
               <Button
                 onClick={handleGrant}
                 disabled={grantAccess.isPending || grantAccess.isConfirming}
-                className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-3.5 flex items-center justify-center gap-1.5"
               >
                 <UserCheck className="h-4 w-4" /> AUTHORIZE DELEGATE
               </Button>
@@ -249,7 +249,7 @@ export default function TranscriptDetailPage() {
               <Button
                 onClick={handleRevoke}
                 disabled={revokeAccess.isPending || revokeAccess.isConfirming}
-                className="w-full bg-[oklch(var(--ca-destructive)/0.15)] text-[oklch(var(--ca-destructive))] hover:bg-[oklch(var(--ca-destructive)/0.25)] border border-[oklch(var(--ca-destructive)/0.3)] font-mono text-xs py-3.5 flex items-center justify-center gap-1.5"
+                className="w-full bg-ca-danger/15 text-ca-danger hover:bg-ca-danger/25 border border-ca-danger/30 font-mono text-xs py-3.5 flex items-center justify-center gap-1.5"
               >
                 <ShieldAlert className="h-4 w-4" /> REVOKE ACCESS IMMEDIATELY
               </Button>

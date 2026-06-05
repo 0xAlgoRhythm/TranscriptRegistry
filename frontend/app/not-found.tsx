@@ -32,7 +32,7 @@ export default function NotFound() {
         <div className="pt-2">
           <Link href="/" passHref legacyBehavior>
             <Button
-              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
+              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
             >
               <Home className="h-3.5 w-3.5" /> RETURN TO INTERFACE
             </Button>

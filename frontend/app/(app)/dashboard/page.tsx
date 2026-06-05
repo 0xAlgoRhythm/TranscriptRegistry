@@ -212,7 +212,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           onClick={() => setActiveTab("requests")}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "requests"
-              ? "border-[oklch(var(--ca-accent))] text-foreground"
+              ? "border-ca-accent text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -222,7 +222,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           onClick={() => setActiveTab("bulk")}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "bulk"
-              ? "border-[oklch(var(--ca-accent))] text-foreground"
+              ? "border-ca-accent text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -252,7 +252,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
               LOADING STUDENT PROFILES...
             </div>
           ) : error ? (
-            <div className="text-center py-8 font-mono text-xs text-[oklch(var(--ca-destructive))]">
+            <div className="text-center py-8 font-mono text-xs text-ca-danger">
               {error}
             </div>
           ) : students.length === 0 ? (
@@ -371,12 +371,12 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                 value={csvText}
                 onChange={(e) => setCsvText(e.target.value)}
                 disabled={!!csvFile}
-                className="w-full rounded-lg border border-border/60 bg-background py-2.5 px-4 text-xs font-mono focus:border-[oklch(var(--ca-accent))] focus:outline-none disabled:opacity-50"
+                className="w-full rounded-lg border border-border/60 bg-background py-2.5 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none disabled:opacity-50"
               />
             </div>
 
             {bulkError && (
-              <div className="p-3 bg-[oklch(var(--ca-destructive)/0.08)] border border-[oklch(var(--ca-destructive)/0.2)] rounded text-[11px] font-mono text-[oklch(var(--ca-destructive))] flex items-center gap-2">
+              <div className="p-3 bg-ca-danger/8 border border-ca-danger/20 rounded text-[11px] font-mono text-ca-danger flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>{bulkError}</span>
               </div>
@@ -392,7 +392,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
             <Button
               type="submit"
               disabled={bulkLoading}
-              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs py-4 flex items-center justify-center gap-1.5"
+              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-4 flex items-center justify-center gap-1.5"
             >
               {bulkLoading ? (
                 <>
@@ -540,13 +540,13 @@ export default function DashboardPage() {
               <div className="space-y-3">
                 {role === "admin" && (
                   <Link href="/admin" className="block group">
-                    <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                    <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[oklch(var(--ca-destructive)/0.1)] rounded-lg text-[oklch(var(--ca-destructive))]">
+                        <div className="p-2 bg-ca-danger/10 rounded-lg text-ca-danger">
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
                             Deploy University
                           </h4>
                           <p className="text-[10px] text-muted-foreground">Register new institutions on-chain</p>
@@ -558,13 +558,13 @@ export default function DashboardPage() {
 
                 {((role as string) === "registrar" || !role) && (
                   <Link href="/issue" className="block group">
-                    <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                    <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+                        <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
                           <PlusCircle className="h-5 w-5" />
                         </div>
                         <div>
-                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
                             Issue Credentials
                           </h4>
                           <p className="text-[10px] text-muted-foreground">Register transcript record for a student</p>
@@ -577,13 +577,13 @@ export default function DashboardPage() {
                 {(role === "student" || !role) && (
                   <>
                     <Link href="/transcripts" className="block group">
-                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-teal)/0.1)] hover:bg-card/45 transition-all">
+                      <GlowCard className="p-4 hover:border-ca-teal/10 hover:bg-card/45 transition-all">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[oklch(var(--ca-teal)/0.1)] rounded-lg text-[oklch(var(--ca-teal))]">
+                          <div className="p-2 bg-ca-teal/10 rounded-lg text-ca-teal">
                             <FileText className="h-5 w-5" />
                           </div>
                           <div>
-                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
                               My Transcripts
                             </h4>
                             <p className="text-[10px] text-muted-foreground">View your academic records on-chain</p>
@@ -593,13 +593,13 @@ export default function DashboardPage() {
                     </Link>
 
                     <Link href="/access" className="block group">
-                      <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                      <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
+                          <div className="p-2 bg-ca-success/10 rounded-lg text-ca-success">
                             <Lock className="h-5 w-5" />
                           </div>
                           <div>
-                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
                               Access Delegation
                             </h4>
                             <p className="text-[10px] text-muted-foreground">Grant & revoke verifier permissions</p>
@@ -611,13 +611,13 @@ export default function DashboardPage() {
                 )}
 
                 <Link href="/verify" className="block group">
-                  <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
+                  <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-[oklch(var(--ca-success)/0.1)] rounded-lg text-[oklch(var(--ca-success))]">
+                      <div className="p-2 bg-ca-success/10 rounded-lg text-ca-success">
                         <UserCheck className="h-5 w-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-[oklch(var(--ca-accent))] transition-colors">
+                        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
                           On-Chain Verification
                         </h4>
                         <p className="text-[10px] text-muted-foreground">Verify transcript cryptographic hashes</p>
@@ -664,9 +664,9 @@ export default function DashboardPage() {
 
                         const getBulletColor = () => {
                           switch (log.type) {
-                            case "university_registered": return "bg-[oklch(var(--ca-accent))]"
-                            case "transcript_issued": return "bg-[oklch(var(--ca-success))]"
-                            case "status_changed": return "bg-[oklch(var(--ca-destructive))]"
+                            case "university_registered": return "bg-ca-accent"
+                            case "transcript_issued": return "bg-ca-success"
+                            case "status_changed": return "bg-ca-danger"
                             default: return "bg-muted"
                           }
                         }
@@ -684,7 +684,7 @@ export default function DashboardPage() {
                                   href={`https://sepolia.etherscan.io/tx/${log.txHash}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-[9px] text-[oklch(var(--ca-accent))] hover:underline block pt-0.5"
+                                  className="text-[9px] text-ca-accent hover:underline block pt-0.5"
                                 >
                                   TX: {log.txHash.slice(0, 10)}...{log.txHash.slice(-6)}
                                 </a>

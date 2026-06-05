@@ -16,17 +16,17 @@ export function StatusBadge({ status, label, className }: StatusBadgeProps) {
   let dotClass = "bg-muted-foreground"
 
   if (normStatus === "success" || normStatus === "active" || normStatus === "verified") {
-    variantClass = "bg-[oklch(var(--ca-success)/0.08)] text-[oklch(var(--ca-success))] border-[oklch(var(--ca-success)/0.3)]"
-    dotClass = "bg-[oklch(var(--ca-success))]"
+    variantClass = "bg-ca-success/8 text-ca-success border-ca-success/30"
+    dotClass = "bg-ca-success"
   } else if (normStatus === "error" || normStatus === "revoked" || normStatus === "deactivated") {
-    variantClass = "bg-[oklch(var(--ca-destructive)/0.08)] text-[oklch(var(--ca-destructive))] border-[oklch(var(--ca-destructive)/0.3)]"
-    dotClass = "bg-[oklch(var(--ca-destructive))]"
+    variantClass = "bg-ca-danger/8 text-ca-danger border-ca-danger/30"
+    dotClass = "bg-ca-danger"
   } else if (normStatus === "warning" || normStatus === "pending") {
-    variantClass = "bg-[oklch(var(--ca-warning)/0.08)] text-[oklch(var(--ca-warning))] border-[oklch(var(--ca-warning)/0.3)]"
-    dotClass = "bg-[oklch(var(--ca-warning))]"
+    variantClass = "bg-ca-warning/8 text-ca-warning border-ca-warning/30"
+    dotClass = "bg-ca-warning"
   } else if (normStatus === "info" || normStatus === "primary") {
-    variantClass = "bg-[oklch(var(--ca-accent)/0.08)] text-[oklch(var(--ca-accent))] border-[oklch(var(--ca-accent)/0.3)]"
-    dotClass = "bg-[oklch(var(--ca-accent))]"
+    variantClass = "bg-ca-accent/8 text-ca-accent border-ca-accent/30"
+    dotClass = "bg-ca-accent"
   }
 
   return (

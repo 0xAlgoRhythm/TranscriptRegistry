@@ -237,10 +237,10 @@ export default function IssuePage() {
               {studentStatus !== "idle" && (
                 <div className={`md:col-span-2 p-3 rounded font-mono text-xs border ${
                   studentStatus === "approved"
-                    ? "bg-[oklch(var(--ca-success)/0.08)] text-[oklch(var(--ca-success))] border-[oklch(var(--ca-success)/0.2)]"
+                    ? "bg-ca-success/8 text-ca-success border-ca-success/20"
                     : studentStatus === "checking"
                     ? "bg-muted/40 text-muted-foreground border-border/40 animate-pulse"
-                    : "bg-[oklch(var(--ca-destructive)/0.08)] text-[oklch(var(--ca-destructive))] border-[oklch(var(--ca-destructive)/0.2)]"
+                    : "bg-ca-danger/8 text-ca-danger border-ca-danger/20"
                 }`}>
                   {studentStatusMsg}
                 </div>
@@ -253,7 +253,7 @@ export default function IssuePage() {
                   onChange={(e) => setStudentName(e.target.value)}
                   placeholder="e.g. John Doe"
                   readOnly={studentStatus === "approved"}
-                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none ${
+                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none ${
                     studentStatus === "approved" ? "opacity-75 cursor-not-allowed" : ""
                   }`}
                 />
@@ -266,7 +266,7 @@ export default function IssuePage() {
                   onChange={(e) => setStudentId(e.target.value)}
                   placeholder="e.g. student@university.edu"
                   readOnly={studentStatus === "approved"}
-                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none ${
+                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none ${
                     studentStatus === "approved" ? "opacity-75 cursor-not-allowed" : ""
                   }`}
                 />
@@ -288,14 +288,14 @@ export default function IssuePage() {
             </div>
             <FileDropZone onFileSelect={setSelectedFile} selectedFile={selectedFile} />
             {isCalculating && (
-              <div className="flex items-center gap-2 text-xs font-mono text-[oklch(var(--ca-accent))] animate-pulse">
+              <div className="flex items-center gap-2 text-xs font-mono text-ca-accent animate-pulse">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Computing SHA-256 fingerprint...
               </div>
             )}
             {calculatedFileHash && !isCalculating && (
-              <div className="rounded-lg border border-[oklch(var(--ca-success)/0.3)] bg-[oklch(var(--ca-success)/0.05)] p-4 font-mono text-xs space-y-2">
-                <div className="flex items-center gap-2 text-[oklch(var(--ca-success))] font-bold uppercase">
+              <div className="rounded-lg border border-ca-success/30 bg-ca-success/5 p-4 font-mono text-xs space-y-2">
+                <div className="flex items-center gap-2 text-ca-success font-bold uppercase">
                   <CheckCircle2 className="h-4 w-4" /> File Hash Computed
                 </div>
                 <HashDisplay hash={calculatedFileHash} chars={14} />
@@ -325,7 +325,7 @@ export default function IssuePage() {
                   value={gpa}
                   onChange={(e) => { setGpa(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
                   placeholder="e.g. 3.85"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 />
               </div>
               <div className="space-y-1.5 md:col-span-2">
@@ -335,7 +335,7 @@ export default function IssuePage() {
                   value={major}
                   onChange={(e) => { setMajor(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
                   placeholder="e.g. B.S. Computer Science"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 />
               </div>
               <div className="space-y-1.5">
@@ -345,7 +345,7 @@ export default function IssuePage() {
                   value={gradYear}
                   onChange={(e) => { setGradYear(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
                   placeholder="e.g. 2026"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 />
               </div>
             </div>
@@ -353,9 +353,9 @@ export default function IssuePage() {
             {/* IPFS Upload Panel */}
             <div className={`rounded-lg border p-5 space-y-4 font-mono text-xs transition-all ${
               ipfsStatus === "success"
-                ? "border-[oklch(var(--ca-success)/0.4)] bg-[oklch(var(--ca-success)/0.04)]"
+                ? "border-ca-success/40 bg-ca-success/4"
                 : ipfsStatus === "error"
-                ? "border-[oklch(var(--ca-destructive)/0.4)] bg-[oklch(var(--ca-destructive)/0.04)]"
+                ? "border-ca-danger/40 bg-ca-danger/4"
                 : "border-border/40 bg-muted/10"
             }`}>
               <div className="flex items-center justify-between">
@@ -364,17 +364,17 @@ export default function IssuePage() {
                   IPFS Metadata Pin
                 </div>
                 {ipfsStatus === "uploading" && (
-                  <div className="flex items-center gap-1.5 text-[oklch(var(--ca-accent))] text-[10px]">
+                  <div className="flex items-center gap-1.5 text-ca-accent text-[10px]">
                     <Loader2 className="h-3.5 w-3.5 animate-spin" /> Uploading to Pinata...
                   </div>
                 )}
                 {ipfsStatus === "success" && (
-                  <div className="flex items-center gap-1.5 text-[oklch(var(--ca-success))] text-[10px]">
+                  <div className="flex items-center gap-1.5 text-ca-success text-[10px]">
                     <CheckCircle2 className="h-3.5 w-3.5" /> Pinned Successfully
                   </div>
                 )}
                 {ipfsStatus === "error" && (
-                  <div className="flex items-center gap-1.5 text-[oklch(var(--ca-destructive))] text-[10px]">
+                  <div className="flex items-center gap-1.5 text-ca-danger text-[10px]">
                     <AlertTriangle className="h-3.5 w-3.5" /> Upload Failed
                   </div>
                 )}
@@ -397,7 +397,7 @@ export default function IssuePage() {
                       href={ipfsGatewayUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-[10px] text-[oklch(var(--ca-accent))] hover:underline"
+                      className="flex items-center gap-1.5 text-[10px] text-ca-accent hover:underline"
                     >
                       View on Pinata Gateway <ExternalLink className="h-3 w-3" />
                     </a>
@@ -406,14 +406,14 @@ export default function IssuePage() {
               )}
 
               {ipfsStatus === "error" && (
-                <p className="text-[10px] text-[oklch(var(--ca-destructive))]">{ipfsError}</p>
+                <p className="text-[10px] text-ca-danger">{ipfsError}</p>
               )}
 
               {ipfsStatus !== "success" && (
                 <Button
                   onClick={uploadToIPFS}
                   disabled={!gpa || !major || !gradYear || !calculatedFileHash || ipfsStatus === "uploading"}
-                  className="w-full bg-[oklch(var(--ca-accent)/0.1)] text-[oklch(var(--ca-accent))] border border-[oklch(var(--ca-accent)/0.3)] hover:bg-[oklch(var(--ca-accent)/0.2)] font-mono text-xs py-3 flex items-center justify-center gap-2"
+                  className="w-full bg-ca-accent/10 text-ca-accent border border-ca-accent/30 hover:bg-ca-accent/20 font-mono text-xs py-3 flex items-center justify-center gap-2"
                 >
                   {ipfsStatus === "uploading" ? (
                     <><Loader2 className="h-4 w-4 animate-spin" /> PINNING TO IPFS...</>
@@ -426,7 +426,7 @@ export default function IssuePage() {
               {ipfsStatus === "error" && (
                 <Button
                   onClick={uploadToIPFS}
-                  className="w-full bg-[oklch(var(--ca-destructive)/0.1)] text-[oklch(var(--ca-destructive))] border border-[oklch(var(--ca-destructive)/0.3)] hover:bg-[oklch(var(--ca-destructive)/0.2)] font-mono text-xs py-3"
+                  className="w-full bg-ca-danger/10 text-ca-danger border border-ca-danger/30 hover:bg-ca-danger/20 font-mono text-xs py-3"
                 >
                   RETRY UPLOAD
                 </Button>
@@ -434,8 +434,8 @@ export default function IssuePage() {
             </div>
 
             {/* Summary */}
-            <div className="rounded-lg border border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.03)] p-4 font-mono text-xs space-y-2">
-              <div className="flex items-center gap-1.5 text-[oklch(var(--ca-accent))] font-bold uppercase tracking-wider">
+            <div className="rounded-lg border border-ca-accent/30 bg-ca-accent/3 p-4 font-mono text-xs space-y-2">
+              <div className="flex items-center gap-1.5 text-ca-accent font-bold uppercase tracking-wider">
                 <ShieldCheck className="h-4 w-4" /> Registry Package Summary
               </div>
               <div className="grid grid-cols-2 gap-y-1.5 gap-x-4 text-[11px] text-muted-foreground mt-2">
@@ -450,7 +450,7 @@ export default function IssuePage() {
                 <span>File Hash:</span>
                 <span className="text-foreground truncate">{calculatedFileHash ? `${calculatedFileHash.slice(0, 18)}...` : "—"}</span>
                 <span>IPFS CID:</span>
-                <span className={metadataCID ? "text-[oklch(var(--ca-success))] truncate" : "text-muted-foreground"}>
+                <span className={metadataCID ? "text-ca-success truncate" : "text-muted-foreground"}>
                   {metadataCID ? `${metadataCID.slice(0, 20)}...` : "Not uploaded yet"}
                 </span>
               </div>
@@ -460,7 +460,7 @@ export default function IssuePage() {
             <Button
               onClick={handleIssue}
               disabled={isPending || isConfirming || !metadataCID || ipfsStatus !== "success"}
-              className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending
                 ? "CONFIRM IN WALLET..."
@@ -494,7 +494,8 @@ export default function IssuePage() {
             <Button
               onClick={handleNext}
               disabled={!isStepValid()}
-              className="bg-card hover:bg-muted border border-border/60 font-mono text-xs flex items-center gap-1.5 px-4"
+              variant="outline"
+              className="font-mono text-xs flex items-center gap-1.5 px-4"
             >
               NEXT STEP <ArrowRight className="h-4 w-4" />
             </Button>

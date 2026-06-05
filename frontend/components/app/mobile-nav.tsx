@@ -57,7 +57,7 @@ export function MobileNav() {
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all border",
                     isActive
-                      ? "bg-[oklch(var(--ca-accent)/0.08)] text-[oklch(var(--ca-accent))] border-[oklch(var(--ca-accent)/0.2)]"
+                      ? "bg-ca-accent/8 text-ca-accent border-ca-accent/20"
                       : "text-muted-foreground hover:bg-muted/20 hover:text-foreground border-transparent",
                   )}
                 >
@@ -71,7 +71,7 @@ export function MobileNav() {
 
         <div className="p-4 border-t border-border/40 bg-card/20 space-y-4">
           <div className="flex items-center gap-1.5 rounded-full border border-border/50 bg-muted/40 px-3 py-1 w-fit">
-            <span className="size-1.5 rounded-full bg-[oklch(var(--ca-teal))]" />
+            <span className="size-1.5 rounded-full bg-ca-teal" />
             <span className="font-mono text-[9px] text-muted-foreground uppercase tracking-wider">
               Sepolia Network
             </span>

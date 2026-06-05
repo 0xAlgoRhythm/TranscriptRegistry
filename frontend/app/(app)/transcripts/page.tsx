@@ -31,10 +31,10 @@ function TranscriptCard({
   const statusStr = TRANSCRIPT_STATUS[status as TranscriptStatus]
 
   return (
-    <GlowCard className="p-5 hover:border-[oklch(var(--ca-accent))] transition-all relative overflow-hidden" glow>
+    <GlowCard className="p-5 hover:border-ca-accent transition-all relative overflow-hidden" glow>
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+          <div className="p-2.5 bg-ca-accent/10 rounded-lg text-ca-accent">
             <FileText className="h-5 w-5" />
           </div>
           <div className="space-y-1">

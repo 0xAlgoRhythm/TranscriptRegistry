@@ -31,7 +31,7 @@ export function TechRail() {
           {TECHS.concat(TECHS).map((tech, idx) => (
             <span 
               key={idx} 
-              className="text-[11px] font-mono font-bold tracking-widest text-muted-foreground/40 hover:text-[oklch(var(--ca-accent)/0.6)] transition-colors cursor-default"
+              className="text-[11px] font-mono font-bold tracking-widest text-muted-foreground/40 hover:text-ca-accent/60 transition-colors cursor-default"
             >
               {tech}
             </span>

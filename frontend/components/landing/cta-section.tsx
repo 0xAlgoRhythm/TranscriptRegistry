@@ -31,7 +31,7 @@ export function CTASection() {
                 <Button
                   asChild
                   size="lg"
-                  className="bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono tracking-wider text-xs px-6 py-5 rounded-lg border border-transparent shadow-lg shadow-[oklch(var(--ca-accent)/0.15)] transition-all"
+                  className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-6 py-5 rounded-lg border border-transparent shadow-lg shadow-ca-accent/15 transition-all"
                 >
                   <Link href="/dashboard">LAUNCH DAPP</Link>
                 </Button>

@@ -26,7 +26,7 @@ export function StatsBar() {
                 transition={{ duration: 0.4, delay: idx * 0.08 }}
                 className="space-y-1"
               >
-                <span className="text-3xl md:text-4xl font-bold tracking-tight text-[oklch(var(--ca-accent))] block">
+                <span className="text-3xl md:text-4xl font-bold tracking-tight text-ca-accent block">
                   {stat.value}
                 </span>
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">

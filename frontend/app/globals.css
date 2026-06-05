@@ -43,6 +43,32 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* CredAxis Design Tokens mapping */
+  --color-ca-bg: var(--ca-bg);
+  --color-ca-surface: var(--ca-surface);
+  --color-ca-surface-2: var(--ca-surface-2);
+  --color-ca-surface-3: var(--ca-surface-3);
+  --color-ca-accent: var(--ca-accent);
+  --color-ca-accent-dim: var(--ca-accent-dim);
+  --color-ca-accent-glow: var(--ca-accent-glow);
+  --color-ca-accent-hover: var(--ca-accent-hover);
+  --color-ca-teal: var(--ca-teal);
+  --color-ca-teal-dim: var(--ca-teal-dim);
+  --color-ca-success: var(--ca-success);
+  --color-ca-success-dim: var(--ca-success-dim);
+  --color-ca-warning: var(--ca-warning);
+  --color-ca-warning-dim: var(--ca-warning-dim);
+  --color-ca-danger: var(--ca-danger);
+  --color-ca-danger-dim: var(--ca-danger-dim);
+  --color-ca-destructive: var(--ca-destructive);
+  --color-ca-amended: var(--ca-amended);
+  --color-ca-amended-dim: var(--ca-amended-dim);
+  --color-ca-border: var(--ca-border);
+  --color-ca-border-dim: var(--ca-border-dim);
+  --color-ca-border-accent: var(--ca-border-accent);
+  --color-ca-border-success: var(--ca-border-success);
+  --color-ca-border-danger: var(--ca-border-danger);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -52,34 +78,34 @@
 
 :root {
   /* ── Shadcn base (light mode) ── */
-  --background:           oklch(0.975 0.005 264); /* Warm slate background for clean depth */
-  --foreground:           oklch(0.12 0.008 264);  /* High contrast deep rich slate-black */
+  --background:           oklch(0.96 0.008 260); /* Clean cool off-white slate background */
+  --foreground:           oklch(0.15 0.012 260);  /* Soft premium dark slate black */
   --card:                 oklch(1.0 0.0 0);       /* Pure white card faces */
-  --card-foreground:      oklch(0.12 0.008 264);
+  --card-foreground:      oklch(0.15 0.012 260);
   --popover:              oklch(1.0 0.0 0);
-  --popover-foreground:   oklch(0.12 0.008 264);
+  --popover-foreground:   oklch(0.15 0.012 260);
   --primary:              oklch(0.52 0.22 280);   /* Rich royal purple/indigo */
   --primary-foreground:   oklch(0.99 0.003 264);
-  --secondary:            oklch(0.93 0.008 264);  /* Defined neutral gray */
-  --secondary-foreground: oklch(0.12 0.008 264);
-  --muted:                oklch(0.94 0.006 264);  /* Soft background gray for badges */
-  --muted-foreground:     oklch(0.40 0.010 264);  /* Clearly readable secondary text */
-  --accent:               oklch(0.93 0.008 264);
-  --accent-foreground:    oklch(0.12 0.008 264);
+  --secondary:            oklch(0.93 0.01 260);  /* Defined neutral gray */
+  --secondary-foreground: oklch(0.15 0.012 260);
+  --muted:                oklch(0.93 0.01 260);  /* Soft background gray for badges */
+  --muted-foreground:     oklch(0.38 0.015 260);  /* Clearly readable secondary text */
+  --accent:               oklch(0.93 0.01 260);
+  --accent-foreground:    oklch(0.15 0.012 260);
   --destructive:          oklch(0.55 0.20 27);
-  --border:               oklch(0.85 0.012 264);  /* Visually distinct component borders */
-  --input:                oklch(0.88 0.010 264);  /* Defined inputs */
+  --border:               oklch(0.85 0.015 260);  /* Visually distinct component borders */
+  --input:                oklch(0.85 0.015 260);  /* Defined inputs */
   --ring:                 oklch(0.52 0.22 280 / 0.40);
   --radius:               0.5rem;                 /* Rounded borders */
 
   /* ── Sidebar ── */
   --sidebar:                oklch(1.0 0.0 0);      /* Pure white sidebar */
-  --sidebar-foreground:     oklch(0.12 0.008 264);
+  --sidebar-foreground:     oklch(0.15 0.012 260);
   --sidebar-primary:        oklch(0.52 0.22 280);
   --sidebar-primary-foreground: oklch(0.99 0.003 264);
   --sidebar-accent:         oklch(0.95 0.005 264);
-  --sidebar-accent-foreground: oklch(0.12 0.008 264);
-  --sidebar-border:         oklch(0.88 0.008 264);
+  --sidebar-accent-foreground: oklch(0.15 0.012 260);
+  --sidebar-border:         oklch(0.85 0.015 260);
   --sidebar-ring:           oklch(0.52 0.22 280 / 0.30);
 
   /* ── Charts ── */
@@ -92,10 +118,10 @@
   /* ═══ CredAxis Design Tokens ═══ */
 
   /* Base surfaces */
-  --ca-bg:         oklch(0.975 0.005 264);
+  --ca-bg:         oklch(0.96 0.008 260);
   --ca-surface:    oklch(1.0 0.0 0);
-  --ca-surface-2:  oklch(0.94 0.006 264);
-  --ca-surface-3:  oklch(0.90 0.008 264);
+  --ca-surface-2:  oklch(0.93 0.01 260);
+  --ca-surface-3:  oklch(0.88 0.012 260);
 
   /* Accent — Electric Indigo */
   --ca-accent:       oklch(0.52 0.22 280);
@@ -114,17 +140,19 @@
   --ca-warning-dim:oklch(0.58 0.16 85 / 0.06);
   --ca-danger:     oklch(0.55 0.20 27);
   --ca-danger-dim: oklch(0.55 0.20 27 / 0.06);
+  --ca-destructive:     oklch(0.55 0.20 27);
+  --ca-destructive-dim: oklch(0.55 0.20 27 / 0.06);
   --ca-amended:    oklch(0.55 0.15 60);
   --ca-amended-dim:oklch(0.55 0.15 60 / 0.06);
 
   /* Text hierarchy */
-  --ca-text:    oklch(0.12 0.008 264);
-  --ca-text-2:  oklch(0.35 0.008 264);
-  --ca-muted:   oklch(0.48 0.008 264);
+  --ca-text:    oklch(0.15 0.012 260);
+  --ca-text-2:  oklch(0.38 0.015 260);
+  --ca-muted:   oklch(0.50 0.012 260);
 
   /* Borders */
-  --ca-border:        oklch(0.85 0.012 264);
-  --ca-border-dim:    oklch(0.90 0.008 264);
+  --ca-border:        oklch(0.85 0.015 260);
+  --ca-border-dim:    oklch(0.92 0.01 260);
   --ca-border-accent: oklch(0.52 0.22 280 / 0.25);
   --ca-border-success:oklch(0.45 0.16 155 / 0.25);
   --ca-border-danger: oklch(0.55 0.20 27 / 0.25);

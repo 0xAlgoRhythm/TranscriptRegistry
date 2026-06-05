@@ -28,12 +28,12 @@ export function Logo({ className, size = "md", showWordmark = true }: LogoProps)
         {/* Hexagonal shield base */}
         <path
           d="M16 2L28 8V16C28 22.627 22.627 28 16 28C9.373 28 4 22.627 4 16V8L16 2Z"
-          fill="oklch(var(--ca-accent))"
+          fill="var(--ca-accent)"
           opacity="0.15"
         />
         <path
           d="M16 3.8L26.4 9.2V16C26.4 21.74 21.74 26.4 16 26.4C10.26 26.4 5.6 21.74 5.6 16V9.2L16 3.8Z"
-          stroke="oklch(var(--ca-accent))"
+          stroke="var(--ca-accent)"
           strokeWidth="1.5"
           fill="none"
         />
@@ -42,7 +42,7 @@ export function Logo({ className, size = "md", showWordmark = true }: LogoProps)
           x="16"
           y="19.5"
           textAnchor="middle"
-          fill="oklch(var(--ca-accent))"
+          fill="var(--ca-accent)"
           fontSize="9"
           fontWeight="700"
           fontFamily="system-ui, sans-serif"

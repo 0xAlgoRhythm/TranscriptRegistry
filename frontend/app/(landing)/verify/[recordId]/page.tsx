@@ -26,7 +26,7 @@ export default function PublicVerifyDetailPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
       </div>
     )
   }
@@ -52,7 +52,7 @@ export default function PublicVerifyDetailPage() {
 
         {!transcript ? (
           <GlowCard className="p-8 text-center space-y-4">
-            <Building2 className="h-10 w-10 text-[oklch(var(--ca-destructive))] mx-auto animate-pulse" />
+            <Building2 className="h-10 w-10 text-ca-danger mx-auto animate-pulse" />
             <h2 className="text-lg font-mono font-bold uppercase tracking-wider">RECORD NOT ACCESSIBLE</h2>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
               This record hash does not exist on this registry, or you do not have permission parameters to view the verification status.
@@ -61,7 +61,7 @@ export default function PublicVerifyDetailPage() {
         ) : (
           <GlowCard className="p-6 md:p-8 space-y-6" glow>
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2.5 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+              <div className="p-2.5 bg-ca-accent/10 rounded-lg text-ca-accent">
                 <ShieldCheck className="h-6 w-6" />
               </div>
               <div>
@@ -113,7 +113,7 @@ export default function PublicVerifyDetailPage() {
             </div>
 
             <div className="pt-6 border-t border-border/40 text-[10px] text-muted-foreground flex gap-1.5 items-start font-mono">
-              <HelpCircle className="h-5 w-5 shrink-0 text-[oklch(var(--ca-accent))]" />
+              <HelpCircle className="h-5 w-5 shrink-0 text-ca-accent" />
               <span>Public verification is readable only. Modifying permissions requires authentication on the primary DApp interface.</span>
             </div>
           </GlowCard>

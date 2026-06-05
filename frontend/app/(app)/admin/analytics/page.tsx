@@ -113,7 +113,7 @@ export default function AdminAnalyticsPage() {
               {[20, 35, 45, 30, 25, 40, 55, 65, 50, 45, 60, 75, 80, 65, 55, 70, 85, 90, 80, 75, 95, 110, 100, 90, 105, 120, 130, 115, 105, 125].map((val, idx) => (
                 <div 
                   key={idx} 
-                  className="flex-grow bg-[oklch(var(--ca-accent)/0.65)] hover:bg-[oklch(var(--ca-accent))] transition-colors rounded-t"
+                  className="flex-grow bg-ca-accent/65 hover:bg-ca-accent transition-colors rounded-t"
                   style={{ height: `${(val / 130) * 100}%` }}
                   title={`Day ${idx + 1}: ${val} checks`}
                 />
@@ -141,10 +141,10 @@ export default function AdminAnalyticsPage() {
                   return uniShares.map((share, idx) => {
                     const pct = total > 0 ? Math.round((share.count / total) * 100) : 0
                     const colors = [
-                      "bg-[oklch(var(--ca-accent))]",
-                      "bg-[oklch(var(--ca-teal))]",
-                      "bg-[oklch(var(--ca-success))]",
-                      "bg-[oklch(var(--ca-warning))]"
+                      "bg-ca-accent",
+                      "bg-ca-teal",
+                      "bg-ca-success",
+                      "bg-ca-warning"
                     ]
                     const colorClass = colors[idx % colors.length]
                     return (

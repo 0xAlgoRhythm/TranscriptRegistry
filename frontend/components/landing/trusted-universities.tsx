@@ -45,7 +45,7 @@ export function TrustedUniversities() {
               transition={{ delay: i * 0.15, duration: 0.8 }}
               className="group flex flex-col items-center gap-4 transition-all duration-300 hover:opacity-100 hover:-translate-y-1"
             >
-              <div className="relative h-24 w-24 overflow-hidden md:h-32 md:w-32 rounded-full border border-border/50 bg-white/5 p-4 backdrop-blur-md shadow-xl transition-all duration-500 group-hover:border-[oklch(var(--ca-accent)/0.5)] group-hover:bg-white/10 group-hover:shadow-[0_0_30px_rgba(108,91,240,0.2)]">
+              <div className="relative h-24 w-24 overflow-hidden md:h-32 md:w-32 rounded-full border border-border bg-card p-4 backdrop-blur-md shadow-md transition-all duration-500 group-hover:border-ca-accent/50 group-hover:bg-muted/30 group-hover:shadow-[0_0_30px_rgba(108,91,240,0.15)]">
                 {/* 
                   Using standard img instead of Next Image to avoid configuring remote patterns 
                   CSS filters applied to blend the colored logos into dark mode elegantly, returning color on hover

@@ -77,7 +77,7 @@ export default function IssuedDetailPage() {
   if (isLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[oklch(var(--ca-accent))] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
       </div>
     )
   }
@@ -85,10 +85,10 @@ export default function IssuedDetailPage() {
   if (!transcript) {
     return (
       <div className="mx-auto max-w-2xl text-center space-y-4 py-12 animate-fade-in">
-        <ShieldAlert className="h-12 w-12 text-[oklch(var(--ca-destructive))] mx-auto" />
+        <ShieldAlert className="h-12 w-12 text-ca-danger mx-auto" />
         <h2 className="text-xl font-mono font-bold uppercase tracking-wider">Record Not Found</h2>
         <p className="text-xs text-muted-foreground">The specified transcript record does not exist on this registry contract.</p>
-        <Button onClick={() => router.back()} className="font-mono text-xs bg-muted">BACK</Button>
+        <Button onClick={() => router.back()} variant="secondary" className="font-mono text-xs">BACK</Button>
       </div>
     )
   }
@@ -355,7 +355,7 @@ export default function IssuedDetailPage() {
 
           <Button
             onClick={handlePrintTranscript}
-            className="font-mono text-xs bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] flex items-center gap-2"
+            className="font-mono text-xs bg-ca-accent text-white hover:bg-ca-accent-hover flex items-center gap-2"
           >
             <Download className="h-4 w-4" /> DOWNLOAD OFFICIAL TRANSCRIPT
           </Button>
@@ -367,7 +367,7 @@ export default function IssuedDetailPage() {
         <div className="md:col-span-2 space-y-6">
           <GlowCard className="p-6 md:p-8 space-y-6" glow>
             <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2.5 bg-[oklch(var(--ca-accent)/0.1)] rounded-lg text-[oklch(var(--ca-accent))]">
+              <div className="p-2.5 bg-ca-accent/10 rounded-lg text-ca-accent">
                 <FileText className="h-6 w-6" />
               </div>
               <div>
@@ -380,7 +380,7 @@ export default function IssuedDetailPage() {
 
             {/* Dynamic IPFS Data Panel */}
             <div className="border border-border/40 rounded-lg p-4 bg-muted/10 font-mono text-xs space-y-3">
-              <div className="font-bold border-b border-border/30 pb-1.5 uppercase text-[oklch(var(--ca-accent))] flex items-center justify-between">
+              <div className="font-bold border-b border-border/30 pb-1.5 uppercase text-ca-accent flex items-center justify-between">
                 <span>Student Academic Dossier</span>
                 {metadataLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               </div>
@@ -475,7 +475,7 @@ export default function IssuedDetailPage() {
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full rounded-lg border border-border/60 bg-card py-2 px-3 text-xs font-mono text-foreground focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2 px-3 text-xs font-mono text-foreground focus:border-ca-accent focus:outline-none"
                 >
                   <option value="0">Active</option>
                   <option value="1">Revoked</option>
@@ -491,14 +491,14 @@ export default function IssuedDetailPage() {
                   placeholder="Provide reason for audit log..."
                   required
                   rows={3}
-                  className="w-full resize-none rounded-lg border border-border/60 bg-card p-3 text-xs font-mono text-foreground focus:border-[oklch(var(--ca-accent))] focus:outline-none"
+                  className="w-full resize-none rounded-lg border border-border/60 bg-card p-3 text-xs font-mono text-foreground focus:border-ca-accent focus:outline-none"
                 />
               </div>
 
               <Button
                 type="submit"
                 disabled={isPending || isConfirming || selectedStatus === status.toString()}
-                className="w-full bg-[oklch(var(--ca-accent))] text-white hover:bg-[oklch(var(--ca-accent-hover))] font-mono text-xs py-3 flex items-center justify-center gap-1.5"
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-3 flex items-center justify-center gap-1.5"
               >
                 {isPending ? (
                   "CONFIRMING IN WALLET..."

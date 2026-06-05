@@ -53,7 +53,7 @@ export function ContactSection() {
             transition={{ duration: 0.6 }}
             className="space-y-6"
           >
-            <div className="inline-flex items-center gap-2 rounded-full border border-[oklch(var(--ca-accent)/0.3)] bg-[oklch(var(--ca-accent)/0.1)] px-3 py-1 text-xs font-medium tracking-wide text-[oklch(var(--ca-accent))] uppercase">
+            <div className="inline-flex items-center gap-2 rounded-full border border-ca-accent/30 bg-ca-accent/10 px-3 py-1 text-xs font-medium tracking-wide text-ca-accent uppercase">
               <MessageSquare className="h-3.5 w-3.5" />
               Get In Touch
             </div>
@@ -68,8 +68,8 @@ export function ContactSection() {
             </p>
 
             <div className="pt-4 flex flex-col gap-4">
-              <div className="flex items-center gap-4 rounded-xl border border-border/40 bg-card/10 p-4 backdrop-blur-sm">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[oklch(var(--ca-accent)/0.2)] text-[oklch(var(--ca-accent))]">
+              <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ca-accent/20 text-ca-accent">
                   <Mail className="h-5 w-5" />
                 </div>
                 <div>
@@ -86,9 +86,9 @@ export function ContactSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <div className="rounded-2xl border border-border/50 bg-card/20 p-8 backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div className="rounded-2xl border border-border bg-card p-8 shadow-xl relative overflow-hidden">
               {/* Form Glow */}
-              <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-[oklch(var(--ca-accent))] opacity-[0.07] blur-3xl" />
+              <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-ca-accent opacity-[0.07] blur-3xl" />
               
               <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
                 <div className="space-y-2">
@@ -98,7 +98,7 @@ export function ContactSection() {
                     name="name"
                     id="name"
                     required
-                    className="w-full rounded-lg border border-border/50 bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[oklch(var(--ca-accent))] focus:bg-background"
+                    className="w-full rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
                     placeholder="University of Examples"
                   />
                 </div>
@@ -110,7 +110,7 @@ export function ContactSection() {
                     name="email"
                     id="email"
                     required
-                    className="w-full rounded-lg border border-border/50 bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[oklch(var(--ca-accent))] focus:bg-background"
+                    className="w-full rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
                     placeholder="admin@university.edu"
                   />
                 </div>
@@ -122,7 +122,7 @@ export function ContactSection() {
                     id="message"
                     required
                     rows={4}
-                    className="w-full resize-none rounded-lg border border-border/50 bg-background/50 px-4 py-3 text-sm outline-none transition-colors focus:border-[oklch(var(--ca-accent))] focus:bg-background"
+                    className="w-full resize-none rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
                     placeholder="We want to start issuing immutable transcripts..."
                   ></textarea>
                 </div>
@@ -133,7 +133,7 @@ export function ContactSection() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || isSuccess}
-                  className="w-full bg-[oklch(var(--ca-accent))] hover:bg-[oklch(var(--ca-accent-hover))] text-white py-6"
+                  className="w-full bg-ca-accent hover:bg-ca-accent-hover text-white py-6"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">Sending...</span>
