@@ -556,7 +556,7 @@ export default function DashboardPage() {
                   </Link>
                 )}
 
-                {(role === "registrar" || !role) && (
+                {((role as string) === "registrar" || !role) && (
                   <Link href="/issue" className="block group">
                     <GlowCard className="p-4 hover:border-[oklch(var(--ca-accent))] hover:bg-card/45 transition-all">
                       <div className="flex items-center gap-3">
