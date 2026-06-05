@@ -150,34 +150,86 @@ app.get("/api/access/:recordId/:verifier", async (c) => {
         return c.json({ error: err.message }, 500);
     }
 });
-// IPFS Upload Simulator
+// ─── IPFS Upload via Pinata ───
 app.post("/api/ipfs/upload", verifyAuth, async (c) => {
     try {
         const body = await c.req.json();
-        const fileHash = body.fileHash || "0x" + Math.random().toString(16).slice(2, 66);
-        const cid = "Qm" + Math.random().toString(36).slice(2, 48);
-        const metadata = {
-            studentAddress: body.studentAddress,
-            universityName: body.universityName,
-            registryAddress: body.registryAddress,
-            uploadedAt: new Date().toISOString(),
+        const pinataJWT = process.env.PINATA_JWT;
+        const pinataApiKey = process.env.PINATA_API_KEY;
+        const pinataSecretKey = process.env.PINATA_SECRET_KEY;
+        if (!pinataJWT && !(pinataApiKey && pinataSecretKey)) {
+            return c.json({ error: "Pinata credentials not configured on server" }, 503);
+        }
+        // Build the structured metadata JSON to pin
+        const metadataPayload = {
+            name: `CredAxis Transcript — ${body.studentName || "Student"} @ ${body.universityName || "University"}`,
+            keyvalues: {
+                studentAddress: body.studentAddress || "",
+                studentName: body.studentName || "",
+                studentId: body.studentId || "",
+                universityName: body.universityName || "",
+                registryAddress: body.registryAddress || "",
+                gpa: body.gpa || "",
+                major: body.major || "",
+                graduationYear: body.gradYear || "",
+                fileHash: body.fileHash || "",
+                issuedAt: new Date().toISOString(),
+                platform: "CredAxis",
+            },
         };
-        // Save metadata CID register record in DB
+        const pinataBody = {
+            pinataContent: {
+                ...body,
+                issuedAt: new Date().toISOString(),
+                platform: "CredAxis",
+            },
+            pinataMetadata: metadataPayload,
+            pinataOptions: { cidVersion: 1 },
+        };
+        // Call Pinata pinJSONToIPFS REST API
+        const headers = {
+            "Content-Type": "application/json",
+        };
+        if (pinataJWT) {
+            headers["Authorization"] = `Bearer ${pinataJWT}`;
+        }
+        else {
+            headers["pinata_api_key"] = pinataApiKey;
+            headers["pinata_secret_api_key"] = pinataSecretKey;
+        }
+        const pinataRes = await fetch("https://api.pinata.cloud/pinning/pinJSONToIPFS", {
+            method: "POST",
+            headers,
+            body: JSON.stringify(pinataBody),
+        });
+        if (!pinataRes.ok) {
+            const errText = await pinataRes.text();
+            console.error("Pinata API error:", errText);
+            return c.json({ error: `Pinata upload failed: ${pinataRes.status} ${errText}` }, 502);
+        }
+        const pinataData = await pinataRes.json();
+        const cid = pinataData.IpfsHash;
+        const fileHash = body.fileHash || ("0x" + Math.random().toString(16).slice(2, 66));
+        // Save upload record in DB
         await db.insert(ipfsUploads).values({
             cid,
             fileHash,
             studentHash: body.studentAddress || "0x",
-            universityName: body.universityName || "MIT",
+            universityName: body.universityName || "Unknown",
             uploadedAt: new Date(),
-            metadataJson: metadata,
+            metadataJson: pinataBody.pinataContent,
         });
+        console.log(`✅ Pinata upload success: CID=${cid}`);
         return c.json({
             cid,
             fileHash,
-            metadataJson: metadata,
+            gateway: `https://gateway.pinata.cloud/ipfs/${cid}`,
+            ipfsUrl: `ipfs://${cid}`,
+            metadataJson: pinataBody.pinataContent,
         });
     }
     catch (err) {
+        console.error("IPFS upload error:", err);
         return c.json({ error: err.message }, 500);
     }
 });
