@@ -26,7 +26,7 @@ const item = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as const },
   },
 }
 
@@ -35,7 +35,7 @@ const itemSlow = {
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const },
   },
 }
 
@@ -162,7 +162,7 @@ export function Hero() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{
                   duration: 0.6,
-                  ease: [0.16, 1, 0.3, 1],
+                  ease: [0.16, 1, 0.3, 1] as const,
                   delay: 0.6 + i * 0.1,
                 }}
               >
