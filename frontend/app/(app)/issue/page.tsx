@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { type Address, keccak256, encodePacked } from "viem"
 import { useRegisterTranscript } from "@/hooks/use-transcript-registry"
 import { useFileHash } from "@/hooks/use-file-hash"
@@ -13,7 +13,7 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { HashDisplay } from "@/components/ui/hash-display"
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, HelpCircle } from "lucide-react"
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, CloudUpload, Loader2, ExternalLink } from "lucide-react"
 
 export default function IssuePage() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -33,11 +33,14 @@ export default function IssuePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { hash: calculatedFileHash, isCalculating, calculateHash, reset: resetHash } = useFileHash()
 
-  // Step 4: Metadata Details
+  // Step 4: Metadata Details + IPFS Upload
   const [gpa, setGpa] = useState("")
   const [major, setMajor] = useState("")
   const [gradYear, setGradYear] = useState("")
-  const [metadataCID, setMetadataCID] = useState("QmXyZ...") // Stub default
+  const [metadataCID, setMetadataCID] = useState("")
+  const [ipfsStatus, setIpfsStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
+  const [ipfsError, setIpfsError] = useState("")
+  const [ipfsGatewayUrl, setIpfsGatewayUrl] = useState("")
 
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
 
