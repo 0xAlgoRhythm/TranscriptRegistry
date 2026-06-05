@@ -33,12 +33,11 @@ export default function IssuedDetailPage() {
   // IPFS metadata state
   const [metadata, setMetadata] = useState<any>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
-
-  const [, metadataCID, fileHash, issuer, timestamp, status] = transcript || []
+  const [, metadataCID = "", fileHash = "", issuer = "", timestamp = BigInt(0), status = 0] = (transcript as any) || []
   const statusStr = transcript ? TRANSCRIPT_STATUS[status as TranscriptStatus] : "Unknown"
 
   useEffect(() => {
-    if (transcript && status !== undefined && status !== null) {
+    if (transcript) {
       setSelectedStatus(status.toString())
     }
   }, [transcript, status])
