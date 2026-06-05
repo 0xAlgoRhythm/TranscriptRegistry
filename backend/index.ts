@@ -9,6 +9,7 @@ import { serve } from "@hono/node-server"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
+import nodemailer from "nodemailer"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -16,6 +17,39 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
 const app = new Hono()
+
+// Set up Nodemailer transport
+let transporter: nodemailer.Transporter | null = null;
+const smtpHost = process.env.SMTP_HOST;
+const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+// Remove any inner spaces from app passwords just in case
+const smtpPass = (process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "").replace(/\s/g, "");
+
+if (smtpHost && smtpUser && smtpPass) {
+  transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465, // true for 465, false for other ports
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+  console.log(`[EMAIL] Nodemailer initialized with ${smtpUser} via ${smtpHost}`);
+} else if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  const gmailPass = process.env.GMAIL_APP_PASSWORD.replace(/\s/g, "");
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: gmailPass,
+    },
+  });
+  console.log(`[EMAIL] Nodemailer initialized with ${process.env.GMAIL_USER}`);
+} else {
+  console.log(`[EMAIL] Nodemailer not initialized. Missing SMTP or GMAIL configuration in .env`);
+}
 
 // ─── Global BigInt JSON patch ───
 // Drizzle ORM returns bigint for block_number columns. Native JSON.stringify
@@ -375,6 +409,24 @@ app.post("/api/students", async (c) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     })
+
+    // Send an email notification to the Admin/Registrar
+    console.log(`[EMAIL NOTIFICATION] Preparing to send email for new student ${fullName}`);
+    if (transporter) {
+      try {
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+          to: process.env.SMTP_USER || process.env.GMAIL_USER, // sending to self/admin
+          subject: "New Student Verification Request",
+          text: `A new student (${fullName}, ID: ${studentId}, Email: ${cleanEmail}) has submitted a profile verification request.\n\nPlease review and accept or reject the application in the admin portal.`,
+        });
+        console.log(`[EMAIL] Notification sent successfully.`);
+      } catch (err) {
+        console.error(`[EMAIL] Failed to send notification:`, err);
+      }
+    } else {
+      console.log(`[EMAIL] Transporter not configured. Skipping email.`);
+    }
 
     return c.json({ status: "pending", message: "Application submitted. Awaiting registrar approval." })
   } catch (err: any) {

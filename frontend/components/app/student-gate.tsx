@@ -69,7 +69,8 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       const res = await fetch(`${API_URL}/api/universities`)
       if (res.ok) {
         const data = await res.json()
-        setUniversities(data.filter((u: University) => u.isActive))
+        const unique = Array.from(new Map(data.map((item: University) => [item.name, item])).values()) as University[]
+        setUniversities(unique.filter((u: University) => u.isActive))
       }
     } catch (e) {
       console.error("Error fetching universities:", e)
@@ -104,6 +105,20 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
     setError("")
 
     const privyEmail = user.email?.address || ""
+    
+    const uni = universities.find(u => u.universityId === parseInt(selectedUni))
+    const uniName = uni ? uni.name.toLowerCase() : ""
+    let domain = "edu.gh"
+    if (uniName.includes("kwame") || uniName.includes("knust")) domain = "st.knust.edu.gh"
+    else if (uniName.includes("ghana")) domain = "st.ug.edu.gh"
+    else if (uniName.includes("cape coast") || uniName.includes("ucc")) domain = "st.ucc.edu.gh"
+    else if (uniName.includes("education") || uniName.includes("uew")) domain = "st.uew.edu.gh"
+    else if (uniName) {
+      const acronym = uniName.split(' ').map(w => w[0]).join('')
+      domain = `st.${acronym}.edu.gh`
+    }
+
+    const calculatedEmail = privyEmail || `${studentId}@${domain}`
 
     try {
       const res = await fetch(`${API_URL}/api/students`, {
@@ -116,7 +131,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
           fullName,
           studentId,
           universityId: parseInt(selectedUni),
-          email: privyEmail || `${studentId}@placeholder-email.edu`,
+          email: calculatedEmail,
         }),
       })
 
