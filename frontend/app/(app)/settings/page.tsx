@@ -1,163 +1,178 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { usePrivy } from "@privy-io/react-auth"
-import { useRoleStore } from "@/lib/stores/role-store"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
-import { StatusBadge } from "@/components/ui/status-badge"
-import { HashDisplay } from "@/components/ui/hash-display"
 import { Button } from "@/components/ui/button"
-import { Settings, Shield, User, Bell, Network, Mail } from "lucide-react"
+import { RefreshCw, User, Mail, Wallet, ShieldAlert, CheckCircle2 } from "lucide-react"
+import { truncateAddress } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { address } = useAccount()
-  const { user } = usePrivy()
-  const { role, isDemoMode, toggleDemoMode } = useRoleStore()
-  
-  // Notification states
-  const [notifyIssue, setNotifyIssue] = useState(true)
-  const [notifyAccess, setNotifyAccess] = useState(true)
-  const [notifyVerify, setNotifyVerify] = useState(false)
+  const { user, linkWallet, linkEmail } = usePrivy()
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [migrateLoading, setMigrateLoading] = useState(false)
+  const [message, setMessage] = useState({ text: "", type: "" })
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const fetchProfile = async () => {
+    if (!address) return
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_URL}/api/students/profile/${address.toLowerCase()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setProfile(data)
+      } else {
+        // Might be logged in with a different wallet that is not bound yet
+        // Let's see if we can find them by email if we have user.email
+        if (user?.email?.address) {
+          const res2 = await fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(user.email.address)}`)
+          if (res2.ok) {
+            const data2 = await res2.json()
+            if (data2.length > 0) setProfile(data2[0])
+          }
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (address || user) {
+      fetchProfile()
+    }
+  }, [address, user])
+
+  const handleMigrateWallet = async () => {
+    if (!profile || !address) return
+    setMigrateLoading(true)
+    setMessage({ text: "", type: "" })
+    
+    try {
+      const res = await fetch(`${API_URL}/api/students/migrate-wallet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: profile.studentId,
+          newWalletAddress: address
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMessage({ text: "Wallet successfully migrated!", type: "success" })
+        fetchProfile()
+      } else {
+        setMessage({ text: data.error || "Migration failed", type: "error" })
+      }
+    } catch (err) {
+      setMessage({ text: "Network error during migration", type: "error" })
+    } finally {
+      setMigrateLoading(false)
+    }
+  }
+
+  const isCurrentWalletBound = profile?.walletAddress?.toLowerCase() === address?.toLowerCase()
 
   return (
     <div className="mx-auto max-w-4xl space-y-10 animate-fade-in pb-16">
       {/* Header */}
       <div className="space-y-1">
-        <SectionLabel index={1} label="PREFERENCES" />
+        <SectionLabel index={1} label="ACCOUNT SETTINGS" />
         <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">
-          System Settings
+          Identity & Wallets
         </h1>
         <p className="text-xs text-muted-foreground">
-          Manage your connected Privy account profile, notification alerts, and active simulator role states.
+          Manage your connected accounts, link multiple wallets, and update your primary bound identity.
         </p>
       </div>
 
-      {/* Main layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Settings options */}
-        <div className="md:col-span-2 space-y-6">
-          {/* Identity settings */}
-          <GlowCard className="p-6 md:p-8 space-y-5" glow>
-            <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
-                <User className="h-5 w-5" />
+      {loading ? (
+        <div className="h-40 rounded-xl bg-card/45 border border-border/40 animate-pulse flex items-center justify-center font-mono text-xs text-muted-foreground">
+          LOADING PROFILE...
+        </div>
+      ) : profile ? (
+        <div className="space-y-6">
+          <GlowCard className="p-6 space-y-6">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider border-b border-border/40 pb-3">
+              University Profile
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1"><User className="h-3 w-3" /> Full Name</span>
+                <p className="font-semibold text-sm">{profile.fullName}</p>
               </div>
-              <div>
-                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
-                  Connected Identity
-                </h3>
-                <p className="text-[10px] text-muted-foreground">Privy auth connection stats</p>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1"><ShieldAlert className="h-3 w-3" /> Student ID</span>
+                <p className="font-mono text-sm">{profile.studentId}</p>
               </div>
-            </div>
-
-            <div className="space-y-4 font-mono text-xs text-muted-foreground">
-              {user?.email && (
-                <div className="flex justify-between items-center py-2 border-b border-border/20">
-                  <span>Authorized Email</span>
-                  <span className="text-foreground">{user.email.address}</span>
-                </div>
-              )}
-              {address && (
-                <div className="flex justify-between items-center py-2 border-b border-border/20">
-                  <span>Ethereum Wallet</span>
-                  <HashDisplay hash={address} />
-                </div>
-              )}
-              <div className="flex justify-between items-center py-2">
-                <span>Login Method</span>
-                <span className="text-foreground capitalize">{user?.linkedAccounts[0]?.type || "Wallet"}</span>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1"><Mail className="h-3 w-3" /> Registered Email</span>
+                <p className="text-sm">{profile.email}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider flex items-center gap-1"><Wallet className="h-3 w-3" /> Bound Wallet</span>
+                <p className="font-mono text-sm text-ca-accent">{profile.walletAddress || "None"}</p>
               </div>
             </div>
           </GlowCard>
 
-          {/* Alert settings */}
-          <GlowCard className="p-6 md:p-8 space-y-5">
-            <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-              <div className="p-2 bg-ca-teal/10 rounded-lg text-ca-teal">
-                <Bell className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
-                  Notification Subscriptions
-                </h3>
-                <p className="text-[10px] text-muted-foreground">Receive real-time alerts on platform actions</p>
-              </div>
-            </div>
-
+          <GlowCard className="p-6 space-y-6">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider border-b border-border/40 pb-3">
+              Wallet Migration
+            </h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-mono font-bold text-foreground">CREDENTIAL ISSUANCE ALERTS</span>
-                  <p className="text-[10px] text-muted-foreground">Notify when a new transcript is issued to my wallet</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Your currently connected wallet is <span className="font-mono text-foreground">{address ? truncateAddress(address) : "None"}</span>.
+                If this is different from your Bound Wallet above, you can migrate your profile to this new wallet.
+                Note: This requires the new wallet to be linked via Privy first.
+              </p>
+              
+              {message.text && (
+                <div className={`p-3 rounded text-xs font-mono ${message.type === "success" ? "bg-ca-success/10 text-ca-success border border-ca-success/30" : "bg-ca-danger/10 text-ca-danger border border-ca-danger/30"}`}>
+                  {message.text}
                 </div>
-                <input
-                  type="checkbox"
-                  checked={notifyIssue}
-                  onChange={(e) => setNotifyIssue(e.target.checked)}
-                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
-                />
-              </div>
+              )}
 
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-mono font-bold text-foreground">ACCESS GRANTED / REVOKED</span>
-                  <p className="text-[10px] text-muted-foreground">Alert when verifier delegations are created or expired</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifyAccess}
-                  onChange={(e) => setNotifyAccess(e.target.checked)}
-                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-mono font-bold text-foreground">AUDIT LOG NOTIFICATIONS</span>
-                  <p className="text-[10px] text-muted-foreground">Notify on any validation checks written on-chain</p>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={notifyVerify}
-                  onChange={(e) => setNotifyVerify(e.target.checked)}
-                  className="rounded border-border/60 text-ca-accent focus:ring-0 w-4 h-4 bg-transparent"
-                />
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Button variant="outline" onClick={linkWallet} className="font-mono text-xs">
+                  <Wallet className="h-3.5 w-3.5 mr-2" /> Link New Wallet
+                </Button>
+                <Button variant="outline" onClick={linkEmail} className="font-mono text-xs">
+                  <Mail className="h-3.5 w-3.5 mr-2" /> Link New Email
+                </Button>
+                
+                {!isCurrentWalletBound && address && (
+                  <Button 
+                    onClick={handleMigrateWallet} 
+                    disabled={migrateLoading}
+                    className="bg-ca-accent hover:bg-ca-accent/90 text-white font-mono text-xs ml-auto"
+                  >
+                    {migrateLoading ? <RefreshCw className="h-3.5 w-3.5 mr-2 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-2" />}
+                    Set Current as Primary Bound Wallet
+                  </Button>
+                )}
               </div>
             </div>
           </GlowCard>
         </div>
-
-        {/* Demo simulator panel */}
-        <div className="md:col-span-1 space-y-6">
-          <SectionLabel index={2} label="SIMULATOR OPTIONS" />
-          <GlowCard className="p-6 space-y-4">
-            <div className="flex items-center gap-2 text-ca-accent">
-              <Shield className="h-5 w-5" />
-              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">
-                Developer Prototyping
-              </h4>
-            </div>
-
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Toggle role emulation to test specific page accesses (Admin, Registrar, Student, Verifier) without needing contract redeployments.
-            </p>
-
-            <div className="pt-4 border-t border-border/40">
-              <Button
-                onClick={toggleDemoMode}
-                variant="outline"
-                className="w-full font-mono text-xs py-3.5"
-              >
-                {isDemoMode ? "DISABLE SIMULATION" : "ENABLE SIMULATION"}
-              </Button>
-            </div>
-          </GlowCard>
-        </div>
-
-      </div>
+      ) : (
+        <GlowCard className="p-10 text-center space-y-4">
+          <ShieldAlert className="h-10 w-10 text-muted-foreground mx-auto" />
+          <h3 className="font-mono font-bold text-lg">Profile Not Found</h3>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            We couldn't locate a student profile associated with your currently connected wallet or email.
+            Please ensure you are using the correct account or contact your university registrar.
+          </p>
+        </GlowCard>
+      )}
     </div>
   )
 }
