@@ -415,6 +415,37 @@ contract TranscriptRegistry is Initializable {
         isActive = true;
     }
     
+    // ============ Identity Migration ============
+    
+    event IdentityMigrated(
+        bytes32 indexed oldHash,
+        bytes32 indexed newHash,
+        uint256 count
+    );
+    
+    /**
+     * @dev Migrate transcripts from one student identity hash to another
+     * @param oldHash The previous student identity hash
+     * @param newHash The new student identity hash
+     */
+    function migrateStudentIdentity(bytes32 oldHash, bytes32 newHash) external onlyRegistrar {
+        if (oldHash == bytes32(0) || newHash == bytes32(0)) revert InvalidStudentHash();
+        if (oldHash == newHash) revert SameRegistrar(); // using existing error for gas savings
+        
+        bytes32[] memory records = studentTranscripts[oldHash];
+        uint256 len = records.length;
+        
+        for (uint256 i = 0; i < len; i++) {
+            bytes32 recordId = records[i];
+            transcripts[recordId].studentHash = newHash;
+            studentTranscripts[newHash].push(recordId);
+        }
+        
+        delete studentTranscripts[oldHash];
+        
+        emit IdentityMigrated(oldHash, newHash, len);
+    }
+    
     // ============ View Functions ============
     
     /**

@@ -84,6 +84,19 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     }
   }, [registrarAddress])
 
+  // Global Search state
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const filteredStudents = students.filter(s => {
+    const q = searchQuery.toLowerCase()
+    return (
+      (s.fullName && s.fullName.toLowerCase().includes(q)) ||
+      (s.studentId && s.studentId.toLowerCase().includes(q)) ||
+      (s.email && s.email.toLowerCase().includes(q)) ||
+      (s.walletAddress && s.walletAddress.toLowerCase().includes(q))
+    )
+  })
+
   const handleUpdateStatus = async (walletAddr: string | null, newStatus: "approved" | "rejected") => {
     if (!walletAddr) return
     try {
@@ -272,18 +285,27 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       {/* Tab Contents */}
       {activeTab === "requests" ? (
         <GlowCard className="p-6 relative overflow-hidden" glow>
-          <div className="flex items-center justify-between border-b border-border/40 pb-3 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
             <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
               Verification Enrollment Requests
             </h3>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={fetchStudents}
-              className="font-mono text-[10px] tracking-wider uppercase border-border/60"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh List
-            </Button>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search ID, Name, Wallet, Email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full sm:w-64 rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={fetchStudents}
+                className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
 
           {loading ? (
@@ -294,7 +316,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
             <div className="text-center py-8 font-mono text-xs text-ca-danger">
               {error}
             </div>
-          ) : students.length === 0 ? (
+          ) : filteredStudents.length === 0 ? (
             <div className="text-center py-8 font-mono text-xs text-muted-foreground">
               NO REGISTERED OR WHITELISTED STUDENTS FOUND
             </div>
@@ -312,7 +334,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((s) => (
+                  {filteredStudents.map((s) => (
                     <tr key={s.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
                       <td className="p-3 text-foreground font-semibold">{s.fullName}</td>
                       <td className="p-3">{s.studentId}</td>
