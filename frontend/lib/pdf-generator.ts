@@ -1,7 +1,6 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-// @ts-ignore - Use browser build to prevent Next.js from bundling Node's 'readline' module
-import QRCode from "qrcode/build/qrcode"
+import QRCode from "qrcode"
 
 
 interface Course {
