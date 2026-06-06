@@ -15,11 +15,23 @@ const RBACContext = createContext<RBACContextType>({ resolvedRole: null, isLoadi
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount()
   const { role, setRole } = useRoleStore()
-  const { data: adminAddress, isLoading: adminLoading } = usePlatformAdmin()
+  const { data: adminAddress, isLoading: adminLoading, isError: adminError, isFetching: adminFetching } = usePlatformAdmin()
   const [resolving, setResolving] = useState(false)
 
   useEffect(() => {
     if (address) {
+      if (adminLoading || adminFetching) {
+        setResolving(true)
+        return
+      }
+
+      if (adminError && !adminAddress) {
+        // If RPC failed and we don't have cached data, don't override the existing role
+        // This prevents kicking admins to the student onboarding form if the RPC hiccups
+        setResolving(false)
+        return
+      }
+      
       const resolveRole = async () => {
         setResolving(true)
         try {
@@ -49,7 +61,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           setRole("student")
         } catch (e) {
           console.error("Failed to resolve RBAC role:", e)
-          setRole("student")
+          // If network failed, don't override existing roles
         } finally {
           setResolving(false)
         }
@@ -59,7 +71,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } else {
       setRole(null)
     }
-  }, [address, adminAddress, setRole])
+  }, [address, adminAddress, adminLoading, adminFetching, adminError, setRole])
 
   const isLoading = (address && adminLoading) || resolving
 
