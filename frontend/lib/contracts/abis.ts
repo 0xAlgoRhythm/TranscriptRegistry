@@ -281,7 +281,7 @@ export const universityFactoryAbi = [
   // Read functions
   {
     type: "function",
-    name: "platformAdmin",
+    name: "owner",
     inputs: [],
     outputs: [{ type: "address" }],
     stateMutability: "view",
