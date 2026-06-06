@@ -122,7 +122,7 @@ function ActivityLogs() {
   )
 }
 
-function UniversityRow({ id }: { id: bigint }) {
+const UniversityRow = React.memo(function UniversityRow({ id }: { id: bigint }) {
   const { data } = useUniversity(id)
   const deactivate = useDeactivateUniversity()
   const reactivate = useReactivateUniversity()
@@ -166,7 +166,7 @@ function UniversityRow({ id }: { id: bigint }) {
       </td>
     </tr>
   )
-}
+})
 
 function UniversityList() {
   const { data: count } = useUniversityCount()
