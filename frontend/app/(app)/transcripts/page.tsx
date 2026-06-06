@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { FileText, School, ChevronRight, RefreshCcw } from "lucide-react"
 import Link from "next/link"
 
-function TranscriptCard({
+const TranscriptCard = React.memo(function TranscriptCard({
   recordId,
   registryAddress,
 }: {
@@ -63,7 +63,7 @@ function TranscriptCard({
       </div>
     </GlowCard>
   )
-}
+})
 
 export default function TranscriptsPage() {
   const { address } = useAccount()
