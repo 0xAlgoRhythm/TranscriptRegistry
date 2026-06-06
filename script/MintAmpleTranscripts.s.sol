@@ -6,8 +6,11 @@ import "../src/TranscriptRegistryUpgradeable.sol";
 
 contract MintAmpleTranscripts is Script {
     function run() external {
-        string memory pkString = vm.envString("REGISTRAR_PRIVATE_KEY");
-        uint256 registrarPrivateKey = vm.parseUint(string(abi.encodePacked("0x", pkString)));
+        uint256[3] memory registrarPKs = [
+            vm.parseUint(string(abi.encodePacked("0x", vm.envString("REGISTRAR1_PRIVATE_KEY")))),
+            vm.parseUint(string(abi.encodePacked("0x", vm.envString("REGISTRAR2_PRIVATE_KEY")))),
+            vm.parseUint(string(abi.encodePacked("0x", vm.envString("REGISTRAR3_PRIVATE_KEY"))))
+        ];
         
         address studentAddress = vm.envAddress("TEST_STUDENT_ADDRESS");
         bytes32 studentHash = keccak256(abi.encodePacked(studentAddress));
@@ -18,17 +21,9 @@ contract MintAmpleTranscripts is Script {
             vm.envAddress("REGISTRY_ADDRESS_UCC")
         ];
 
-        string[3] memory metadataCIDs = [
-            "QmTestMetadata1_KNUST", "QmTestMetadata2_KNUST", "QmTestMetadata3_KNUST"
-        ];
-        
-        bytes32[3] memory fileHashes = [
-            keccak256("file1_knust"), keccak256("file2_knust"), keccak256("file3_knust")
-        ];
-
-        vm.startBroadcast(registrarPrivateKey);
-
         for (uint i = 0; i < registries.length; i++) {
+            vm.startBroadcast(registrarPKs[i]);
+            
             TranscriptRegistryUpgradeable registry = TranscriptRegistryUpgradeable(registries[i]);
             console.log("Minting for Registry:", address(registry));
             try registry.universityName() returns (string memory name) {
@@ -49,8 +44,8 @@ contract MintAmpleTranscripts is Script {
                     console.log("Failed to mint (unknown error or custom error)");
                 }
             }
+            
+            vm.stopBroadcast();
         }
-
-        vm.stopBroadcast();
     }
 }

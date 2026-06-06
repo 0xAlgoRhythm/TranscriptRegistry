@@ -37,6 +37,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [universities, setUniversities] = useState<University[]>([])
   const [checking, setChecking] = useState(false)
+  const [isPending, startTransition] = React.useTransition()
 
   // Form State
   const [fullName, setFullName] = useState("")
@@ -52,15 +53,23 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       const res = await fetch(`${API_URL}/api/students/profile/${walletAddr.toLowerCase()}`)
       if (res.ok) {
         const data = await res.json()
-        setProfile(data)
+        startTransition(() => {
+          setProfile(data)
+        })
       } else {
-        setProfile(null)
+        startTransition(() => {
+          setProfile(null)
+        })
       }
     } catch (e) {
       console.error("Error fetching student profile:", e)
-      setProfile(null)
+      startTransition(() => {
+        setProfile(null)
+      })
     } finally {
-      setLoading(false)
+      startTransition(() => {
+        setLoading(false)
+      })
     }
   }
 
@@ -88,21 +97,29 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
 
   const handleRefresh = async () => {
     if (!address) return
-    setChecking(true)
+    startTransition(() => {
+      setChecking(true)
+    })
     await fetchProfile(address)
-    setChecking(false)
+    startTransition(() => {
+      setChecking(false)
+    })
   }
 
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address || !user) return
     if (!fullName || !studentId || !selectedUni) {
-      setError("Please fill in all fields.")
+      startTransition(() => {
+        setError("Please fill in all fields.")
+      })
       return
     }
 
-    setSubmitting(true)
-    setError("")
+    startTransition(() => {
+      setSubmitting(true)
+      setError("")
+    })
 
     const privyEmail = user.email?.address || ""
     
@@ -139,21 +156,29 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
         await fetchProfile(address)
       } else {
         const errData = await res.json()
-        setError(errData.error || "Failed to submit onboarding profile.")
+        startTransition(() => {
+          setError(errData.error || "Failed to submit onboarding profile.")
+        })
       }
     } catch (err: any) {
-      setError("Network error. Please try again.")
+      startTransition(() => {
+        setError("Network error. Please try again.")
+      })
     } finally {
-      setSubmitting(false)
+      startTransition(() => {
+        setSubmitting(false)
+      })
     }
   }
 
   const handleResetApplication = async () => {
     // Allows student to apply again by going back to form state
-    setProfile(null)
-    setFullName("")
-    setStudentId("")
-    setSelectedUni("")
+    startTransition(() => {
+      setProfile(null)
+      setFullName("")
+      setStudentId("")
+      setSelectedUni("")
+    })
   }
 
   if (role !== "student" || !address) {

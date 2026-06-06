@@ -15,6 +15,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { role } = useRoleStore()
+  const [isPending, startTransition] = React.useTransition()
 
   // Guard routing configuration
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/")
@@ -49,14 +50,14 @@ export function RoleGuard({ children }: RoleGuardProps) {
 
           <div className="flex gap-3 justify-center pt-2">
             <Button
-              onClick={() => router.back()}
+              onClick={() => startTransition(() => router.back())}
               variant="outline"
               className="font-mono text-xs border-border/60 flex items-center gap-1.5"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> BACK
             </Button>
             <Button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => startTransition(() => router.push("/dashboard"))}
               className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs flex items-center gap-1.5"
             >
               <Home className="h-3.5 w-3.5" /> DASHBOARD
