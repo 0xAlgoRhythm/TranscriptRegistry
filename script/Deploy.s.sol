@@ -157,11 +157,7 @@ contract RegisterTestTranscript is Script {
         console.log("Metadata CID:", metadataCID);
         console.log("File hash:", vm.toString(fileHash));
         
-        bytes32 recordId = registry.registerTranscript(
-            studentHash,
-            metadataCID,
-            fileHash
-        );
+        bytes32 recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, address(0x3333333333333333333333333333333333333333));
         
         console.log("\nTranscript registered successfully!");
         console.log("Record ID:", vm.toString(recordId));

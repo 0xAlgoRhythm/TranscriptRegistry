@@ -9,6 +9,8 @@ export const universities = pgTable("universities", {
   registrar: text("registrar").notNull(),
   deployedAt: timestamp("deployed_at", { withTimezone: true }).notNull(),
   isActive: boolean("is_active").default(true),
+  logoUrl: text("logo_url"),
+  stampUrl: text("stamp_url"),
   txHash: text("tx_hash"),
   blockNumber: bigint("block_number", { mode: "bigint" }),
 })

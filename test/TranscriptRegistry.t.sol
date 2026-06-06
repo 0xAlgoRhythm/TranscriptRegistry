@@ -188,7 +188,7 @@ contract TranscriptRegistryTest is Test {
     function test_RegisterTranscript_RevertsWithInvalidFileHash() public {
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.InvalidFileHash.selector);
-        registry.registerTranscript(studentHash, metadataCID, bytes32(0, student));
+        registry.registerTranscript(studentHash, metadataCID, bytes32(0), student);
     }
     
     function test_RegisterTranscript_AddsToStudentTranscriptsList() public {
@@ -196,7 +196,7 @@ contract TranscriptRegistryTest is Test {
         bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
-        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferentCID", keccak256("different_content", student));
+        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferentCID", keccak256("different_content"), student);
         
         bytes32[] memory studentTranscripts = registry.getStudentTranscripts(studentHash);
         
@@ -213,7 +213,7 @@ contract TranscriptRegistryTest is Test {
         assertEq(registry.transcriptCount(), 1);
         
         vm.prank(registrar);
-        registry.registerTranscript(studentHash, "QmDifferent", keccak256("different", student));
+        registry.registerTranscript(studentHash, "QmDifferent", keccak256("different"), student);
         assertEq(registry.transcriptCount(), 2);
     }
     
@@ -558,7 +558,7 @@ contract TranscriptRegistryTest is Test {
         bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
-        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferent", keccak256("different", student));
+        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferent", keccak256("different"), student);
         
         studentTranscripts = registry.getStudentTranscripts(studentHash);
         assertEq(studentTranscripts.length, 2);

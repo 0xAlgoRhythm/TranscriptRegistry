@@ -13,7 +13,9 @@ import {
   SearchCode, 
   Settings2,
   Lock,
-  ListFilter
+  ListFilter,
+  Settings,
+  History
 } from "lucide-react"
 
 const NAV_ITEMS = [
@@ -27,12 +29,14 @@ const NAV_ITEMS = [
   // Registrar specific
   { label: "Issue Transcript", href: "/issue", icon: FilePlus2, role: "registrar" },
   { label: "Issued List", href: "/issued", icon: ListFilter, role: "registrar" },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings2, role: "registrar" },
   
   // Public/All
   { label: "Verify On-Chain", href: "/verify", icon: SearchCode, role: null },
   
   // Admin specific
-  { label: "Platform Admin", href: "/admin", icon: Settings2, role: "admin" },
+  { label: "Dashboard", href: "/admin", icon: Settings, role: "admin" },
+  { label: "Global Settings & Audit", href: "/admin/settings", icon: History, role: "admin" },
 ]
 
 export function Sidebar() {
