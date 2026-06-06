@@ -15,7 +15,7 @@ CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-RPC_URL="https://sepolia.drpc.org"
+RPC_URL="https://ethereum-sepolia-rpc.publicnode.com"
 
 # Load environment variables
 if [ ! -f .env ]; then
@@ -46,14 +46,14 @@ print_usage() {
 
 run_status() {
     echo -e "${CYAN}Checking platform status...${NC}"
-    forge script script/TestDeployedContracts.s.sol:CheckFactoryStatus \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:CheckFactoryStatus \
         --rpc-url $RPC_URL \
         -vv
 }
 
 run_register() {
     echo -e "${CYAN}Registering new transcript...${NC}"
-    forge script script/TestDeployedContracts.s.sol:TestRegisterTranscript \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:TestRegisterTranscript \
         --rpc-url $RPC_URL \
         --broadcast \
         --legacy \
@@ -62,7 +62,7 @@ run_register() {
 
 run_grant() {
     echo -e "${CYAN}Granting access to verifier...${NC}"
-    forge script script/TestDeployedContracts.s.sol:TestGrantAccess \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:TestGrantAccess \
         --rpc-url $RPC_URL \
         --broadcast \
         --legacy \
@@ -71,7 +71,7 @@ run_grant() {
 
 run_verify() {
     echo -e "${CYAN}Verifying transcript...${NC}"
-    forge script script/TestDeployedContracts.s.sol:TestVerifyTranscript \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:TestVerifyTranscript \
         --rpc-url $RPC_URL \
         --broadcast \
         --legacy \
@@ -80,7 +80,7 @@ run_verify() {
 
 run_revoke() {
     echo -e "${CYAN}Revoking access...${NC}"
-    forge script script/TestDeployedContracts.s.sol:TestRevokeAccess \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:TestRevokeAccess \
         --rpc-url $RPC_URL \
         --broadcast \
         --legacy \
@@ -89,7 +89,7 @@ run_revoke() {
 
 run_student() {
     echo -e "${CYAN}Getting student transcripts...${NC}"
-    forge script script/TestDeployedContracts.s.sol:GetStudentTranscripts \
+    ~/.foundry/bin/forge script script/TestDeployedContracts.s.sol:GetStudentTranscripts \
         --rpc-url $RPC_URL \
         -vv
 }
@@ -160,3 +160,4 @@ case "$1" in
         print_usage
         exit 1
         ;;
+esac

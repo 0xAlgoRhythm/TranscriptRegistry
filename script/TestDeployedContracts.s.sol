@@ -68,7 +68,7 @@ contract TestRegisterTranscript is Script {
         ) = registry.getTranscript(recordId);
         
         // Get status separately to avoid enum type issues
-        uint8 statusValue;
+        TranscriptRegistryUpgradeable.Status statusValue;
         (,,,,,statusValue) = registry.getTranscript(recordId);
         
         console.log("\nVerification:");
@@ -77,7 +77,7 @@ contract TestRegisterTranscript is Script {
         console.log("File Hash Match:", retrievedFileHash == fileHash);
         console.log("Issuer:", issuer);
         console.log("Timestamp:", timestamp);
-        console.log("Status (0=Active, 1=Revoked, 2=Amended):", statusValue);
+        console.log("Status (0=Active, 1=Revoked, 2=Amended):", uint256(statusValue));
         
         console.log("\nView on Etherscan:");
         console.log("https://sepolia.etherscan.io/address/", registryAddress);
