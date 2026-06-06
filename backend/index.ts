@@ -3,7 +3,7 @@ import { cors } from "hono/cors"
 import { db } from "./db/connection.js"
 import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications } from "./db/schema.js"
 import { createRemoteJWKSet, jwtVerify } from "jose"
-import { eq, and, sql } from "drizzle-orm"
+import { eq, and, sql, inArray } from "drizzle-orm"
 import { startIndexer } from "./indexer/sync.js"
 import { serve } from "@hono/node-server"
 import dotenv from "dotenv"
@@ -456,15 +456,18 @@ app.get("/api/students/profile/:walletAddress", async (c) => {
 app.get("/api/registrar/students/:registrarAddress", async (c) => {
   try {
     const registrarAddress = c.req.param("registrarAddress").toLowerCase()
-    const uni = await db.query.universities.findFirst({
-      where: eq(universities.registrar, registrarAddress)
-    })
-    if (!uni) {
+    
+    // A registrar may be assigned to multiple universities (e.g. from script redeployments)
+    const unis = await db.select().from(universities).where(eq(universities.registrar, registrarAddress))
+    
+    if (!unis || unis.length === 0) {
       return c.json({ error: "Registrar not registered with any university" }, 404)
     }
 
+    const uniIds = unis.map(u => u.universityId)
+
     const list = await db.select().from(students)
-      .where(eq(students.universityId, uni.universityId))
+      .where(inArray(students.universityId, uniIds))
 
     return c.json(list)
   } catch (err: any) {
