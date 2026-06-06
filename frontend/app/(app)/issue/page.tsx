@@ -231,16 +231,20 @@ export default function IssuePage() {
                 The student wallet address will be obfuscated using keccak256 on-chain, ensuring complete privacy.
               </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AddressInput
-                label="Student Wallet Address"
-                value={studentAddress}
-                onChange={setStudentAddress}
-                placeholder="0x..."
-                className="md:col-span-2"
-              />
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student ID Lookup</label>
+                <input
+                  type="text"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                  placeholder="Enter Student ID..."
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
+                />
+              </div>
+
               {studentStatus !== "idle" && (
-                <div className={`md:col-span-2 p-3 rounded font-mono text-xs border ${
+                <div className={`p-3 rounded font-mono text-xs border ${
                   studentStatus === "approved"
                     ? "bg-ca-success/8 text-ca-success border-ca-success/20"
                     : studentStatus === "checking"
@@ -250,32 +254,29 @@ export default function IssuePage() {
                   {studentStatusMsg}
                 </div>
               )}
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student Full Name</label>
-                <input
-                  type="text"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="e.g. John Doe"
-                  readOnly={studentStatus === "approved"}
-                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none ${
-                    studentStatus === "approved" ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student ID / Email</label>
-                <input
-                  type="text"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="e.g. student@university.edu"
-                  readOnly={studentStatus === "approved"}
-                  className={`w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none ${
-                    studentStatus === "approved" ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
-                />
-              </div>
+
+              {studentStatus === "approved" && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Verified Full Name</label>
+                    <input
+                      type="text"
+                      value={studentName}
+                      readOnly
+                      className="w-full rounded-lg border border-border/60 bg-muted/20 py-2.5 px-4 text-sm text-muted-foreground opacity-75 cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Bound Wallet Address</label>
+                    <input
+                      type="text"
+                      value={studentAddress}
+                      readOnly
+                      className="w-full rounded-lg border border-border/60 bg-muted/20 py-2.5 px-4 text-sm font-mono text-muted-foreground opacity-75 cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
