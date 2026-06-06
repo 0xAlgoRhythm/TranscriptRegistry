@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Cormorant_Garamond, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google"
+import { Analytics } from "@vercel/analytics/next"
 import { Web3Provider } from "@/components/providers/web3-provider"
 import "./globals.css"
 
@@ -54,6 +55,7 @@ export default function RootLayout({
 				className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} font-sans antialiased`}
 			>
 				<Web3Provider>{children}</Web3Provider>
+				<Analytics />
 			</body>
 		</html>
 	)
