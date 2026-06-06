@@ -522,7 +522,11 @@ export default function IssuePage() {
                 )}
               </Button>
             </div>
-            <TxPanel txHash={txHash} isConfirming={isConfirming} isSuccess={isSuccess} error={error} />
+            <TxPanel 
+              hash={txHash as string} 
+              status={error ? "error" : isSuccess ? "success" : isConfirming ? "pending" : isPending ? "signing" : "idle"} 
+              error={error?.message || undefined} 
+            />
           </div>
         )}
 
