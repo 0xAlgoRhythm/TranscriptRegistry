@@ -10,6 +10,7 @@
     "outDir": "./dist",
     "types": ["node"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["cleanup-db.ts"]
 }
 

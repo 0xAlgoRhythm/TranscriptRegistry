@@ -17,10 +17,12 @@
     "@pinata/sdk": "^2.1.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
+    "drizzle-orm": "^0.45.2",
     "form-data": "^4.0.5",
     "hono": "^4.12.23",
     "jose": "^6.2.3",
     "nodemailer": "^8.0.10",
+    "pg": "^8.21.0",
     "viem": "^2.51.3"
   },
   "devDependencies": {
@@ -28,8 +30,6 @@
     "@types/nodemailer": "^8.0.0",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
-    "drizzle-orm": "^0.45.2",
-    "pg": "^8.21.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
   }
