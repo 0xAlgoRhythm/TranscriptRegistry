@@ -439,6 +439,38 @@ app.get("/api/registrar/students/:registrarAddress", async (c) => {
         return c.json({ error: err.message }, 500);
     }
 });
+// Registrar binds a wallet address to a whitelisted student
+app.put("/api/students/:id/bind-wallet", async (c) => {
+    try {
+        const studentIdStr = c.req.param("id");
+        const { walletAddress, registrarAddress } = await c.req.json();
+        if (!walletAddress || !registrarAddress) {
+            return c.json({ error: "Missing required fields" }, 400);
+        }
+        const uni = await db.query.universities.findFirst({
+            where: eq(universities.registrar, registrarAddress.toLowerCase())
+        });
+        if (!uni) {
+            return c.json({ error: "Registrar university not found" }, 403);
+        }
+        const existingWallet = await db.query.students.findFirst({
+            where: eq(students.walletAddress, walletAddress.toLowerCase())
+        });
+        if (existingWallet) {
+            return c.json({ error: "Wallet address already bound to a student" }, 400);
+        }
+        await db.update(students)
+            .set({
+            walletAddress: walletAddress.toLowerCase(),
+            updatedAt: new Date(),
+        })
+            .where(and(eq(students.id, parseInt(studentIdStr)), eq(students.universityId, uni.universityId)));
+        return c.json({ success: true, message: "Wallet successfully bound to student profile." });
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
 // Registrar updates student approval status
 app.put("/api/students/:walletAddress/status", async (c) => {
     try {
@@ -569,6 +601,25 @@ app.get("/api/logs", async (c) => {
         ];
         logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         return c.json(logs.slice(0, 50));
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// ─── TEST EMAIL ENDPOINT ───
+app.post("/api/test-email", async (c) => {
+    try {
+        const { to } = await c.req.json();
+        if (!transporter) {
+            return c.json({ error: "Email transporter is not configured on the server." }, 500);
+        }
+        const info = await transporter.sendMail({
+            from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+            to: to || process.env.SMTP_USER || process.env.GMAIL_USER,
+            subject: "Test Email from CredAxis System",
+            text: "If you are reading this, the email configuration is fully working and perfectly aligned with the architecture!",
+        });
+        return c.json({ success: true, message: "Test email sent successfully", messageId: info.messageId });
     }
     catch (err) {
         return c.json({ error: err.message }, 500);
