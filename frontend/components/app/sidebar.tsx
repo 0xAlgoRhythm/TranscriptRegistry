@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   // Student specific
   { label: "My Transcripts", href: "/transcripts", icon: FileCheck2, role: "student" },
   { label: "Access Hub", href: "/access", icon: Lock, role: "student" },
+  { label: "Account Settings", href: "/settings", icon: Settings2, role: "student" },
   
   // Registrar specific
   { label: "Issue Transcript", href: "/issue", icon: FilePlus2, role: "registrar" },
