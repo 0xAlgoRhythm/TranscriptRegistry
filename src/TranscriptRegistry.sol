@@ -2,13 +2,14 @@
 pragma solidity ^0.8.20;
 
 import "../lib/openzeppelin-contracts/contracts/proxy/utils/Initializable.sol";
+import "../lib/openzeppelin-contracts-upgradeable/contracts/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 
 /**
  * @title TranscriptRegistry
- * @dev Smart contract for managing university transcripts on blockchain
+ * @dev Smart contract for managing university transcripts on blockchain and issuing SBTs
  * @notice Optimized with proxy clones and custom revert errors
  */
-contract TranscriptRegistry is Initializable {
+contract TranscriptRegistry is Initializable, ERC721URIStorageUpgradeable {
     // ============ Custom Errors ============
     
     error InvalidRegistrarAddress();
@@ -29,6 +30,7 @@ contract TranscriptRegistry is Initializable {
     error StatusAlreadySet();
     error InvalidAddress();
     error SameRegistrar();
+    error SoulboundTokenCannotBeTransferred();
 
     // ============ State Variables ============
     
@@ -137,14 +139,14 @@ contract TranscriptRegistry is Initializable {
         _;
     }
     
-    // ============ Constructor (Disables Direct Initialization of Master template) ============
+    // ============ Constructor ============
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
     
-    // ============ Initializer (Called by Factory clone) ============
+    // ============ Initializer ============
     
     /**
      * @dev Initialize a new cloned instance
@@ -160,6 +162,8 @@ contract TranscriptRegistry is Initializable {
         if (_registrar == address(0)) revert InvalidRegistrarAddress();
         if (_admin == address(0)) revert InvalidAdminAddress();
         
+        __ERC721_init(string.concat(_universityName, " Transcript"), "TR-SBT");
+        
         admin = _admin;
         registrar = _registrar;
         universityName = _universityName;
@@ -170,19 +174,22 @@ contract TranscriptRegistry is Initializable {
     
     /**
      * @dev Register a new transcript on blockchain
-     * @param studentHash Keccak256 hash of student ID (for privacy)
+     * @param studentHash Keccak256 hash of student ID
      * @param metadataCID IPFS CID containing metadata JSON
      * @param fileHash SHA-256 hash of the encrypted PDF file
+     * @param studentWallet Address of the student to mint the SBT NFT
      * @return recordId Unique identifier for the transcript
      */
     function registerTranscript(
         bytes32 studentHash,
         string memory metadataCID,
-        bytes32 fileHash
+        bytes32 fileHash,
+        address studentWallet
     ) external onlyRegistrar onlyActiveContract returns (bytes32) {
         if (studentHash == bytes32(0)) revert InvalidStudentHash();
         if (bytes(metadataCID).length == 0) revert InvalidMetadataCID();
         if (fileHash == bytes32(0)) revert InvalidFileHash();
+        if (studentWallet == address(0)) revert InvalidAddress();
         
         // Generate unique record ID
         bytes32 recordId = keccak256(
@@ -210,7 +217,12 @@ contract TranscriptRegistry is Initializable {
         // Add to student's transcript list
         studentTranscripts[studentHash].push(recordId);
         
+        uint256 tokenId = transcriptCount;
         transcriptCount++;
+        
+        // Mint Soulbound NFT to the student's wallet
+        _mint(studentWallet, tokenId);
+        _setTokenURI(tokenId, string.concat("ipfs://", metadataCID));
         
         emit TranscriptRegistered(
             recordId,
@@ -222,6 +234,20 @@ contract TranscriptRegistry is Initializable {
         );
         
         return recordId;
+    }
+    
+    // ============ ERC721 Soulbound Implementation ============
+
+    /**
+     * @dev Hook that is called before any token transfer. This includes minting and burning.
+     * We revert any transfer that is not a mint or burn to make the token Soulbound.
+     */
+    function _update(address to, uint256 tokenId, address auth) internal virtual override returns (address) {
+        address from = _ownerOf(tokenId);
+        if (from != address(0) && to != address(0)) {
+            revert SoulboundTokenCannotBeTransferred();
+        }
+        return super._update(to, tokenId, auth);
     }
     
     /**

@@ -414,7 +414,7 @@ contract UniversityFactoryTest is Test {
         bytes32 fileHash = keccak256("test_file");
         
         vm.prank(registrar1);
-        bytes32 recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        bytes32 recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // 3. Verify transcript was registered
         (bytes32 retrievedStudentHash, , bytes32 retrievedFileHash, , , ) = 

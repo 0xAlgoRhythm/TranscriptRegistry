@@ -133,10 +133,8 @@ contract TranscriptRegistryTest is Test {
         );
         
         recordId = registry.registerTranscript(
-            studentHash,
-            metadataCID,
-            fileHash
-        );
+            studentHash, metadataCID, fileHash
+        , student);
         
         // Verify transcript was registered
         (
@@ -162,7 +160,7 @@ contract TranscriptRegistryTest is Test {
     function test_RegisterTranscript_RevertsIfNotRegistrar() public {
         vm.prank(unauthorizedUser);
         vm.expectRevert(TranscriptRegistry.OnlyRegistrar.selector);
-        registry.registerTranscript(studentHash, metadataCID, fileHash);
+        registry.registerTranscript(studentHash, metadataCID, fileHash, student);
     }
     
     function test_RegisterTranscript_RevertsIfContractInactive() public {
@@ -172,33 +170,33 @@ contract TranscriptRegistryTest is Test {
         
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.ContractInactive.selector);
-        registry.registerTranscript(studentHash, metadataCID, fileHash);
+        registry.registerTranscript(studentHash, metadataCID, fileHash, student);
     }
     
     function test_RegisterTranscript_RevertsWithInvalidStudentHash() public {
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.InvalidStudentHash.selector);
-        registry.registerTranscript(bytes32(0), metadataCID, fileHash);
+        registry.registerTranscript(bytes32(0), metadataCID, fileHash, student);
     }
     
     function test_RegisterTranscript_RevertsWithEmptyMetadataCID() public {
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.InvalidMetadataCID.selector);
-        registry.registerTranscript(studentHash, "", fileHash);
+        registry.registerTranscript(studentHash, "", fileHash, student);
     }
     
     function test_RegisterTranscript_RevertsWithInvalidFileHash() public {
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.InvalidFileHash.selector);
-        registry.registerTranscript(studentHash, metadataCID, bytes32(0));
+        registry.registerTranscript(studentHash, metadataCID, bytes32(0, student));
     }
     
     function test_RegisterTranscript_AddsToStudentTranscriptsList() public {
         vm.prank(registrar);
-        bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
-        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferentCID", keccak256("different_content"));
+        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferentCID", keccak256("different_content", student));
         
         bytes32[] memory studentTranscripts = registry.getStudentTranscripts(studentHash);
         
@@ -211,11 +209,11 @@ contract TranscriptRegistryTest is Test {
         assertEq(registry.transcriptCount(), 0);
         
         vm.prank(registrar);
-        registry.registerTranscript(studentHash, metadataCID, fileHash);
+        registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         assertEq(registry.transcriptCount(), 1);
         
         vm.prank(registrar);
-        registry.registerTranscript(studentHash, "QmDifferent", keccak256("different"));
+        registry.registerTranscript(studentHash, "QmDifferent", keccak256("different", student));
         assertEq(registry.transcriptCount(), 2);
     }
     
@@ -224,7 +222,7 @@ contract TranscriptRegistryTest is Test {
     function test_GrantAccess_Success() public {
         // First register a transcript
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // Grant access as student
         uint256 duration = 30 days;
@@ -242,7 +240,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_GrantAccess_RevertsIfNotTranscriptOwner() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(unauthorizedUser);
         vm.expectRevert(TranscriptRegistry.NotTranscriptOwner.selector);
@@ -251,7 +249,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_GrantAccess_RevertsWithInvalidVerifierAddress() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         vm.expectRevert(TranscriptRegistry.InvalidVerifierAddress.selector);
@@ -260,7 +258,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_GrantAccess_RevertsWithInvalidDuration() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // Test zero duration
         vm.prank(student);
@@ -284,7 +282,7 @@ contract TranscriptRegistryTest is Test {
     function test_RevokeAccess_Success() public {
         // Register and grant access
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         registry.grantAccess(recordId, verifier, 30 days);
@@ -304,7 +302,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_RevokeAccess_RevertsIfNotTranscriptOwner() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         registry.grantAccess(recordId, verifier, 30 days);
@@ -316,7 +314,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_RevokeAccess_RevertsIfAccessNotGranted() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         vm.expectRevert(TranscriptRegistry.AccessNotGrantedOrRevoked.selector);
@@ -325,7 +323,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_CheckAccess_ReturnsFalseIfExpired() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // Grant access for 1 day
         vm.prank(student);
@@ -344,7 +342,7 @@ contract TranscriptRegistryTest is Test {
     function test_VerifyTranscript_Success() public {
         // Register transcript
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // Grant access
         vm.prank(student);
@@ -363,7 +361,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_VerifyTranscript_ReturnsFalseForWrongHash() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         registry.grantAccess(recordId, verifier, 30 days);
@@ -380,7 +378,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_VerifyTranscript_RevertsIfAccessDenied() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         // No access granted
         vm.prank(verifier);
@@ -390,7 +388,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_VerifyTranscript_RevertsIfAccessExpired() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         registry.grantAccess(recordId, verifier, 1 days);
@@ -407,7 +405,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_UpdateTranscriptStatus_Success() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
         vm.expectEmit(true, false, false, true);
@@ -430,7 +428,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_UpdateTranscriptStatus_RevertsIfNotRegistrar() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(unauthorizedUser);
         vm.expectRevert(TranscriptRegistry.OnlyRegistrar.selector);
@@ -443,7 +441,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_UpdateTranscriptStatus_RevertsIfSameStatus() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
         vm.expectRevert(TranscriptRegistry.StatusAlreadySet.selector);
@@ -526,7 +524,7 @@ contract TranscriptRegistryTest is Test {
     
     function test_GetTranscript_Success() public {
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         (
             bytes32 _studentHash,
@@ -557,10 +555,10 @@ contract TranscriptRegistryTest is Test {
         assertEq(studentTranscripts.length, 0);
         
         vm.prank(registrar);
-        bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        bytes32 recordId1 = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(registrar);
-        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferent", keccak256("different"));
+        bytes32 recordId2 = registry.registerTranscript(studentHash, "QmDifferent", keccak256("different", student));
         
         studentTranscripts = registry.getStudentTranscripts(studentHash);
         assertEq(studentTranscripts.length, 2);
@@ -578,7 +576,7 @@ contract TranscriptRegistryTest is Test {
         
         // Register and verify
         vm.prank(registrar);
-        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash);
+        recordId = registry.registerTranscript(studentHash, metadataCID, fileHash, student);
         
         vm.prank(student);
         registry.grantAccess(recordId, verifier, 30 days);

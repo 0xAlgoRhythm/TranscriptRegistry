@@ -90,3 +90,12 @@ export const students = pgTable("students", {
   actionAt: timestamp("action_at", { withTimezone: true }),
 })
 
+export const systemAuditLogs = pgTable("system_audit_logs", {
+  id: serial("id").primaryKey(),
+  actorType: text("actor_type").notNull(), // 'admin' | 'registrar' | 'system'
+  actorAddress: text("actor_address").notNull(),
+  action: text("action").notNull(),
+  details: text("details"),
+  timestamp: timestamp("timestamp", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+})
+
