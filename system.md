@@ -113,3 +113,24 @@ The React/Next.js frontend employs standard App Router structures.
 * **Global Theme Provider:** Theme state is initialized on mount from `localStorage` inside the global `Web3Provider` wrapper, eliminating duplicate layout-level state changes.
 * **Responsive Visual Contrast:** Surfaces and borders are cleanly structured using physical color tokens that transition correctly between Light and Dark mode.
 * **Interactive Prototyping:** A custom Zustand role-switch store is wired to a developer panel in `settings` to allow instant role testing without deploying new smart contracts.
+
+---
+
+## 6. Unified Authentication Architecture (Email & Web3)
+
+To bridge the gap between non-crypto-native users and blockchain infrastructure, the platform implements a hybrid identity system:
+
+### 6.1 Administrator Identity Verification
+Because the Platform Admin must sign transactions via the Factory Contract owner wallet, the system uses Web3 identity primarily. However, for a unified experience:
+- The system recognizes a hard-coded super-admin email (`johnokyere282@icloud.com`).
+- By utilizing **Privy Account Linking**, the Admin can log in via email and link their `0x` owner wallet. The frontend `rbac-provider.tsx` automatically resolves authorization by checking both the active wallet and all linked Privy accounts against the known admin credentials.
+
+### 6.2 Manual Wallet Binding for Students
+When registrars bulk-whitelist students via CSV, those profiles initially exist strictly off-chain as Web2 records without associated wallets.
+- **Registrar Authority:** The dashboard includes an "Edit Wallet" feature allowing the Registrar to manually input and bind a wallet address to a whitelisted student.
+- **Immediate Issuance:** This allows the Registrar to issue transcripts immediately without waiting for the student to onboard via the frontend.
+
+### 6.3 Domain Isolation
+The sidebar and routing strictly segment views:
+- **Platform Admins** see the global ecosystem, server logs, and the "Registered Institutions" (Registrar Manager) panel.
+- **Registrars** are restricted to their assigned University Dashboard and transcript issuance flows.

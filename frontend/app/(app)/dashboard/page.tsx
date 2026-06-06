@@ -53,6 +53,12 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [bulkLoading, setBulkLoading] = useState(false)
   const [activeTab, setActiveTab] = useState<"requests" | "bulk">("requests")
 
+  // Wallet Binding states
+  const [selectedStudentForWallet, setSelectedStudentForWallet] = useState<StudentRequest | null>(null)
+  const [newWalletAddress, setNewWalletAddress] = useState("")
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
+  const [bindLoading, setBindLoading] = useState(false)
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
   const fetchStudents = async () => {
@@ -98,7 +104,40 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
         alert("Failed to update student status.")
       }
     } catch (e) {
-      alert("Error connecting to server.")
+      alert("Network error updating status.")
+    }
+  }
+
+  const handleBindWallet = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedStudentForWallet || !newWalletAddress) return
+
+    try {
+      setBindLoading(true)
+      const res = await fetch(`${API_URL}/api/students/${selectedStudentForWallet.id}/bind-wallet`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          walletAddress: newWalletAddress,
+          registrarAddress,
+        }),
+      })
+
+      if (res.ok) {
+        setIsWalletModalOpen(false)
+        setNewWalletAddress("")
+        setSelectedStudentForWallet(null)
+        fetchStudents()
+      } else {
+        const errData = await res.json()
+        alert(errData.error || "Failed to bind wallet.")
+      }
+    } catch (e) {
+      alert("Network error binding wallet.")
+    } finally {
+      setBindLoading(false)
     }
   }
 
@@ -293,6 +332,19 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                         </span>
                       </td>
                       <td className="p-3 text-right">
+                        {!s.walletAddress && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedStudentForWallet(s)
+                              setIsWalletModalOpen(true)
+                            }}
+                            className="font-mono text-[9px] px-2 py-1 h-6 border-ca-accent text-ca-accent hover:bg-ca-accent hover:text-white"
+                          >
+                            BIND WALLET
+                          </Button>
+                        )}
                         {s.status === "pending" && s.walletAddress && (
                           <div className="flex gap-2 justify-end">
                             <Button
@@ -406,6 +458,53 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
             </Button>
           </form>
         </GlowCard>
+      )}
+
+      {/* Wallet Bind Modal */}
+      {isWalletModalOpen && selectedStudentForWallet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <GlowCard className="p-6 w-full max-w-md space-y-4" glow>
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                Bind Wallet Address
+              </h3>
+              <button onClick={() => setIsWalletModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground font-mono">
+              Link a wallet address to <strong>{selectedStudentForWallet.fullName}</strong> ({selectedStudentForWallet.studentId}).
+            </p>
+
+            <form onSubmit={handleBindWallet} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="walletAddr" className="text-[10px] font-mono font-bold uppercase tracking-wider">Wallet Address (0x...)</Label>
+                <input
+                  id="walletAddr"
+                  type="text"
+                  placeholder="0x..."
+                  value={newWalletAddress}
+                  onChange={(e) => setNewWalletAddress(e.target.value)}
+                  className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={bindLoading}
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-2 flex items-center justify-center gap-1.5"
+              >
+                {bindLoading ? (
+                  <><RefreshCw className="h-3 w-3 animate-spin" /> BINDING...</>
+                ) : (
+                  <><Check className="h-3 w-3" /> CONFIRM BIND</>
+                )}
+              </Button>
+            </form>
+          </GlowCard>
+        </div>
       )}
     </div>
   )

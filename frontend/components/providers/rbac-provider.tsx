@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 import { useAccount } from "wagmi"
 import { useRoleStore, UserRole } from "@/lib/stores/role-store"
 import { usePlatformAdmin } from "@/hooks/use-university-factory"
+import { usePrivy } from "@privy-io/react-auth"
 
 interface RBACContextType {
   resolvedRole: UserRole | null
@@ -14,6 +15,7 @@ const RBACContext = createContext<RBACContextType>({ resolvedRole: null, isLoadi
 
 export function RBACProvider({ children }: { children: React.ReactNode }) {
   const { address } = useAccount()
+  const { user } = usePrivy()
   const { role, setRole } = useRoleStore()
   const { data: adminAddress, isLoading: adminLoading, isError: adminError, isFetching: adminFetching } = usePlatformAdmin()
   const [resolving, setResolving] = useState(false)
@@ -35,11 +37,33 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       const resolveRole = async () => {
         setResolving(true)
         try {
-          // 1. Check Platform Admin
-          if (adminAddress && address.toLowerCase() === (adminAddress as string).toLowerCase()) {
+          // 0. Check Hardcoded Platform Admin Email
+          const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "johnokyere282@icloud.com"
+          const userEmail = user?.email?.address?.toLowerCase()
+          if (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com") {
             setRole("admin")
             setResolving(false)
             return
+          }
+
+          // Gather all associated addresses for this user (connected wallet + linked accounts)
+          const userAddresses = [address.toLowerCase()]
+          if (user?.linkedAccounts) {
+            user.linkedAccounts.forEach(acc => {
+              if (acc.type === "wallet" && acc.address) {
+                userAddresses.push(acc.address.toLowerCase())
+              }
+            })
+          }
+
+          // 1. Check Platform Admin Wallet
+          if (adminAddress) {
+            const adminAddr = (adminAddress as string).toLowerCase()
+            if (userAddresses.includes(adminAddr)) {
+              setRole("admin")
+              setResolving(false)
+              return
+            }
           }
 
           // 2. Check if Registrar via Hono API
@@ -48,7 +72,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           if (res.ok) {
             const universities = await res.json()
             const isRegistrar = universities.some(
-              (u: any) => u.registrar.toLowerCase() === address.toLowerCase()
+              (u: any) => userAddresses.includes(u.registrar.toLowerCase())
             )
             if (isRegistrar) {
               setRole("registrar")
@@ -71,7 +95,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } else {
       setRole(null)
     }
-  }, [address, adminAddress, adminLoading, adminFetching, adminError, setRole])
+  }, [address, adminAddress, adminLoading, adminFetching, adminError, setRole, user])
 
   const isLoading = (address && adminLoading) || resolving
 
