@@ -8,6 +8,8 @@ export const universities = pgTable("universities", {
     registrar: text("registrar").notNull(),
     deployedAt: timestamp("deployed_at", { withTimezone: true }).notNull(),
     isActive: boolean("is_active").default(true),
+    logoUrl: text("logo_url"),
+    stampUrl: text("stamp_url"),
     txHash: text("tx_hash"),
     blockNumber: bigint("block_number", { mode: "bigint" }),
 });
@@ -80,4 +82,12 @@ export const students = pgTable("students", {
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
     actionAt: timestamp("action_at", { withTimezone: true }),
+});
+export const systemAuditLogs = pgTable("system_audit_logs", {
+    id: serial("id").primaryKey(),
+    actorType: text("actor_type").notNull(), // 'admin' | 'registrar' | 'system'
+    actorAddress: text("actor_address").notNull(),
+    action: text("action").notNull(),
+    details: text("details"),
+    timestamp: timestamp("timestamp", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
 });

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { db } from "./db/connection.js";
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications } from "./db/schema.js";
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs } from "./db/schema.js";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { startIndexer } from "./indexer/sync.js";
@@ -112,6 +112,79 @@ const verifyAuth = async (c, next) => {
     await next();
 };
 // ─── API Routes ───
+// Helper: Add Audit Log
+async function logAudit(actorType, actorAddress, action, details) {
+    try {
+        await db.insert(systemAuditLogs).values({
+            actorType,
+            actorAddress,
+            action,
+            details,
+        });
+    }
+    catch (err) {
+        console.error("Failed to write audit log:", err);
+    }
+}
+// Audit Logs Endpoint
+app.get("/api/audit-logs", async (c) => {
+    try {
+        const actorAddress = c.req.query("actorAddress");
+        if (actorAddress) {
+            const logs = await db.select().from(systemAuditLogs)
+                .where(eq(systemAuditLogs.actorAddress, actorAddress.toLowerCase()))
+                .orderBy(sql `${systemAuditLogs.timestamp} DESC`)
+                .limit(100);
+            return c.json(logs);
+        }
+        const logs = await db.select().from(systemAuditLogs)
+            .orderBy(sql `${systemAuditLogs.timestamp} DESC`)
+            .limit(200);
+        return c.json(logs);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/audit-logs", async (c) => {
+    try {
+        const { actorType, actorAddress, action, details } = await c.req.json();
+        await logAudit(actorType, actorAddress.toLowerCase(), action, details);
+        return c.json({ success: true });
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Registrar Settings
+app.get("/api/registrar/settings/:registrarAddr", async (c) => {
+    try {
+        const addr = c.req.param("registrarAddr").toLowerCase();
+        const uni = await db.query.universities.findFirst({
+            where: eq(universities.registrar, addr)
+        });
+        if (!uni)
+            return c.json({ error: "University not found" }, 404);
+        return c.json(uni);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/registrar/settings", async (c) => {
+    try {
+        const { registrarAddr, logoUrl, stampUrl } = await c.req.json();
+        const result = await db.update(universities)
+            .set({ logoUrl, stampUrl })
+            .where(eq(universities.registrar, registrarAddr.toLowerCase()))
+            .returning();
+        await logAudit("registrar", registrarAddr.toLowerCase(), "UPDATED_SETTINGS", `Updated logo/stamp assets`);
+        return c.json(result[0]);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
 // Platform stats
 app.get("/api/stats/platform", async (c) => {
     try {
