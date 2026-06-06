@@ -52,18 +52,21 @@ export default function IssuePage() {
 
   // ─── Auto-check student profile ───────────────────────────────────────────
   useEffect(() => {
-    if (studentAddress && studentAddress.length === 42 && studentAddress.startsWith("0x")) {
+    if (studentId && studentId.length >= 3) {
       setStudentStatus("checking")
       setStudentStatusMsg("Verifying student profile status...")
-      fetch(`${API_URL}/api/students/profile/${studentAddress.toLowerCase()}`)
+      fetch(`${API_URL}/api/students/profile-by-id/${encodeURIComponent(studentId)}`)
         .then(async (res) => {
           if (res.ok) {
             const profile = await res.json()
-            if (profile.status === "approved") {
+            if (!profile.walletAddress) {
+              setStudentStatus("pending")
+              setStudentStatusMsg("Student found but has no bound wallet address. Please bind a wallet in the dashboard first.")
+            } else if (profile.status === "approved") {
               setStudentStatus("approved")
               setStudentStatusMsg("✓ Approved student profile verified.")
               setStudentName(profile.fullName || "")
-              setStudentId(profile.studentId || "")
+              setStudentAddress(profile.walletAddress)
             } else if (profile.status === "pending") {
               setStudentStatus("pending")
               setStudentStatusMsg("⏳ Verification pending — approve this student first.")
@@ -83,8 +86,10 @@ export default function IssuePage() {
     } else {
       setStudentStatus("idle")
       setStudentStatusMsg("")
+      setStudentName("")
+      setStudentAddress("")
     }
-  }, [studentAddress, API_URL])
+  }, [studentId, API_URL])
 
   // ─── Auto-hash on file select ──────────────────────────────────────────────
   useEffect(() => {
