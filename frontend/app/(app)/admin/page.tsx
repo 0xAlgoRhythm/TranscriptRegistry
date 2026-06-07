@@ -2,7 +2,8 @@
 
 import React, { useState } from "react"
 import { type Address } from "viem"
-import { useAccount } from "wagmi"
+import { useAccount, useWriteContract } from "wagmi"
+import { transcriptRegistryAbi, CHAIN } from "@/lib/contracts"
 import { useRoleStore } from "@/lib/stores/role-store"
 import { useWallets } from "@privy-io/react-auth"
 import {
@@ -211,14 +212,34 @@ function DeployUniversityForm() {
 
   const [name, setName] = useState("")
   const [registrar, setRegistrar] = useState("")
+  const [email, setEmail] = useState("")
 
   const { deploy, hash, isPending, isConfirming, isSuccess, error } = useDeployUniversity()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!name || !registrar) return
+    if (!name || !registrar || !email) return
     deploy(name, registrar as Address)
   }
+
+  React.useEffect(() => {
+    if (hash && email) {
+      const registerEmail = async () => {
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+          await fetch(`${API_URL}/api/universities/register-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ txHash: hash, email }),
+          })
+          console.log("Registered registrar email mapping for tx:", hash)
+        } catch (err) {
+          console.error("Failed to register registrar email mapping:", err)
+        }
+      }
+      registerEmail()
+    }
+  }, [hash, email])
 
   return (
     <GlowCard className="p-6 md:p-8 space-y-6 relative overflow-hidden" glow>
@@ -239,6 +260,18 @@ function DeployUniversityForm() {
             placeholder="e.g. Massachusetts Institute of Technology"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
+            required
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Designated Registrar Email</label>
+          <input
+            type="email"
+            placeholder="e.g. registrar@university.edu"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
             required
           />
@@ -279,10 +312,204 @@ function DeployUniversityForm() {
   )
 }
 
+interface GovernanceRequest {
+  id: number
+  type: string
+  universityId: number
+  contractAddr: string
+  currentValue: string
+  newValue: string
+  status: string
+  createdAt: string
+}
+
+function PendingGovernanceApprovals() {
+  const [requests, setRequests] = useState<GovernanceRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [processingId, setProcessingId] = useState<number | null>(null)
+  
+  const { writeContractAsync } = useWriteContract()
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${API_URL}/api/governance/requests`)
+      if (res.ok) {
+        const data = await res.json()
+        setRequests(data.filter((r: any) => r.status === "pending"))
+      } else {
+        setError("Failed to fetch pending requests.")
+      }
+    } catch (e) {
+      setError("Failed to connect to backend server.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  React.useEffect(() => {
+    fetchRequests()
+  }, [])
+
+  const handleApprove = async (req: GovernanceRequest) => {
+    try {
+      setProcessingId(req.id)
+      
+      // If it is a wallet update, we must execute the on-chain txn
+      if (req.type === "wallet") {
+        console.log("Signing wallet update on-chain for registry:", req.contractAddr)
+        const hash = await writeContractAsync({
+          address: req.contractAddr as Address,
+          abi: transcriptRegistryAbi,
+          functionName: "updateRegistrar",
+          args: [req.newValue as Address],
+          chainId: CHAIN.id,
+        })
+        console.log("On-chain update registrar txn submitted:", hash)
+      }
+
+      // Now approve in our DB backend
+      const res = await fetch(`${API_URL}/api/governance/requests/${req.id}/approve`, {
+        method: "POST"
+      })
+
+      if (res.ok) {
+        await fetchRequests()
+      } else {
+        alert("Failed to approve request in database.")
+      }
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || "Action failed.")
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleReject = async (req: GovernanceRequest) => {
+    try {
+      setProcessingId(req.id)
+      const res = await fetch(`${API_URL}/api/governance/requests/${req.id}/reject`, {
+        method: "POST"
+      })
+
+      if (res.ok) {
+        await fetchRequests()
+      } else {
+        alert("Failed to reject request.")
+      }
+    } catch (err: any) {
+      console.error(err)
+      alert(err.message || "Action failed.")
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <SectionLabel index={3} label="PENDING SECURITY & GOVERNANCE APPROVALS" />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={fetchRequests}
+          className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+        >
+          <RefreshCw className="h-3 w-3 mr-1" /> REFRESH
+        </Button>
+      </div>
+
+      <GlowCard className="p-6 relative overflow-hidden" glow>
+        {loading ? (
+          <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+            LOADING GOVERNANCE REQUESTS...
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 font-mono text-xs text-ca-danger">
+            {error}
+          </div>
+        ) : requests.length === 0 ? (
+          <div className="text-center py-8 font-mono text-xs text-muted-foreground uppercase tracking-wide">
+            No pending security approvals
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {requests.map((req) => (
+              <div
+                key={req.id}
+                className="flex flex-col md:flex-row md:items-center justify-between border-b border-border/20 pb-4 last:border-0 last:pb-0 gap-4"
+              >
+                <div className="space-y-1.5 font-mono text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded text-[10px] uppercase font-bold border",
+                      req.type === "wallet" 
+                        ? "bg-ca-accent/10 text-ca-accent border-ca-accent/20"
+                        : "bg-ca-warning/10 text-ca-warning border-ca-warning/20"
+                    )}>
+                      {req.type === "wallet" ? "WALLET CHANGE" : "EMAIL CHANGE"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      University ID: {req.universityId}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Registry: <span className="text-foreground">{req.contractAddr}</span>
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-1 text-[11px]">
+                    <div>
+                      <span className="text-muted-foreground">Current: </span>
+                      <span className="text-ca-danger font-semibold">{req.currentValue}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">New Requested: </span>
+                      <span className="text-ca-success font-semibold">{req.newValue}</span>
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-muted-foreground/60">
+                    Requested: {new Date(req.createdAt).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    disabled={processingId !== null}
+                    onClick={() => handleReject(req)}
+                    className="bg-ca-danger/15 text-ca-danger hover:bg-ca-danger/25 border border-ca-danger/30 font-mono text-[10px] py-1 h-8 px-3"
+                  >
+                    REJECT
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={processingId !== null}
+                    onClick={() => handleApprove(req)}
+                    className="bg-ca-success/15 text-ca-success hover:bg-ca-success/25 border border-ca-success/30 font-mono text-[10px] py-1 h-8 px-3 flex items-center gap-1.5"
+                  >
+                    {processingId === req.id ? (
+                      <span className="animate-spin h-3.5 w-3.5 border-2 border-ca-success border-t-transparent rounded-full" />
+                    ) : null}
+                    {req.type === "wallet" ? "SIGN & APPROVE" : "APPROVE"}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </GlowCard>
+    </div>
+  )
+}
+
+
 export default function AdminPage() {
   const { address } = useAccount()
   const { role } = useRoleStore()
   const { data: stats } = usePlatformStats()
+  const { data: adminAddress } = usePlatformAdmin()
 
   const hasAccess = role === "admin"
 
@@ -309,6 +536,26 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-10 animate-fade-in pb-16">
+      {/* Wallet Address Warning Banner */}
+      {address && adminAddress && address.toLowerCase() !== (adminAddress as string).toLowerCase() && (
+        <div className="rounded-xl border border-ca-danger/30 bg-ca-danger/10 p-5 font-mono text-xs text-foreground flex flex-col md:flex-row items-start md:items-center justify-between gap-4 backdrop-blur-sm shadow-lg">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-5 w-5 text-ca-danger shrink-0 mt-0.5 animate-pulse" />
+            <div>
+              <p className="font-bold text-ca-danger uppercase tracking-wider text-[11px] mb-1">
+                Platform Admin Wallet Mismatch
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                You are logged in as admin via email, but your active wallet is <span className="text-ca-danger font-semibold">{address}</span> instead of the Platform Admin deployer wallet <span className="text-ca-success font-semibold">{adminAddress as string}</span>. Switch accounts inside MetaMask before performing contract actions.
+              </p>
+            </div>
+          </div>
+          <div className="text-[10px] bg-ca-danger/15 border border-ca-danger/30 px-3 py-1.5 rounded-lg text-ca-danger shrink-0 uppercase tracking-wider font-bold">
+            Switch Account in MetaMask
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="space-y-1">
         <SectionLabel index={1} label="ADMINISTRATIVE ACTION" />
@@ -345,6 +592,9 @@ export default function AdminPage() {
           <UniversityList />
         </GlowCard>
       </div>
+
+      {/* Governance Approvals */}
+      <PendingGovernanceApprovals />
 
       {/* Activity Logs */}
       <ActivityLogs />

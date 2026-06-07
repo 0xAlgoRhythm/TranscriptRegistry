@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { db } from "./db/connection.js";
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs } from "./db/schema.js";
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests } from "./db/schema.js";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { startIndexer } from "./indexer/sync.js";
@@ -208,6 +208,113 @@ app.get("/api/universities", async (c) => {
     try {
         const list = await db.select().from(universities);
         return c.json(list);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/universities/register-email", async (c) => {
+    try {
+        const { txHash, email } = await c.req.json();
+        if (!txHash || !email) {
+            return c.json({ error: "Missing required fields" }, 400);
+        }
+        const cleanHash = txHash.toLowerCase();
+        const cleanEmail = email.toLowerCase();
+        await db.insert(registrarEmails).values({
+            txHash: cleanHash,
+            email: cleanEmail,
+        }).onConflictDoUpdate({
+            target: registrarEmails.txHash,
+            set: { email: cleanEmail }
+        });
+        return c.json({ success: true });
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Governance / Recovery Requests
+app.get("/api/governance/requests", async (c) => {
+    try {
+        const list = await db.select().from(governanceRequests).orderBy(sql `${governanceRequests.createdAt} DESC`);
+        return c.json(list);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/governance/requests", async (c) => {
+    try {
+        const { type, universityId, contractAddr, currentValue, newValue } = await c.req.json();
+        if (!type || !universityId || !contractAddr || !currentValue || !newValue) {
+            return c.json({ error: "Missing required fields" }, 400);
+        }
+        const result = await db.insert(governanceRequests).values({
+            type, // 'email' | 'wallet'
+            universityId: parseInt(universityId),
+            contractAddr: contractAddr.toLowerCase(),
+            currentValue: currentValue.toLowerCase(),
+            newValue: newValue.toLowerCase(),
+            status: "pending",
+            createdAt: new Date(),
+        }).returning();
+        await logAudit("registrar", contractAddr.toLowerCase(), "GOVERNANCE_REQUEST_SUBMITTED", `Requested ${type} change from ${currentValue} to ${newValue}`);
+        return c.json(result[0]);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/governance/requests/:id/approve", async (c) => {
+    try {
+        const id = parseInt(c.req.param("id"));
+        const req = await db.query.governanceRequests.findFirst({
+            where: eq(governanceRequests.id, id)
+        });
+        if (!req)
+            return c.json({ error: "Request not found" }, 404);
+        if (req.status !== "pending")
+            return c.json({ error: "Request is already processed" }, 400);
+        // Update request status
+        await db.update(governanceRequests)
+            .set({ status: "approved", actionAt: new Date() })
+            .where(eq(governanceRequests.id, id));
+        if (req.type === "email") {
+            // For email change, we update the database
+            await db.update(universities)
+                .set({ registrarEmail: req.newValue.toLowerCase() })
+                .where(eq(universities.universityId, req.universityId));
+            await logAudit("admin", "0x31eee44788ea5ae0c65dbdcb1d1c3ea1d8a4e592", "APPROVED_EMAIL_CHANGE", `Approved email change to ${req.newValue} for university ID ${req.universityId}`);
+        }
+        else if (req.type === "wallet") {
+            // For wallet change, we also update the universities registrar wallet in DB
+            await db.update(universities)
+                .set({ registrar: req.newValue.toLowerCase() })
+                .where(eq(universities.universityId, req.universityId));
+            await logAudit("admin", "0x31eee44788ea5ae0c65dbdcb1d1c3ea1d8a4e592", "APPROVED_WALLET_CHANGE", `Approved wallet change to ${req.newValue} for university ID ${req.universityId}`);
+        }
+        return c.json({ success: true });
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+app.post("/api/governance/requests/:id/reject", async (c) => {
+    try {
+        const id = parseInt(c.req.param("id"));
+        const req = await db.query.governanceRequests.findFirst({
+            where: eq(governanceRequests.id, id)
+        });
+        if (!req)
+            return c.json({ error: "Request not found" }, 404);
+        if (req.status !== "pending")
+            return c.json({ error: "Request is already processed" }, 400);
+        await db.update(governanceRequests)
+            .set({ status: "rejected", actionAt: new Date() })
+            .where(eq(governanceRequests.id, id));
+        await logAudit("admin", "0x31eee44788ea5ae0c65dbdcb1d1c3ea1d8a4e592", "REJECTED_GOVERNANCE_CHANGE", `Rejected ${req.type} change to ${req.newValue} for university ID ${req.universityId}`);
+        return c.json({ success: true });
     }
     catch (err) {
         return c.json({ error: err.message }, 500);

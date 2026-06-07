@@ -7,6 +7,7 @@ export const universities = pgTable("universities", {
   name: text("name").notNull(),
   contractAddr: text("contract_addr").notNull(),
   registrar: text("registrar").notNull(),
+  registrarEmail: text("registrar_email"),
   deployedAt: timestamp("deployed_at", { withTimezone: true }).notNull(),
   isActive: boolean("is_active").default(true),
   logoUrl: text("logo_url"),
@@ -99,5 +100,23 @@ export const systemAuditLogs = pgTable("system_audit_logs", {
   action: text("action").notNull(),
   details: text("details"),
   timestamp: timestamp("timestamp", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+})
+
+export const registrarEmails = pgTable("registrar_emails", {
+  id: serial("id").primaryKey(),
+  txHash: text("tx_hash").unique().notNull(),
+  email: text("email").notNull(),
+})
+
+export const governanceRequests = pgTable("governance_requests", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // 'email' | 'wallet'
+  universityId: integer("university_id").notNull(),
+  contractAddr: text("contract_addr").notNull(),
+  currentValue: text("current_value").notNull(),
+  newValue: text("new_value").notNull(),
+  status: text("status").default("pending").notNull(), // 'pending' | 'approved' | 'rejected'
+  createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  actionAt: timestamp("action_at", { withTimezone: true }),
 })
 

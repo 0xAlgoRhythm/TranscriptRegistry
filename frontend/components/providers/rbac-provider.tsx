@@ -82,8 +82,13 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           const res = await fetch(`${API_URL}/api/universities`)
           if (res.ok) {
             const universities = await res.json()
+            const userEmail = user?.email?.address?.toLowerCase()
             const isRegistrar = universities.some(
-              (u: any) => userAddresses.includes(u.registrar.toLowerCase())
+              (u: any) => {
+                const matchesWallet = userAddresses.includes(u.registrar.toLowerCase())
+                const matchesEmail = userEmail && u.registrarEmail && u.registrarEmail.toLowerCase() === userEmail
+                return matchesWallet || matchesEmail
+              }
             )
             if (isRegistrar) {
               setRole("registrar")

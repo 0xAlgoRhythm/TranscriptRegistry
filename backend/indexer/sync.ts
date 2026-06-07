@@ -1,8 +1,8 @@
 import { createPublicClient, http, parseAbiItem } from "viem"
 import { sepolia } from "viem/chains"
 import { db } from "../db/connection.js"
-import { universities, transcripts, transcriptStatusHistory, indexerState, verifications } from "../db/schema.js"
-import { eq } from "drizzle-orm"
+import { universities, transcripts, transcriptStatusHistory, indexerState, verifications, registrarEmails } from "../db/schema.js"
+import { eq, sql } from "drizzle-orm"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -68,16 +68,32 @@ export async function startIndexer() {
         const { universityId, contractAddress, universityName, registrar, timestamp } = log.args
         if (universityId !== undefined && contractAddress && registrar && universityName) {
           console.log(`[EVENT] Deployed university: ${universityName} at registry ${contractAddress}`)
+          
+          // Lookup email associated with this deployment tx hash
+          const emailMap = await db.query.registrarEmails.findFirst({
+            where: eq(registrarEmails.txHash, log.transactionHash.toLowerCase())
+          })
+          const registrarEmail = emailMap ? emailMap.email : null
+
           await db.insert(universities).values({
             universityId: Number(universityId),
             name: universityName,
             contractAddr: contractAddress.toLowerCase(),
             registrar: registrar.toLowerCase(),
+            registrarEmail: registrarEmail,
             deployedAt: new Date(Number(timestamp) * 1000),
             isActive: true,
             txHash: log.transactionHash,
             blockNumber: log.blockNumber,
-          }).onConflictDoNothing()
+          }).onConflictDoUpdate({
+            target: universities.universityId,
+            set: {
+              contractAddr: contractAddress.toLowerCase(),
+              registrar: registrar.toLowerCase(),
+              registrarEmail: registrarEmail || sql`registrar_email`,
+              isActive: true,
+            }
+          })
         }
       }
 
@@ -177,6 +193,25 @@ export async function startIndexer() {
               txHash: log.transactionHash,
               blockNumber: log.blockNumber,
             }).onConflictDoNothing()
+          }
+        }
+
+        // 5. Fetch RegistrarUpdated events
+        const registrarLogs = await publicClient.getLogs({
+          address: registryAddresses,
+          event: parseAbiItem("event RegistrarUpdated(address indexed oldRegistrar, address indexed newRegistrar)"),
+          fromBlock: currentBlock,
+          toBlock: toBlock,
+        })
+
+        for (const log of registrarLogs) {
+          const { oldRegistrar, newRegistrar } = log.args
+          if (oldRegistrar && newRegistrar) {
+            const registryAddr = log.address.toLowerCase()
+            console.log(`[EVENT] Updated registrar for registry ${registryAddr}: ${oldRegistrar} -> ${newRegistrar}`)
+            await db.update(universities)
+              .set({ registrar: newRegistrar.toLowerCase() })
+              .where(eq(universities.contractAddr, registryAddr))
           }
         }
       }
