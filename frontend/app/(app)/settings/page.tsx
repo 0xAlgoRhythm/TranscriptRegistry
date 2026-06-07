@@ -7,7 +7,7 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, User, Mail, Wallet, ShieldAlert, CheckCircle2 } from "lucide-react"
-import { truncateAddress } from "@/lib/utils"
+import { truncateAddress, getPrivyEmail } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { address } = useAccount()
@@ -30,8 +30,9 @@ export default function SettingsPage() {
       } else {
         // Might be logged in with a different wallet that is not bound yet
         // Let's see if we can find them by email if we have user.email
-        if (user?.email?.address) {
-          const res2 = await fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(user.email.address)}`)
+        const userEmail = getPrivyEmail(user)
+        if (userEmail) {
+          const res2 = await fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(userEmail)}`)
           if (res2.ok) {
             const data2 = await res2.json()
             if (data2.length > 0) setProfile(data2[0])

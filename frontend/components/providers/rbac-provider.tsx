@@ -5,6 +5,7 @@ import { useAccount } from "wagmi"
 import { useRoleStore, UserRole } from "@/lib/stores/role-store"
 import { usePlatformAdmin } from "@/hooks/use-university-factory"
 import { usePrivy } from "@privy-io/react-auth"
+import { getPrivyEmail } from "@/lib/utils"
 
 interface RBACContextType {
   resolvedRole: UserRole | null
@@ -22,9 +23,9 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 0. Check Hardcoded Platform Admin Email (Instant local check)
-    if (user?.email?.address) {
+    const userEmail = getPrivyEmail(user)
+    if (userEmail) {
       const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "johnokyere282@icloud.com"
-      const userEmail = user.email.address.toLowerCase()
       if (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com") {
         setRole("admin")
         setResolving(false)
@@ -50,8 +51,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         try {
           // Keep as fallback
           const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "johnokyere282@icloud.com"
-          const userEmail = user?.email?.address?.toLowerCase()
-          if (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com") {
+          const userEmail = getPrivyEmail(user)
+          if (userEmail && (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com")) {
             setRole("admin")
             setResolving(false)
             return
@@ -82,7 +83,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
           const res = await fetch(`${API_URL}/api/universities`)
           if (res.ok) {
             const universities = await res.json()
-            const userEmail = user?.email?.address?.toLowerCase()
+            const userEmail = getPrivyEmail(user)
             const isRegistrar = universities.some(
               (u: any) => {
                 const matchesWallet = userAddresses.includes(u.registrar.toLowerCase())

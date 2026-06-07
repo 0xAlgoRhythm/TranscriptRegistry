@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ShieldAlert, Clock, CheckCircle2, RefreshCw, Send, AlertTriangle, LogOut } from "lucide-react"
+import { getPrivyEmail } from "@/lib/utils"
 
 interface StudentProfile {
   id: number
@@ -198,7 +199,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
 
   // 1. Unregistered -> Render Onboarding Form
   if (!profile) {
-    const defaultEmail = user?.email?.address || ""
+    const defaultEmail = getPrivyEmail(user) || ""
     return (
       <div className="flex min-h-[75vh] items-center justify-center p-6 animate-fade-in">
         <GlowCard className="p-8 w-full max-w-lg space-y-6" glow>

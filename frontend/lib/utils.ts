@@ -47,3 +47,19 @@ export function getHumanError(error: unknown): string {
 
   return "Something went wrong — please try again"
 }
+
+export function getPrivyEmail(user: any): string | null {
+  if (!user) return null
+  if (user.email?.address) return user.email.address.toLowerCase()
+  if (user.google?.email) return user.google.email.toLowerCase()
+  if (user.apple?.email) return user.apple.email.toLowerCase()
+  if (user.linkedAccounts) {
+    for (const acc of user.linkedAccounts) {
+      if (acc.type === "email" && acc.address) return acc.address.toLowerCase()
+      if (acc.type === "google_oauth" && acc.email) return acc.email.toLowerCase()
+      if (acc.type === "apple_oauth" && acc.email) return acc.email.toLowerCase()
+    }
+  }
+  return null
+}
+
