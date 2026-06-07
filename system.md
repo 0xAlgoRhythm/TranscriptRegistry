@@ -134,3 +134,7 @@ When registrars bulk-whitelist students via CSV, those profiles initially exist 
 The sidebar and routing strictly segment views:
 - **Platform Admins** see the global ecosystem, server logs, and the "Registered Institutions" (Registrar Manager) panel.
 - **Registrars** are restricted to their assigned University Dashboard and transcript issuance flows.
+
+
+
+
