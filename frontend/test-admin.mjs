@@ -3,35 +3,21 @@ import { baseSepolia } from 'viem/chains'
 
 const client = createPublicClient({
   chain: baseSepolia,
-  transport: http('https://sepolia.drpc.org') // Base Sepolia RPC from root .env
+  transport: http('https://sepolia.drpc.org')
 })
 
 const factoryAddress = '0xC47F6F55C968b7c47ec011EB3BcD76c944a937ad'
-const platformAdminAbi = [{
-  type: 'function',
-  name: 'platformAdmin',
-  inputs: [],
-  outputs: [{ type: 'address' }],
-  stateMutability: 'view'
-}]
+const implSlot = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc'
 
 async function main() {
   try {
-    const code = await client.getBytecode({
-      address: factoryAddress
+    const val = await client.getStorageAt({
+      address: factoryAddress,
+      slot: implSlot
     })
-    console.log('BASE SEPOLIA BYTECODE FOR 0xC47F:', code ? code.substring(0, 100) + '...' : 'null')
-    
-    if (code) {
-      const admin = await client.readContract({
-        address: factoryAddress,
-        abi: platformAdminAbi,
-        functionName: 'platformAdmin'
-      })
-      console.log('ON-CHAIN PLATFORM ADMIN ADDRESS ON BASE SEPOLIA:', admin)
-    }
+    console.log('BASE SEPOLIA IMPLEMENTATION SLOT VALUE:', val)
   } catch (err) {
-    console.error('Error on Base Sepolia:', err.message)
+    console.error('Error getting storage:', err.message)
   }
 }
 
