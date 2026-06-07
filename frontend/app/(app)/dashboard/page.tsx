@@ -59,6 +59,14 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false)
   const [bindLoading, setBindLoading] = useState(false)
 
+  // Edit Student states
+  const [selectedStudentForEdit, setSelectedStudentForEdit] = useState<StudentRequest | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editEmail, setEditEmail] = useState("")
+  const [editWallet, setEditWallet] = useState("")
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [editLoading, setEditLoading] = useState(false)
+
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
   const fetchStudents = async () => {
@@ -151,6 +159,39 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       alert("Network error binding wallet.")
     } finally {
       setBindLoading(false)
+    }
+  }
+
+  const handleEditStudent = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedStudentForEdit) return
+
+    try {
+      setEditLoading(true)
+      const res = await fetch(`${API_URL}/api/students/${selectedStudentForEdit.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: editName,
+          email: editEmail,
+          walletAddress: editWallet || null,
+        }),
+      })
+
+      if (res.ok) {
+        setIsEditModalOpen(false)
+        setSelectedStudentForEdit(null)
+        fetchStudents()
+      } else {
+        const errData = await res.json()
+        alert(errData.error || "Failed to update student details.")
+      }
+    } catch (e) {
+      alert("Network error updating student details.")
+    } finally {
+      setEditLoading(false)
     }
   }
 
@@ -354,55 +395,72 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                         </span>
                       </td>
                       <td className="p-3 text-right">
-                        {!s.walletAddress && (
+                        <div className="flex gap-2 justify-end items-center">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedStudentForWallet(s)
-                              setIsWalletModalOpen(true)
+                              setSelectedStudentForEdit(s)
+                              setEditName(s.fullName)
+                              setEditEmail(s.email)
+                              setEditWallet(s.walletAddress || "")
+                              setIsEditModalOpen(true)
                             }}
-                            className="font-mono text-[9px] px-2 py-1 h-6 border-ca-accent text-ca-accent hover:bg-ca-accent hover:text-white"
+                            className="font-mono text-[9px] px-2 py-1 h-6 border-muted-foreground/30 text-muted-foreground hover:bg-muted/30"
                           >
-                            BIND WALLET
+                            EDIT
                           </Button>
-                        )}
-                        {s.status === "pending" && s.walletAddress && (
-                          <div className="flex gap-2 justify-end">
+
+                          {!s.walletAddress && (
                             <Button
                               size="sm"
-                              onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
-                              className="bg-green-600 hover:bg-green-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedStudentForWallet(s)
+                                setIsWalletModalOpen(true)
+                              }}
+                              className="font-mono text-[9px] px-2 py-1 h-6 border-ca-accent text-ca-accent hover:bg-ca-accent hover:text-white"
                             >
-                              APPROVE
+                              BIND WALLET
                             </Button>
+                          )}
+                          {s.status === "pending" && s.walletAddress && (
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
+                                className="bg-green-600 hover:bg-green-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                              >
+                                APPROVE
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleUpdateStatus(s.walletAddress, "rejected")}
+                                className="bg-red-600 hover:bg-red-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                              >
+                                REJECT
+                              </Button>
+                            </div>
+                          )}
+                          {s.status === "approved" && s.walletAddress && (
                             <Button
                               size="sm"
                               onClick={() => handleUpdateStatus(s.walletAddress, "rejected")}
-                              className="bg-red-600 hover:bg-red-700 text-white font-mono text-[9px] px-2 py-1 h-6"
+                              className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6"
                             >
-                              REJECT
+                              REVOKE
                             </Button>
-                          </div>
-                        )}
-                        {s.status === "approved" && s.walletAddress && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateStatus(s.walletAddress, "rejected")}
-                            className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6"
-                          >
-                            REVOKE
-                          </Button>
-                        )}
-                        {s.status === "rejected" && s.walletAddress && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
-                            className="bg-green-950/20 hover:bg-green-950/45 text-green-400 border border-green-900/50 font-mono text-[9px] px-2 py-1 h-6"
-                          >
-                            APPROVE
-                          </Button>
-                        )}
+                          )}
+                          {s.status === "rejected" && s.walletAddress && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateStatus(s.walletAddress, "approved")}
+                              className="bg-green-950/20 hover:bg-green-950/45 text-green-400 border border-green-900/50 font-mono text-[9px] px-2 py-1 h-6"
+                            >
+                              APPROVE
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -522,6 +580,78 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                   <><RefreshCw className="h-3 w-3 animate-spin" /> BINDING...</>
                 ) : (
                   <><Check className="h-3 w-3" /> CONFIRM BIND</>
+                )}
+              </Button>
+            </form>
+          </GlowCard>
+        </div>
+      )}
+
+      {/* Edit Student Details Modal */}
+      {isEditModalOpen && selectedStudentForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <GlowCard className="p-6 w-full max-w-md space-y-4" glow>
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                Edit Student Details
+              </h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground font-mono">
+              Update institutional profile fields for student ID: <strong>{selectedStudentForEdit.studentId}</strong>.
+            </p>
+
+            <form onSubmit={handleEditStudent} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="editNameInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">Full Name</Label>
+                <input
+                  id="editNameInput"
+                  type="text"
+                  placeholder="Enter full name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="editEmailInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">Email Address</Label>
+                <input
+                  id="editEmailInput"
+                  type="email"
+                  placeholder="Enter email address"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="editWalletInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">Wallet Address (0x...)</Label>
+                <input
+                  id="editWalletInput"
+                  type="text"
+                  placeholder="0x... (or leave blank if none)"
+                  value={editWallet}
+                  onChange={(e) => setEditWallet(e.target.value)}
+                  className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={editLoading}
+                className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-2 flex items-center justify-center gap-1.5"
+              >
+                {editLoading ? (
+                  <><RefreshCw className="h-3 w-3 animate-spin" /> SAVING...</>
+                ) : (
+                  <><Check className="h-3 w-3" /> SAVE CHANGES</>
                 )}
               </Button>
             </form>

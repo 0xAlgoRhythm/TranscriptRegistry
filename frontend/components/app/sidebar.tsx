@@ -44,11 +44,12 @@ export function Sidebar() {
   const { sidebarOpen } = useUIStore()
   const { role, isDemoMode, setRole } = useRoleStore()
 
-  // Filter items based on active role if set, otherwise show all for simulation
+  // Filter items based on active role if set, otherwise show only public items for simulation
   const filteredNav = NAV_ITEMS.filter(item => {
-    if (!role) return true
-    if (!item.role) return true
-    return item.role === role
+    if (!role) {
+      return item.role === null
+    }
+    return item.role === null || item.role === role
   })
 
   if (!sidebarOpen) return null

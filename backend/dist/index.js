@@ -667,6 +667,40 @@ app.put("/api/students/:id/bind-wallet", async (c) => {
         return c.json({ error: err.message }, 500);
     }
 });
+app.put("/api/students/:id", async (c) => {
+    try {
+        const id = parseInt(c.req.param("id"));
+        const { fullName, email, walletAddress } = await c.req.json();
+        const updateData = {};
+        if (fullName)
+            updateData.fullName = fullName;
+        if (email)
+            updateData.email = email.toLowerCase();
+        if (walletAddress !== undefined) {
+            const cleanWallet = walletAddress ? walletAddress.toLowerCase() : null;
+            if (cleanWallet) {
+                // Check uniqueness excluding current student
+                const existing = await db.query.students.findFirst({
+                    where: and(eq(students.walletAddress, cleanWallet), sql `id != ${id}`)
+                });
+                if (existing) {
+                    return c.json({ error: "Wallet address is already registered to another profile" }, 400);
+                }
+            }
+            updateData.walletAddress = cleanWallet;
+        }
+        updateData.updatedAt = new Date();
+        const result = await db.update(students)
+            .set(updateData)
+            .where(eq(students.id, id))
+            .returning();
+        await logAudit("registrar", "system", "EDITED_STUDENT_DETAILS", `Updated student ID ${id} details: Name: ${fullName}, Email: ${email}, Wallet: ${walletAddress}`);
+        return c.json(result[0]);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
 // Registrar updates student approval status
 app.put("/api/students/:walletAddress/status", async (c) => {
     try {

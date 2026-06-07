@@ -33,7 +33,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (address) {
-      if (adminLoading || adminFetching) {
+      if (adminLoading && !adminAddress) {
         setResolving(true)
         return
       }

@@ -3,6 +3,7 @@
 import React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useRoleStore } from "@/lib/stores/role-store"
+import { useRBAC } from "@/components/providers/rbac-provider"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
 import { ShieldAlert, ArrowLeft, Home } from "lucide-react"
@@ -15,6 +16,7 @@ export function RoleGuard({ children }: RoleGuardProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { role } = useRoleStore()
+  const { isLoading } = useRBAC()
   const [isPending, startTransition] = React.useTransition()
 
   // Guard routing configuration
@@ -23,13 +25,26 @@ export function RoleGuard({ children }: RoleGuardProps) {
   const isStudentRoute = pathname === "/transcripts" || pathname.startsWith("/transcripts/") || pathname === "/access"
 
   const hasAdminAccess = role === "admin"
-  const hasRegistrarAccess = role === "registrar"
-  const hasStudentAccess = role === "student"
+  const hasRegistrarAccess = role === "registrar" || role === "admin"
+  const hasStudentAccess = role === "student" || role === "admin"
 
   const isAuthorized = 
     (!isAdminRoute || hasAdminAccess) &&
     (!isRegistrarRoute || hasRegistrarAccess) &&
     (!isStudentRoute || hasStudentAccess)
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest animate-pulse">
+            Verifying Access...
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   if (!isAuthorized) {
     return (
