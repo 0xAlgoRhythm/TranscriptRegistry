@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { type Address } from "viem"
 import { useAccount } from "wagmi"
 import { useRoleStore } from "@/lib/stores/role-store"
+import { useWallets } from "@privy-io/react-auth"
 import {
   usePlatformStats,
   usePlatformAdmin,
@@ -203,6 +204,11 @@ function UniversityList() {
 }
 
 function DeployUniversityForm() {
+  const { address } = useAccount()
+  const { wallets } = useWallets()
+  const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase())
+  const isEmbeddedWallet = activeWallet?.walletClientType === "privy"
+
   const [name, setName] = useState("")
   const [registrar, setRegistrar] = useState("")
 
@@ -245,9 +251,18 @@ function DeployUniversityForm() {
           onChange={setRegistrar}
         />
 
+        {isEmbeddedWallet && (
+          <div className="rounded border border-ca-warning/30 bg-ca-warning-dim p-4 font-mono text-xs text-ca-warning flex items-start gap-2">
+            <AlertTriangle className="h-4.5 w-4.5 mt-0.5 text-ca-warning shrink-0" />
+            <p className="leading-relaxed">
+              <strong>Warning:</strong> You are currently connected with an Embedded Wallet. Admins must use a native self-custody wallet (e.g. MetaMask, Coinbase Wallet) to deploy university registry contracts.
+            </p>
+          </div>
+        )}
+
         <Button
           type="submit"
-          disabled={isPending || isConfirming}
+          disabled={isPending || isConfirming || isEmbeddedWallet}
           className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5"
         >
           <Plus className="h-5 w-5" /> DEPLOY REGISTRY CONTRACT

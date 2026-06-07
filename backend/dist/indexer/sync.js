@@ -38,13 +38,14 @@ export async function startIndexer() {
     const indexLoop = async () => {
         try {
             const latestBlock = await publicClient.getBlockNumber();
-            if (currentBlock > latestBlock) {
+            const safeLatestBlock = latestBlock > 3n ? latestBlock - 3n : latestBlock;
+            if (currentBlock > safeLatestBlock) {
                 // Wait 12 seconds for next block
                 setTimeout(indexLoop, 12000);
                 return;
             }
             // Fetch logs in chunks of 5000 blocks to prevent RPC limit issues
-            const toBlock = currentBlock + 5000n > latestBlock ? latestBlock : currentBlock + 5000n;
+            const toBlock = currentBlock + 5000n > safeLatestBlock ? safeLatestBlock : currentBlock + 5000n;
             console.log(`Indexing logs from block ${currentBlock} to ${toBlock}...`);
             // 1. Fetch UniversityDeployed events from Factory
             const factoryLogs = await publicClient.getLogs({
