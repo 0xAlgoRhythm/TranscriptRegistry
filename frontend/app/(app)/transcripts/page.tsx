@@ -54,10 +54,11 @@ const TranscriptCard = React.memo(function TranscriptCard({
         </div>
 
         <div className="flex items-center gap-2 sm:self-center">
-          <Link href={`/transcripts/${recordId}?registry=${registryAddress}`} passHref legacyBehavior>
-            <a className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-border/60 hover:border-border text-xs font-mono font-bold tracking-wider text-muted-foreground hover:text-foreground bg-muted/20 hover:bg-muted/40 transition-all">
-              VIEW DETAILED <ChevronRight className="h-3 w-3" />
-            </a>
+          <Link
+            href={`/transcripts/${recordId}?registry=${registryAddress}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded border border-border/60 hover:border-border text-xs font-mono font-bold tracking-wider text-muted-foreground hover:text-foreground bg-muted/20 hover:bg-muted/40 transition-all"
+          >
+            VIEW DETAILED <ChevronRight className="h-3 w-3" />
           </Link>
         </div>
       </div>

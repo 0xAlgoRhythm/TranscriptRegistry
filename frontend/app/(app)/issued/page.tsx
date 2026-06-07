@@ -48,10 +48,11 @@ function IssuedRow({ t, registryAddress }: { t: any; registryAddress: string }) 
             IPFS VIEWER
           </a>
         )}
-        <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} passHref legacyBehavior>
-          <a className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline">
-            DETAILS <ChevronRight className="h-3.5 w-3.5" />
-          </a>
+        <Link
+          href={`/issued/${t.recordId}?registry=${registryAddress}`}
+          className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline"
+        >
+          DETAILS <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>

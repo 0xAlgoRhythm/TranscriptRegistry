@@ -30,13 +30,14 @@ export default function NotFound() {
         </div>
 
         <div className="pt-2">
-          <Link href="/" passHref legacyBehavior>
-            <Button
-              className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
-            >
+          <Button
+            asChild
+            className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
+          >
+            <Link href="/">
               <Home className="h-3.5 w-3.5" /> RETURN TO INTERFACE
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     </div>
