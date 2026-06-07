@@ -19,7 +19,7 @@ export function usePlatformAdmin() {
   return useReadContract({
     address: factoryAddress,
     abi: universityFactoryAbi,
-    functionName: "owner",
+    functionName: "platformAdmin",
     query: { enabled: !!factoryAddress },
   })
 }
