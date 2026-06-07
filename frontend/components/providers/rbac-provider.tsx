@@ -21,6 +21,17 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const [resolving, setResolving] = useState(false)
 
   useEffect(() => {
+    // 0. Check Hardcoded Platform Admin Email (Instant local check)
+    if (user?.email?.address) {
+      const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "johnokyere282@icloud.com"
+      const userEmail = user.email.address.toLowerCase()
+      if (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com") {
+        setRole("admin")
+        setResolving(false)
+        return
+      }
+    }
+
     if (address) {
       if (adminLoading || adminFetching) {
         setResolving(true)
@@ -37,7 +48,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       const resolveRole = async () => {
         setResolving(true)
         try {
-          // 0. Check Hardcoded Platform Admin Email
+          // Keep as fallback
           const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || "johnokyere282@icloud.com"
           const userEmail = user?.email?.address?.toLowerCase()
           if (userEmail === ADMIN_EMAIL.toLowerCase() || userEmail === "johnotchere282@gmail.com") {
