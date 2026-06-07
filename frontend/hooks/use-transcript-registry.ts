@@ -2,7 +2,7 @@
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { type Address } from "viem"
-import { transcriptRegistryAbi } from "@/lib/contracts"
+import { transcriptRegistryAbi, CHAIN } from "@/lib/contracts"
 
 export function useRegistryStats(registryAddress: Address) {
   return useReadContract({
@@ -97,6 +97,7 @@ export function useRegisterTranscript() {
       abi: transcriptRegistryAbi,
       functionName: "registerTranscript",
       args: [studentHashVal, metadataCID, fileHash],
+      chainId: CHAIN.id,
     })
   }
 
@@ -118,6 +119,7 @@ export function useGrantAccess() {
       abi: transcriptRegistryAbi,
       functionName: "grantAccess",
       args: [recordId, verifier, duration],
+      chainId: CHAIN.id,
     })
   }
 
@@ -138,6 +140,7 @@ export function useRevokeAccess() {
       abi: transcriptRegistryAbi,
       functionName: "revokeAccess",
       args: [recordId, verifier],
+      chainId: CHAIN.id,
     })
   }
 
@@ -158,6 +161,7 @@ export function useVerifyTranscript() {
       abi: transcriptRegistryAbi,
       functionName: "verifyTranscript",
       args: [recordId, fileHash],
+      chainId: CHAIN.id,
     })
   }
 
@@ -179,6 +183,7 @@ export function useUpdateTranscriptStatus() {
       abi: transcriptRegistryAbi,
       functionName: "updateTranscriptStatus",
       args: [recordId, status, reason],
+      chainId: CHAIN.id,
     })
   }
 

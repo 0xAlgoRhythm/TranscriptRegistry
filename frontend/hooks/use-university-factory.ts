@@ -2,7 +2,7 @@
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
 import { type Address } from "viem"
-import { universityFactoryAbi, CONTRACT_ADDRESSES } from "@/lib/contracts"
+import { universityFactoryAbi, CONTRACT_ADDRESSES, CHAIN } from "@/lib/contracts"
 
 const factoryAddress = CONTRACT_ADDRESSES.universityFactory
 
@@ -73,6 +73,7 @@ export function useDeployUniversity() {
       abi: universityFactoryAbi,
       functionName: "deployUniversityContract",
       args: [universityName, registrar],
+      chainId: CHAIN.id,
     })
   }
 
@@ -89,6 +90,7 @@ export function useDeactivateUniversity() {
       abi: universityFactoryAbi,
       functionName: "deactivateUniversity",
       args: [universityId, reason],
+      chainId: CHAIN.id,
     })
   }
 
@@ -105,6 +107,7 @@ export function useReactivateUniversity() {
       abi: universityFactoryAbi,
       functionName: "reactivateUniversity",
       args: [universityId],
+      chainId: CHAIN.id,
     })
   }
 
