@@ -9,6 +9,7 @@ export function useRegistryStats(registryAddress: Address) {
     address: registryAddress,
     abi: transcriptRegistryAbi,
     functionName: "getContractStats",
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress },
   })
 }
@@ -18,6 +19,7 @@ export function useUniversityName(registryAddress: Address) {
     address: registryAddress,
     abi: transcriptRegistryAbi,
     functionName: "universityName",
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress },
   })
 }
@@ -27,6 +29,7 @@ export function useRegistrar(registryAddress: Address) {
     address: registryAddress,
     abi: transcriptRegistryAbi,
     functionName: "registrar",
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress },
   })
 }
@@ -37,6 +40,7 @@ export function useTranscript(registryAddress: Address, recordId: `0x${string}`)
     abi: transcriptRegistryAbi,
     functionName: "getTranscript",
     args: [recordId],
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress && !!recordId },
   })
 }
@@ -50,6 +54,7 @@ export function useStudentTranscripts(
     abi: transcriptRegistryAbi,
     functionName: "getStudentTranscripts",
     args: [studentHashValue],
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress && !!studentHashValue },
   })
 }
@@ -64,6 +69,7 @@ export function useCheckAccess(
     abi: transcriptRegistryAbi,
     functionName: "checkAccess",
     args: [recordId, verifier],
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress && !!recordId && !!verifier },
   })
 }
@@ -78,6 +84,7 @@ export function useAccessControl(
     abi: transcriptRegistryAbi,
     functionName: "accessControl",
     args: [recordId, verifier],
+    chainId: CHAIN.id,
     query: { enabled: !!registryAddress && !!recordId && !!verifier },
   })
 }

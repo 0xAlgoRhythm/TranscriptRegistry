@@ -11,6 +11,7 @@ export function usePlatformStats() {
     address: factoryAddress,
     abi: universityFactoryAbi,
     functionName: "getPlatformStats",
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
 }
@@ -20,6 +21,7 @@ export function usePlatformAdmin() {
     address: factoryAddress,
     abi: universityFactoryAbi,
     functionName: "platformAdmin",
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
 }
@@ -29,6 +31,7 @@ export function useUniversityCount() {
     address: factoryAddress,
     abi: universityFactoryAbi,
     functionName: "universityCount",
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
 }
@@ -39,6 +42,7 @@ export function useUniversity(universityId: bigint) {
     abi: universityFactoryAbi,
     functionName: "getUniversity",
     args: [universityId],
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
 }
@@ -49,6 +53,7 @@ export function useActiveUniversities(offset: bigint, limit: bigint) {
     abi: universityFactoryAbi,
     functionName: "getActiveUniversities",
     args: [offset, limit],
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
 }
@@ -59,6 +64,7 @@ export function useIsUniversityContract(address: Address) {
     abi: universityFactoryAbi,
     functionName: "isUniversityContract",
     args: [address],
+    chainId: CHAIN.id,
     query: { enabled: !!factoryAddress && !!address },
   })
 }

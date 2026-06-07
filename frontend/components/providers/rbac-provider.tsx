@@ -33,6 +33,24 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
+    // 0b. Check Hardcoded Platform Admin Wallet (Instant local check)
+    const ADMIN_WALLET = "0x31eEE44788ea5AE0C65DBdCb1D1C3ea1D8A4e592".toLowerCase()
+    const localAddresses: string[] = []
+    if (address) localAddresses.push(address.toLowerCase())
+    if (user?.linkedAccounts) {
+      user.linkedAccounts.forEach((acc: any) => {
+        if (acc.type === "wallet" && acc.address) {
+          localAddresses.push(acc.address.toLowerCase())
+        }
+      })
+    }
+    if (localAddresses.includes(ADMIN_WALLET)) {
+      setRole("admin")
+      setResolving(false)
+      return
+    }
+
+
     if (address) {
       if (adminLoading && !adminAddress) {
         setResolving(true)
