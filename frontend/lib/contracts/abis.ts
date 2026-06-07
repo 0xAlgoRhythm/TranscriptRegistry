@@ -281,7 +281,7 @@ export const universityFactoryAbi = [
   // Read functions
   {
     type: "function",
-    name: "platformAdmin",
+    name: "owner",
     inputs: [],
     outputs: [{ type: "address" }],
     stateMutability: "view",
@@ -334,21 +334,21 @@ export const universityFactoryAbi = [
   },
   {
     type: "function",
-    name: "isUniversityContract",
+    name: "isUniversityProxy",
     inputs: [{ name: "", type: "address" }],
     outputs: [{ type: "bool" }],
     stateMutability: "view",
   },
   {
     type: "function",
-    name: "getUniversityIdByContract",
-    inputs: [{ name: "", type: "address" }],
+    name: "getUniversityIdByProxy",
+    inputs: [{ name: "proxyAddress", type: "address" }],
     outputs: [{ type: "uint256" }],
     stateMutability: "view",
   },
   {
     type: "function",
-    name: "contractToUniversityId",
+    name: "proxyToUniversityId",
     inputs: [{ name: "", type: "address" }],
     outputs: [{ type: "uint256" }],
     stateMutability: "view",
@@ -356,14 +356,14 @@ export const universityFactoryAbi = [
   // Write functions
   {
     type: "function",
-    name: "deployUniversityContract",
+    name: "deployUniversityProxy",
     inputs: [
       { name: "universityName", type: "string" },
       { name: "registrar", type: "address" },
     ],
     outputs: [
       { name: "universityId", type: "uint256" },
-      { name: "contractAddress", type: "address" },
+      { name: "proxyAddress", type: "address" },
     ],
     stateMutability: "nonpayable",
   },

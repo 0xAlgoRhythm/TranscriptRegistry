@@ -20,7 +20,7 @@ export function usePlatformAdmin() {
   return useReadContract({
     address: factoryAddress,
     abi: universityFactoryAbi,
-    functionName: "platformAdmin",
+    functionName: "owner",
     chainId: CHAIN.id,
     query: { enabled: !!factoryAddress },
   })
@@ -62,7 +62,7 @@ export function useIsUniversityContract(address: Address) {
   return useReadContract({
     address: factoryAddress,
     abi: universityFactoryAbi,
-    functionName: "isUniversityContract",
+    functionName: "isUniversityProxy",
     args: [address],
     chainId: CHAIN.id,
     query: { enabled: !!factoryAddress && !!address },
@@ -77,7 +77,7 @@ export function useDeployUniversity() {
     writeContract({
       address: factoryAddress,
       abi: universityFactoryAbi,
-      functionName: "deployUniversityContract",
+      functionName: "deployUniversityProxy",
       args: [universityName, registrar],
       chainId: CHAIN.id,
     })
