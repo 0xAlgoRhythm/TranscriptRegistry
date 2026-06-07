@@ -13,6 +13,7 @@ import { SectionLabel } from "@/components/ui/section-label"
 import { Button } from "@/components/ui/button"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
+import { useWallets } from "@privy-io/react-auth"
 import {
   ArrowLeft, ArrowRight, ShieldCheck, CloudUpload,
   Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download
@@ -20,6 +21,10 @@ import {
 
 export default function IssuePage() {
   const { address } = useAccount()
+  const { wallets } = useWallets()
+  const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase())
+  const isEmbeddedWallet = activeWallet?.walletClientType === "privy"
+
   const [currentStep, setCurrentStep] = useState(1)
 
   // Step 1: University Info
@@ -47,6 +52,7 @@ export default function IssuePage() {
   const [ipfsStatus, setIpfsStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
   const [ipfsError, setIpfsError] = useState("")
   const [ipfsGatewayUrl, setIpfsGatewayUrl] = useState("")
+  const [logoUrl, setLogoUrl] = useState("")
 
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
@@ -98,13 +104,14 @@ export default function IssuePage() {
     setIsGeneratingPdf(true)
     try {
       // 1. Fetch Registrar Settings (Logo/Stamp)
-      let logoUrl = ""
+      let fetchedLogoUrl = ""
       let stampUrl = ""
       const res = await fetch(`${API_URL}/api/registrar/settings/${address.toLowerCase()}`)
       if (res.ok) {
         const uniSettings = await res.json()
-        logoUrl = uniSettings.logoUrl
+        fetchedLogoUrl = uniSettings.logoUrl
         stampUrl = uniSettings.stampUrl
+        setLogoUrl(fetchedLogoUrl)
       }
 
       // 2. Mock some courses based on major
@@ -130,7 +137,7 @@ export default function IssuePage() {
         courses,
         gpa: parseFloat(gpa),
         universityName: typeof uniName === "string" ? uniName : "University",
-        logoUrl,
+        logoUrl: fetchedLogoUrl,
         stampUrl,
         recordId: tempRecordId,
         verifierUrl
@@ -183,6 +190,7 @@ export default function IssuePage() {
           major,
           gradYear,
           fileHash: calculatedFileHash,
+          logoUrl,
         }),
       })
       const data = await res.json()
@@ -194,7 +202,7 @@ export default function IssuePage() {
       setIpfsError(err.message || "Failed to upload to IPFS")
       setIpfsStatus("error")
     }
-  }, [gpa, major, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, API_URL])
+  }, [gpa, major, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, logoUrl, API_URL])
 
   // ─── Wizard config ─────────────────────────────────────────────────────────
   const steps = [
