@@ -350,9 +350,26 @@ app.post("/api/ipfs/upload", verifyAuth, async (c) => {
       },
     }
 
+    const logoUrl = body.logoUrl || "https://credaxis.vercel.app/icon.svg"
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000"
+    const verifyUrl = `${frontendUrl}/verify/${body.fileHash || ""}`
+
     const pinataBody = {
       pinataContent: {
         ...body,
+        name: `CredAxis Academic Transcript — ${body.studentName || "Student"}`,
+        description: `Official academic transcript for ${body.studentName || "Student"} issued by ${body.universityName || "University"}. Secured and verified on-chain via CredAxis.`,
+        image: logoUrl,
+        external_url: verifyUrl,
+        attributes: [
+          { trait_type: "Student Name", value: body.studentName || "Unknown" },
+          { trait_type: "Student ID", value: body.studentId || "Unknown" },
+          { trait_type: "University", value: body.universityName || "Unknown" },
+          { trait_type: "Major", value: body.major || "Unknown" },
+          { trait_type: "GPA", value: parseFloat(body.gpa) || 0, display_type: "number" },
+          { trait_type: "Graduation Year", value: parseInt(body.gradYear) || 2026 },
+          { trait_type: "Issued Date", value: new Date().toLocaleDateString() }
+        ],
         issuedAt: new Date().toISOString(),
         platform: "CredAxis",
       },

@@ -497,6 +497,15 @@ export default function IssuePage() {
 
             <div className="h-px w-full bg-border/40 my-4" />
 
+            {isEmbeddedWallet && (
+              <div className="rounded border border-ca-warning/30 bg-ca-warning-dim p-4 font-mono text-xs text-ca-warning flex items-start gap-2">
+                <AlertTriangle className="h-4.5 w-4.5 mt-0.5 text-ca-warning shrink-0" />
+                <p className="leading-relaxed">
+                  <strong>Warning:</strong> You are currently connected with a Privy Embedded Wallet. Registrars must use a native self-custody wallet (e.g. MetaMask, Coinbase Wallet) to execute registrar smart contract functions.
+                </p>
+              </div>
+            )}
+
             <div className="space-y-4">
               <div className="rounded border border-border/40 bg-muted/10 p-4 font-mono text-xs">
                 <div className="flex items-start gap-2 text-muted-foreground">
@@ -509,7 +518,7 @@ export default function IssuePage() {
               <Button
                 size="lg"
                 className="w-full font-mono text-sm tracking-wider uppercase h-14 bg-ca-accent hover:bg-ca-accent/90 text-white shadow-lg"
-                disabled={!isStepValid() || isPending || isConfirming}
+                disabled={!isStepValid() || isPending || isConfirming || isEmbeddedWallet}
                 onClick={handleIssue}
               >
                 {(isPending || isConfirming) ? (
