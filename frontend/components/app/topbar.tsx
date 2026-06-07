@@ -12,7 +12,7 @@ export function Topbar() {
   const { login, logout, authenticated, ready } = usePrivy()
   const { address } = useAccount()
   const { sidebarOpen, toggleSidebar, toggleMobileMenu, theme, toggleTheme } = useUIStore()
-  const { role } = useRoleStore()
+  const { role, isDemoMode, toggleDemoMode } = useRoleStore()
 
   const getRoleLabel = () => {
     switch (role) {
@@ -79,6 +79,20 @@ export function Topbar() {
           ) : (
             <Sun className="h-5 w-5" />
           )}
+        </button>
+        
+        {/* Demo Mode Toggle */}
+        <button
+          onClick={toggleDemoMode}
+          className={`p-1.5 rounded hover:bg-muted transition-colors font-mono text-[9px] uppercase tracking-wider font-bold border flex items-center gap-1.5 h-8 ${
+            isDemoMode
+              ? "bg-ca-accent/15 border-ca-accent/30 text-ca-accent hover:bg-ca-accent/25"
+              : "border-border/60 text-muted-foreground hover:text-foreground"
+          }`}
+          title={isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>{isDemoMode ? "DEMO ACTIVE" : "DEMO MODE"}</span>
         </button>
 
         {!ready ? (
