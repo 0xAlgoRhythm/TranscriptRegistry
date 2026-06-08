@@ -14,9 +14,10 @@ import { Button } from "@/components/ui/button"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { useWallets } from "@privy-io/react-auth"
+import { useSearchParams } from "next/navigation"
 import {
   ArrowLeft, ArrowRight, ShieldCheck, CloudUpload,
-  Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download
+  Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download, Eye
 } from "lucide-react"
 
 export default function IssuePage() {
@@ -62,6 +63,22 @@ export default function IssuePage() {
   const [hasOldTranscript, setHasOldTranscript] = useState(false)
   const [oldTranscriptRecordId, setOldTranscriptRecordId] = useState("")
   const [shouldAmendOld, setShouldAmendOld] = useState(true)
+  const [editLocked, setEditLocked] = useState(false)
+
+  // Track if this issuance completes a pending request
+  const searchParams = useSearchParams()
+  const [requestIdToComplete, setRequestIdToComplete] = useState<string | null>(null)
+
+  useEffect(() => {
+    const paramStudentId = searchParams.get("studentId")
+    const paramRequestId = searchParams.get("requestId")
+    if (paramStudentId) {
+      setStudentId(paramStudentId)
+    }
+    if (paramRequestId) {
+      setRequestIdToComplete(paramRequestId)
+    }
+  }, [searchParams])
 
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -111,7 +128,7 @@ export default function IssuePage() {
           if (metaRes.ok) {
             const metaData = await metaRes.json()
             const oldRecord = metaData.metadataJson
-            if (oldRecord) {
+             if (oldRecord) {
               setMajor(oldRecord.major || oldRecord.degree || "")
               setGradYear(oldRecord.gradYear || oldRecord.graduationDate || "")
               if (Array.isArray(oldRecord.courses)) {
@@ -119,12 +136,14 @@ export default function IssuePage() {
               }
               setHasOldTranscript(true)
               setOldTranscriptRecordId(latestTx.recordId)
+              setEditLocked(true)
               setStudentStatusMsg(`✓ Approved student profile verified. Existing transcript detected (${latestTx.recordId.slice(0, 10)}...). Previous academic data has been pre-populated.`)
             }
           }
         } else {
           setHasOldTranscript(false)
           setOldTranscriptRecordId("")
+          setEditLocked(false)
         }
       }
     } catch (e) {
