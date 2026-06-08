@@ -13,7 +13,8 @@ import { AddressInput } from "@/components/ui/address-input"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { EmptyState } from "@/components/ui/empty-state"
-import { FileText, School, ChevronRight, RefreshCcw } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { FileText, School, ChevronRight, RefreshCcw, Send, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 const TranscriptCard = React.memo(function TranscriptCard({
@@ -77,18 +78,73 @@ export default function TranscriptsPage() {
     hashValue,
   )
 
+  const [requestLoading, setRequestLoading] = useState(false)
+  const [requestResult, setRequestResult] = useState<{ text: string, type: "success" | "info" | "error" } | null>(null)
+
+  const handleRequestTranscript = async () => {
+    if (!address) return
+    try {
+      setRequestLoading(true)
+      setRequestResult(null)
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+      const res = await fetch(`${API_URL}/api/transcripts/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentWallet: address })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        if (data.status === "sent") {
+          setRequestResult({ text: data.message, type: "success" })
+        } else {
+          setRequestResult({ text: data.message, type: "info" })
+        }
+      } else {
+        setRequestResult({ text: data.error || "Failed to submit request.", type: "error" })
+      }
+    } catch (err) {
+      setRequestResult({ text: "Error submitting transcript request.", type: "error" })
+    } finally {
+      setRequestLoading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-10 animate-fade-in pb-16">
       {/* Header */}
-      <div className="space-y-1">
-        <SectionLabel index={1} label="STUDENT RECORDS" />
-        <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">
-          My Academic Credentials
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Access your secure on-chain educational qualifications, transcript files, and manage delegate access tokens.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <SectionLabel index={1} label="STUDENT RECORDS" />
+          <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">
+            My Academic Credentials
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            Access your secure on-chain educational qualifications, transcript files, and manage delegate access tokens.
+          </p>
+        </div>
+        <div className="shrink-0">
+          <Button
+            onClick={handleRequestTranscript}
+            disabled={requestLoading || !address}
+            className="font-mono text-xs bg-ca-accent hover:bg-ca-accent/90 text-white flex items-center gap-1.5 px-4 h-9 uppercase"
+          >
+            {requestLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Request Transcript
+          </Button>
+        </div>
       </div>
+
+      {requestResult && (
+        <div className={`p-3 rounded font-mono text-[10px] border ${
+          requestResult.type === "success" 
+            ? "bg-ca-success/8 text-ca-success border-ca-success/20" 
+            : requestResult.type === "info" 
+            ? "bg-ca-accent/8 text-ca-accent border-ca-accent/20" 
+            : "bg-ca-danger/8 text-ca-danger border-ca-danger/20"
+        }`}>
+          {requestResult.text}
+        </div>
+      )}
 
       {/* University Registry Input Card */}
       <GlowCard className="p-6 space-y-4">

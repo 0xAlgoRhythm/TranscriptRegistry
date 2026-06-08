@@ -80,20 +80,6 @@ export default function IssuePage() {
     }
   }, [searchParams])
 
-  useEffect(() => {
-    if (isSuccess && requestIdToComplete) {
-      fetch(`${API_URL}/api/registrar/requests/${requestIdToComplete}/complete`, {
-        method: "PUT"
-      })
-      .then(res => {
-        if (res.ok) {
-          console.log("Transcript request marked completed in database.")
-        }
-      })
-      .catch(err => console.error("Failed to complete request in DB:", err))
-    }
-  }, [isSuccess, requestIdToComplete, API_URL])
-
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const { hash: calculatedFileHash, isCalculating, calculateHash, reset: resetHash } = useFileHash()
@@ -129,6 +115,20 @@ export default function IssuePage() {
 
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
   const { updateStatus, hash: updateTxHash, isPending: updateIsPending, isConfirming: updateIsConfirming, isSuccess: updateIsSuccess, error: updateError } = useUpdateTranscriptStatus()
+
+  useEffect(() => {
+    if (isSuccess && requestIdToComplete) {
+      fetch(`${API_URL}/api/registrar/requests/${requestIdToComplete}/complete`, {
+        method: "PUT"
+      })
+      .then(res => {
+        if (res.ok) {
+          console.log("Transcript request marked completed in database.")
+        }
+      })
+      .catch(err => console.error("Failed to complete request in DB:", err))
+    }
+  }, [isSuccess, requestIdToComplete, API_URL])
 
   const checkExistingTranscript = useCallback(async (walletAddr: string) => {
     try {
