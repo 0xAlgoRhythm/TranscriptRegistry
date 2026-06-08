@@ -883,6 +883,26 @@ export default function IssuePage() {
 
             <div className="h-px w-full bg-border/40 my-4" />
 
+            {hasOldTranscript && (
+              <div className="flex items-center gap-3 bg-muted/10 p-4 rounded-lg border border-border/40 font-mono text-xs">
+                <input
+                  type="checkbox"
+                  id="amendOld"
+                  checked={shouldAmendOld}
+                  onChange={(e) => setShouldAmendOld(e.target.checked)}
+                  className="h-4 w-4 rounded border-border/60 bg-card text-ca-accent focus:ring-ca-accent cursor-pointer"
+                />
+                <div className="space-y-0.5">
+                  <label htmlFor="amendOld" className="font-bold text-foreground cursor-pointer uppercase">
+                    Mark previous transcript as Amended on-chain (Record ID: {oldTranscriptRecordId.slice(0, 10)}...)
+                  </label>
+                  <p className="text-[10px] text-muted-foreground">
+                    Recommended to maintain a single active source of truth.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {isEmbeddedWallet && (
               <div className="rounded border border-ca-warning/30 bg-ca-warning-dim p-4 font-mono text-xs text-ca-warning flex items-start gap-2">
                 <AlertTriangle className="h-4.5 w-4.5 mt-0.5 text-ca-warning shrink-0" />
@@ -901,15 +921,6 @@ export default function IssuePage() {
                   </p>
                 </div>
               </div>
-              <Button
-                size="lg"
-                className="w-full font-mono text-sm tracking-wider uppercase h-14 bg-ca-accent hover:bg-ca-accent/90 text-white shadow-lg"
-                disabled={!isStepValid() || isPending || isConfirming || isEmbeddedWallet}
-                onClick={handleIssue}
-              >
-                {(isPending || isConfirming) ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Waiting for Confirmations...
                   </>
                 ) : (
