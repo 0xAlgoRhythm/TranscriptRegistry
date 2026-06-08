@@ -120,3 +120,26 @@ export const governanceRequests = pgTable("governance_requests", {
   actionAt: timestamp("action_at", { withTimezone: true }),
 })
 
+export const publicAccessRequests = pgTable("public_access_requests", {
+  id: serial("id").primaryKey(),
+  recordId: text("record_id").notNull(),
+  requesterName: text("requester_name").notNull(),
+  requesterOrg: text("requester_org").notNull(),
+  requesterEmail: text("requester_email").notNull(),
+  status: text("status").default("pending").notNull(), // pending | approved | rejected
+  token: text("token").unique().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+})
+
+export const issuedTokens = pgTable("issued_tokens", {
+  id: serial("id").primaryKey(),
+  token: text("token").unique().notNull(),
+  institutionName: text("institution_name").notNull(),
+  issuerAddress: text("issuer_address").notNull(),
+  role: text("role").notNull(), // admin | registrar
+  createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  isActive: boolean("is_active").default(true).notNull(),
+})
+
