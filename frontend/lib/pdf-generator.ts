@@ -44,69 +44,175 @@ const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
 export const generateTranscriptPDF = async (data: TranscriptData): Promise<Blob> => {
   const doc = new jsPDF()
 
-  // 1. Load Images
+  // 1. Draw Page Borders (Navy and Gold Theme)
+  // Page size for A4: 210mm x 297mm
+  doc.setDrawColor(11, 27, 60) // Deep Navy
+  doc.setLineWidth(0.8)
+  doc.rect(10, 10, 190, 277)
+
+  doc.setDrawColor(197, 160, 89) // Rich Gold
+  doc.setLineWidth(0.3)
+  doc.rect(11.5, 11.5, 187, 274)
+
+  // 2. Load Images
   const logoBase64 = data.logoUrl ? await fetchImageAsBase64(data.logoUrl) : null
   const stampBase64 = data.stampUrl ? await fetchImageAsBase64(data.stampUrl) : null
 
-  // 2. Generate QR Code
+  // 3. Generate QR Code
   const qrDataUrl = await QRCode.toDataURL(data.verifierUrl, { errorCorrectionLevel: 'H', margin: 1 })
 
-  // 3. Layout: Header
+  // 4. Layout: Header & Title
+  let currentY = 16
   if (logoBase64) {
-    doc.addImage(logoBase64, "PNG", 95, 10, 20, 20) // Centered-ish logo
-    doc.setFontSize(22)
-    doc.setFont("helvetica", "bold")
-    doc.text(data.universityName, 105, 40, { align: "center" })
+    doc.addImage(logoBase64, "PNG", 95, currentY, 20, 20) // Centered logo
+    currentY += 25
   } else {
-    doc.setFontSize(24)
-    doc.setFont("helvetica", "bold")
-    doc.text(data.universityName, 105, 30, { align: "center" })
+    currentY += 10
   }
 
-  doc.setFontSize(16)
-  doc.setFont("helvetica", "normal")
-  doc.text("OFFICIAL ACADEMIC TRANSCRIPT", 105, logoBase64 ? 50 : 40, { align: "center" })
-  
-  // 4. Layout: Student Details
-  const startY = logoBase64 ? 65 : 55
-  doc.setFontSize(11)
-  doc.text(`Student Name: ${data.studentName}`, 20, startY)
-  doc.text(`Student ID: ${data.studentId}`, 20, startY + 7)
-  doc.text(`Degree Program: ${data.degree}`, 120, startY)
-  doc.text(`Date Issued: ${new Date().toLocaleDateString()}`, 120, startY + 7)
+  // Wrap long university names
+  const wrappedUniversityName = doc.splitTextToSize(data.universityName.toUpperCase(), 160)
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(18)
+  doc.setTextColor(11, 27, 60)
+  doc.text(wrappedUniversityName, 105, currentY, { align: "center" })
 
-  // 5. Layout: Table of Courses
+  currentY += (wrappedUniversityName.length * 7) + 1
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(11)
+  doc.setTextColor(197, 160, 89) // Gold subtitle color
+  doc.text("OFFICIAL ACADEMIC TRANSCRIPT", 105, currentY, { align: "center" })
+
+  // 5. Layout: Student Identification Card Box
+  currentY += 6
+  const cardY = currentY
+  const cardHeight = 24
+  doc.setFillColor(248, 249, 250) // Light grey card background
+  doc.setDrawColor(220, 224, 230)
+  doc.setLineWidth(0.2)
+  doc.roundedRect(15, cardY, 180, cardHeight, 2, 2, "FD") // Fill and border
+
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(9)
+  doc.setTextColor(11, 27, 60)
+  doc.text("STUDENT IDENTIFICATION RECORD", 20, cardY + 5)
+
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(8.5)
+  doc.setTextColor(60, 60, 60)
+  doc.text(`Student Name:  ${data.studentName}`, 20, cardY + 12)
+  doc.text(`Student ID:    ${data.studentId}`, 20, cardY + 18)
+
+  doc.text(`Degree Program: ${data.degree}`, 110, cardY + 12)
+  doc.text(`Date Issued:    ${new Date().toLocaleDateString()}`, 110, cardY + 18)
+
+  // 6. Layout: Table of Courses
+  const tableStartY = cardY + cardHeight + 8
   autoTable(doc, {
-    startY: startY + 20,
+    startY: tableStartY,
     head: [['Course Code', 'Course Name', 'Credits', 'Grade']],
     body: data.courses.map(c => [c.code, c.name, c.credits.toString(), c.grade]),
     theme: 'striped',
-    headStyles: { fillColor: [40, 40, 40] }
+    styles: {
+      font: 'helvetica',
+      fontSize: 9,
+      cellPadding: 3,
+    },
+    headStyles: {
+      fillColor: [11, 27, 60], // Navy
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+    },
+    alternateRowStyles: {
+      fillColor: [245, 247, 250],
+    },
+    margin: { left: 15, right: 15 },
   })
 
   // @ts-ignore
-  const finalY = doc.lastAutoTable.finalY || startY + 40
+  const finalY = doc.lastAutoTable.finalY || tableStartY + 40
 
-  // 6. Layout: GPA & Signature
-  doc.setFontSize(12)
+  // 7. Layout: GPA & Signature
   doc.setFont("helvetica", "bold")
-  doc.text(`Cumulative GPA: ${data.gpa.toFixed(2)}`, 20, finalY + 15)
-
   doc.setFontSize(11)
+  doc.setTextColor(11, 27, 60)
+  doc.text(`CUMULATIVE GPA:  ${data.gpa.toFixed(2)} / 4.00`, 15, finalY + 12)
+
   doc.setFont("helvetica", "normal")
-  doc.text("University Registrar", 140, finalY + 30)
-  doc.line(130, finalY + 25, 180, finalY + 25) // Signature line
+  doc.setFontSize(9.5)
+  doc.setTextColor(70, 70, 70)
+  doc.text("University Registrar", 135, finalY + 28)
+  
+  doc.setDrawColor(197, 160, 89) // Gold line
+  doc.setLineWidth(0.4)
+  doc.line(130, finalY + 22, 180, finalY + 22)
 
   if (stampBase64) {
-    doc.addImage(stampBase64, "PNG", 140, finalY + 5, 30, 30)
+    doc.addImage(stampBase64, "PNG", 140, finalY + 2, 22, 22)
   }
 
-  // 7. Layout: Footer (QR Code & Verifier Info)
-  doc.addImage(qrDataUrl, "PNG", 20, 260, 25, 25)
-  doc.setFontSize(8)
-  doc.text("Scan QR code to verify this transcript on-chain", 50, 270)
-  doc.text(`Record ID: ${data.recordId}`, 50, 275)
-  doc.text(`Verification URL: ${data.verifierUrl}`, 50, 280)
+  // 8. Layout: Footer Security Receipt Card (Receipt Box)
+  // Anchored to the bottom of the page
+  const footerY = 232
+  doc.setFillColor(243, 244, 246) // Darker grey card for receipt
+  doc.setDrawColor(197, 160, 89) // Gold border
+  doc.setLineWidth(0.4)
+  doc.roundedRect(15, footerY, 180, 48, 3, 3, "FD")
+
+  // Title of Security Receipt Card
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(8.5)
+  doc.setTextColor(11, 27, 60)
+  doc.text("CRYPTOGRAPHIC VERIFICATION RECEIPT (ON-CHAIN)", 20, footerY + 6)
+
+  // Thin dividing line
+  doc.setDrawColor(220, 224, 230)
+  doc.setLineWidth(0.2)
+  doc.line(20, footerY + 9, 190, footerY + 9)
+
+  // QR Code inside receipt box
+  doc.addImage(qrDataUrl, "PNG", 20, footerY + 11, 32, 32)
+
+  // Metadata labels next to QR code
+  doc.setFont("helvetica", "normal")
+  doc.setFontSize(7.5)
+  doc.setTextColor(80, 80, 80)
+  doc.text("PROTOCOL STATUS:", 58, footerY + 15)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(16, 185, 129) // Success Green
+  doc.text("VERIFIED / ON-CHAIN SECURED", 90, footerY + 15)
+
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Record ID:", 58, footerY + 21)
+  doc.setFont("courier", "normal")
+  doc.setTextColor(11, 27, 60)
+  doc.text(data.recordId, 85, footerY + 21)
+
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Registry Address:", 58, footerY + 26)
+  doc.setFont("courier", "normal")
+  doc.setTextColor(11, 27, 60)
+  // Try to grab registryAddr if present in data, otherwise display default verifier URL segment
+  const parsedRegistryAddr = data.verifierUrl.includes("registry=") 
+    ? data.verifierUrl.split("registry=")[1].split("&")[0] 
+    : "ON-CHAIN CONTRACT DEFAULT"
+  doc.text(parsedRegistryAddr, 85, footerY + 26)
+
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Verify URL:", 58, footerY + 31)
+  doc.setFont("courier", "normal")
+  doc.setTextColor(11, 27, 60)
+  
+  const splitUrl = doc.splitTextToSize(data.verifierUrl, 95)
+  doc.text(splitUrl, 85, footerY + 31)
+
+  doc.setFont("helvetica", "italic")
+  doc.setFontSize(6.5)
+  doc.setTextColor(120, 120, 120)
+  doc.text("This receipt is cryptographically generated. Scanning the QR code verifies the integrity of this academic record on the ledger.", 58, footerY + 44)
 
   return doc.output("blob")
 }

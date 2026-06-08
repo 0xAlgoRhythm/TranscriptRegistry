@@ -39,6 +39,21 @@ export default function IssuePage() {
   const [studentStatusMsg, setStudentStatusMsg] = useState("")
 
   // Step 3: Academic Data & PDF Generation
+  interface Course {
+    code: string
+    name: string
+    credits: number
+    grade: string
+  }
+
+  const [courses, setCourses] = useState<Course[]>([
+    { code: "CS101", name: "Intro to Programming", credits: 4, grade: "A" },
+    { code: "CS102", name: "Data Structures", credits: 4, grade: "A-" },
+    { code: "MATH201", name: "Calculus I", credits: 4, grade: "B+" },
+    { code: "CS301", name: "Algorithms", credits: 4, grade: "A" },
+    { code: "CS400", name: "Senior Capstone", credits: 4, grade: "A" }
+  ])
+
   const [gpa, setGpa] = useState("")
   const [major, setMajor] = useState("")
   const [gradYear, setGradYear] = useState("")
@@ -53,6 +68,26 @@ export default function IssuePage() {
   const [ipfsError, setIpfsError] = useState("")
   const [ipfsGatewayUrl, setIpfsGatewayUrl] = useState("")
   const [logoUrl, setLogoUrl] = useState("")
+
+  const calculateGPA = (coursesList: Course[]) => {
+    const gradePoints: Record<string, number> = {
+      "A": 4.0, "A-": 3.7, "B+": 3.3, "B": 3.0, "B-": 2.7,
+      "C+": 2.3, "C": 2.0, "C-": 1.7, "D+": 1.3, "D": 1.0, "F": 0.0
+    }
+    let totalCredits = 0
+    let weightedPoints = 0
+    coursesList.forEach(c => {
+      const gp = gradePoints[c.grade] ?? 0
+      weightedPoints += Number(c.credits || 0) * gp
+      totalCredits += Number(c.credits || 0)
+    })
+    return totalCredits > 0 ? (weightedPoints / totalCredits) : 0
+  }
+
+  useEffect(() => {
+    const computed = calculateGPA(courses)
+    setGpa(computed.toFixed(2))
+  }, [courses])
 
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
@@ -164,6 +199,31 @@ export default function IssuePage() {
     setShowStudentSuggestions(false)
   }
 
+  const handleCourseChange = (index: number, field: keyof Course, value: any) => {
+    const newCourses = [...courses]
+    newCourses[index] = {
+      ...newCourses[index],
+      [field]: field === "credits" ? Number(value || 0) : value
+    }
+    setCourses(newCourses)
+    setIpfsStatus("idle")
+    setMetadataCID("")
+  }
+
+  const addCourseRow = () => {
+    setCourses([...courses, { code: "", name: "", credits: 3, grade: "A" }])
+    setIpfsStatus("idle")
+    setMetadataCID("")
+  }
+
+  const removeCourseRow = (index: number) => {
+    if (courses.length <= 1) return
+    const newCourses = courses.filter((_, i) => i !== index)
+    setCourses(newCourses)
+    setIpfsStatus("idle")
+    setMetadataCID("")
+  }
+
   // ─── PDF Generation ─────────────────────────────────────────────────────────
   const handleGeneratePDF = async () => {
     if (!address || !gpa || !major || !gradYear) return
@@ -177,22 +237,25 @@ export default function IssuePage() {
         const uniSettings = await res.json()
         fetchedLogoUrl = uniSettings.logoUrl
         stampUrl = uniSettings.stampUrl
-        setLogoUrl(fetchedLogoUrl)
       }
 
-      // 2. Mock some courses based on major
-      const courses = [
-        { code: "CS101", name: "Intro to Programming", credits: 4, grade: "A" },
-        { code: "CS102", name: "Data Structures", credits: 4, grade: "A-" },
-        { code: "MATH201", name: "Calculus I", credits: 4, grade: "B+" },
-        { code: "CS301", name: "Algorithms", credits: 4, grade: "A" },
-        { code: "CS400", name: "Senior Capstone", credits: 4, grade: "A" }
-      ]
+      // Apply Fallback for KNUST / UEW / UCC default logos if missing
+      if (!fetchedLogoUrl) {
+        const nameLower = (typeof uniName === "string" ? uniName : "").toLowerCase()
+        if (nameLower.includes("knust") || nameLower.includes("kwame")) {
+          fetchedLogoUrl = `${window.location.origin}/knust.jpg`
+        } else if (nameLower.includes("uew") || nameLower.includes("winneba")) {
+          fetchedLogoUrl = `${window.location.origin}/uew.png`
+        } else if (nameLower.includes("ucc") || nameLower.includes("cape coast")) {
+          fetchedLogoUrl = `${window.location.origin}/ucc.png`
+        }
+      }
+      setLogoUrl(fetchedLogoUrl)
 
       // Determine a pseudo recordId based on current data
       const studentHashVal = keccak256(encodePacked(["address"], [studentAddress as Address]))
       const tempRecordId = "0x" + studentHashVal.substring(2, 10) + Date.now().toString(16)
-      const verifierUrl = `${window.location.origin}/verify?recordId=${tempRecordId}`
+      const verifierUrl = `${window.location.origin}/verify/${tempRecordId}?registry=${registryAddress}`
 
       // 3. Generate PDF
       const blob = await generateTranscriptPDF({
@@ -462,27 +525,17 @@ export default function IssuePage() {
 
         {/* ── Step 3: Academic Data & Generate PDF ────────────────────── */}
         {currentStep === 3 && (
-          <div className="space-y-5 animate-fade-in">
+          <div className="space-y-6 animate-fade-in">
             <div className="space-y-1.5">
               <h3 className="text-sm font-mono font-bold tracking-wide uppercase text-foreground">
                 03. Academic Data & Document Generation
               </h3>
               <p className="text-xs text-muted-foreground">
-                Enter academic details. A dynamic PDF will be generated incorporating your university logo and stamp.
+                Enter academic details, courses, and grades. The cumulative GPA will be automatically computed on a 4.0 scale.
               </p>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Cumulative GPA</label>
-                <input
-                  type="text"
-                  value={gpa}
-                  onChange={(e) => { setGpa(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
-                  placeholder="e.g. 3.85"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
-                />
-              </div>
               <div className="space-y-1.5 md:col-span-2">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Degree Major</label>
                 <input
@@ -493,7 +546,7 @@ export default function IssuePage() {
                   className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 />
               </div>
-              <div className="space-y-1.5 md:col-span-3">
+              <div className="space-y-1.5">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Graduation Year</label>
                 <input
                   type="text"
@@ -503,6 +556,86 @@ export default function IssuePage() {
                   className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
                 />
               </div>
+            </div>
+
+            {/* Courses Table Form */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Academic Courses & Grades</span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addCourseRow}
+                  className="h-8 font-mono text-[11px] px-3.5 border border-border/60 bg-card hover:bg-muted/40 text-foreground"
+                >
+                  + Add Course Row
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {courses.map((course, idx) => (
+                  <div key={idx} className="flex flex-wrap md:flex-nowrap gap-2 items-center bg-muted/10 p-2.5 rounded-lg border border-border/40">
+                    <div className="w-full md:w-1/4">
+                      <input
+                        type="text"
+                        value={course.code}
+                        placeholder="Code (e.g. CS101)"
+                        onChange={(e) => handleCourseChange(idx, "code", e.target.value)}
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                      />
+                    </div>
+                    <div className="w-full md:w-2/5">
+                      <input
+                        type="text"
+                        value={course.name}
+                        placeholder="Course Name"
+                        onChange={(e) => handleCourseChange(idx, "name", e.target.value)}
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs text-foreground focus:outline-none focus:border-ca-accent"
+                      />
+                    </div>
+                    <div className="w-1/2 md:w-1/6">
+                      <input
+                        type="number"
+                        min="1"
+                        max="6"
+                        value={course.credits || ""}
+                        placeholder="Credits"
+                        onChange={(e) => handleCourseChange(idx, "credits", e.target.value)}
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                      />
+                    </div>
+                    <div className="w-1/2 md:w-1/6">
+                      <select
+                        value={course.grade}
+                        onChange={(e) => handleCourseChange(idx, "grade", e.target.value)}
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                      >
+                        {["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"].map(g => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeCourseRow(idx)}
+                      disabled={courses.length <= 1}
+                      className="p-1.5 text-muted-foreground hover:text-ca-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      title="Remove course"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Read-only GPA summary */}
+            <div className="rounded-lg border border-border/40 bg-muted/20 p-4 font-mono text-xs flex justify-between items-center">
+              <span className="text-muted-foreground uppercase font-bold">Calculated GPA (4.0 Scale):</span>
+              <span className="text-ca-accent text-lg font-bold">{gpa || "0.00"}</span>
             </div>
 
             <Button 

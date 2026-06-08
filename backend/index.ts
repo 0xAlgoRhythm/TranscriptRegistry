@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { db } from "./db/connection.js"
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests } from "./db/schema.js"
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens } from "./db/schema.js"
 import { createRemoteJWKSet, jwtVerify } from "jose"
 import { eq, and, sql, inArray } from "drizzle-orm"
 import { startIndexer } from "./indexer/sync.js"
@@ -10,6 +10,7 @@ import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
 import nodemailer from "nodemailer"
+import { keccak256, encodePacked } from "viem"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -950,6 +951,444 @@ app.get("/api/logs", async (c) => {
     logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
     return c.json(logs.slice(0, 50))
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// ─── PUBLIC LOOKUP & PRIVACY ACCESS APIs ───
+
+// Public verify API
+app.get("/api/public/verify", async (c) => {
+  try {
+    const recordId = c.req.query("recordId")?.trim()
+    const studentId = c.req.query("studentId")?.trim()
+    const token = c.req.query("token")?.trim()
+
+    if (!recordId && !studentId) {
+      return c.json({ error: "Provide recordId or studentId parameter" }, 400)
+    }
+
+    let tx: any = null
+
+    if (recordId) {
+      tx = await db.query.transcripts.findFirst({
+        where: eq(transcripts.recordId, recordId)
+      })
+    } else if (studentId) {
+      const student = await db.query.students.findFirst({
+        where: eq(students.studentId, studentId)
+      })
+      if (student && student.walletAddress) {
+        const studentHashVal = keccak256(encodePacked(["address"], [student.walletAddress as `0x${string}`]))
+        tx = await db.query.transcripts.findFirst({
+          where: eq(transcripts.studentHash, studentHashVal),
+          orderBy: (transcripts, { desc }) => [desc(transcripts.issuedAt)]
+        })
+      }
+    }
+
+    if (!tx) {
+      return c.json({ error: "Transcript record not found" }, 404)
+    }
+
+    // Check Token authorization
+    let isAuthorized = false
+    let authorizedBy = ""
+
+    if (token) {
+      // 1. Check if token is in publicAccessRequests and approved
+      const pRequest = await db.query.publicAccessRequests.findFirst({
+        where: and(
+          eq(publicAccessRequests.recordId, tx.recordId),
+          eq(publicAccessRequests.token, token),
+          eq(publicAccessRequests.status, "approved")
+        )
+      })
+
+      if (pRequest) {
+        if (!pRequest.expiresAt || new Date(pRequest.expiresAt).getTime() > Date.now()) {
+          isAuthorized = true
+          authorizedBy = `Public Approval Request (${pRequest.requesterEmail})`
+        }
+      }
+
+      // 2. Check if token is a valid, active institutional verifier token
+      if (!isAuthorized) {
+        const iToken = await db.query.issuedTokens.findFirst({
+          where: and(
+            eq(issuedTokens.token, token),
+            eq(issuedTokens.isActive, true)
+          )
+        })
+
+        if (iToken) {
+          if (!iToken.expiresAt || new Date(iToken.expiresAt).getTime() > Date.now()) {
+            isAuthorized = true
+            authorizedBy = `Institutional API Key (${iToken.institutionName})`
+          }
+        }
+      }
+    }
+
+    // Resolve university details (always public)
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.universityId, tx.universityId || 0)
+    })
+
+    if (!isAuthorized) {
+      // Hide student privacy details, return basic verify state
+      return c.json({
+        transcript: {
+          recordId: tx.recordId,
+          registryAddr: tx.registryAddr,
+          issuedAt: tx.issuedAt,
+          status: tx.status
+        },
+        university: uni ? {
+          name: uni.name,
+          logoUrl: uni.logoUrl,
+          contractAddr: uni.contractAddr
+        } : null,
+        requestAccessRequired: true
+      })
+    }
+
+    // Resolve full student details
+    let studentDetails: any = null
+    const allStudents = await db.select().from(students)
+    for (const s of allStudents) {
+      if (s.walletAddress) {
+        const h = keccak256(encodePacked(["address"], [s.walletAddress as `0x${string}`]))
+        if (h === tx.studentHash) {
+          studentDetails = {
+            fullName: s.fullName,
+            studentId: s.studentId,
+            email: s.email,
+            walletAddress: s.walletAddress
+          }
+          break
+        }
+      }
+    }
+
+    return c.json({
+      transcript: tx,
+      student: studentDetails,
+      university: uni ? {
+        name: uni.name,
+        contractAddr: uni.contractAddr,
+        logoUrl: uni.logoUrl,
+        stampUrl: uni.stampUrl
+      } : null,
+      authorizedBy
+    })
+
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Request access API (verifier submits request)
+app.post("/api/public/request-access", async (c) => {
+  try {
+    const { recordId, requesterName, requesterOrg, requesterEmail } = await c.req.json()
+
+    if (!recordId || !requesterName || !requesterOrg || !requesterEmail) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const tx = await db.query.transcripts.findFirst({
+      where: eq(transcripts.recordId, recordId)
+    })
+    if (!tx) {
+      return c.json({ error: "Transcript record not found" }, 404)
+    }
+
+    // Find student details
+    let studentDetails: any = null
+    const allStudents = await db.select().from(students)
+    for (const s of allStudents) {
+      if (s.walletAddress) {
+        const h = keccak256(encodePacked(["address"], [s.walletAddress as `0x${string}`]))
+        if (h === tx.studentHash) {
+          studentDetails = s
+          break
+        }
+      }
+    }
+
+    if (!studentDetails) {
+      return c.json({ error: "Student profile not found for this transcript" }, 404)
+    }
+
+    const token = "req_" + Math.random().toString(36).slice(2) + Date.now().toString(36)
+
+    await db.insert(publicAccessRequests).values({
+      recordId,
+      requesterName,
+      requesterOrg,
+      requesterEmail,
+      token,
+      status: "pending"
+    })
+
+    if (transporter) {
+      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+      const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`
+      const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: studentDetails.email,
+        subject: "🔒 CredAxis — Access Request to Verify your Transcript",
+        html: `
+          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+            <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT ACCESS REQUEST</h2>
+            <p>Hello <strong>${studentDetails.fullName}</strong>,</p>
+            <p>An external verifier has requested permission to verify your official academic transcript on-chain.</p>
+            <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+              <p style="margin: 5px 0;"><strong>Requester:</strong> ${requesterName}</p>
+              <p style="margin: 5px 0;"><strong>Organization:</strong> ${requesterOrg}</p>
+              <p style="margin: 5px 0;"><strong>Email:</strong> ${requesterEmail}</p>
+              <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${recordId}</p>
+            </div>
+            <p>To protect your privacy, this verifier cannot see your GPA, major, or grades unless you approve.</p>
+            <div style="text-align: center; margin: 30px 0; display: flex; justify-content: center; gap: 20px;">
+              <a href="${approveUrl}" style="background-color: #10b981; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 15px;">APPROVE ACCESS</a>
+              <a href="${rejectUrl}" style="background-color: #ef4444; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">REJECT ACCESS</a>
+            </div>
+            <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+              This access request token is unique. Approving gives access for 30 days. You can revoke it anytime.
+            </p>
+          </div>
+        `
+      })
+    }
+
+    return c.json({ success: true, message: "Verification request sent to student email." })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Access approve endpoint (student clicks approve link in email)
+app.get("/api/public/access-requests/approve", async (c) => {
+  try {
+    const token = c.req.query("token")
+
+    if (!token) return c.html("<h3>Error: Missing request token</h3>", 400)
+
+    const request = await db.query.publicAccessRequests.findFirst({
+      where: eq(publicAccessRequests.token, token)
+    })
+
+    if (!request) return c.html("<h3>Error: Access request not found</h3>", 404)
+
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+
+    await db.update(publicAccessRequests)
+      .set({
+        status: "approved",
+        expiresAt
+      })
+      .where(eq(publicAccessRequests.token, token))
+
+    const tx = await db.query.transcripts.findFirst({
+      where: eq(transcripts.recordId, request.recordId)
+    })
+
+    // Email verifier
+    if (transporter && tx) {
+      const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+      const accessUrl = `${frontendBase}/verify/${request.recordId}?token=${token}&registry=${tx.registryAddr}`
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: request.requesterEmail,
+        subject: "✓ Access Granted — CredAxis Transcript Verification",
+        html: `
+          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+            <h2 style="color: #10b981; border-bottom: 1px solid #222; padding-bottom: 10px;">ACCESS GRANTED</h2>
+            <p>Dear <strong>${request.requesterName}</strong>,</p>
+            <p>Your request to verify the academic transcript record on-chain has been <strong>approved</strong> by the student.</p>
+            <p>You can access the full verified transcript details using the unique link below. This link will be active for 30 days.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${accessUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">VIEW VERIFIED TRANSCRIPT</a>
+            </div>
+            <p style="font-size: 11px; color: #888;">Record ID: ${request.recordId}</p>
+          </div>
+        `
+      })
+    }
+
+    return c.html(`
+      <html>
+        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
+          <div style="border: 1px solid #10b981; padding: 40px; display: inline-block; background: #0d1f14; border-radius: 8px;">
+            <h1 style="color: #10b981; margin: 0 0 15px 0;">ACCESS GRANTED</h1>
+            <p style="margin: 0; color: #a3e635;">You have successfully approved this verification request.</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">The verifier has been notified via email with their access token.</p>
+          </div>
+        </body>
+      </html>
+    `)
+  } catch (err: any) {
+    return c.html(`<h3>Error: ${err.message}</h3>`, 500)
+  }
+})
+
+// Access reject endpoint (student clicks reject link in email)
+app.get("/api/public/access-requests/reject", async (c) => {
+  try {
+    const token = c.req.query("token")
+
+    if (!token) return c.html("<h3>Error: Missing request token</h3>", 400)
+
+    await db.update(publicAccessRequests)
+      .set({
+        status: "rejected"
+      })
+      .where(eq(publicAccessRequests.token, token))
+
+    return c.html(`
+      <html>
+        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
+          <div style="border: 1px solid #ef4444; padding: 40px; display: inline-block; background: #270e0f; border-radius: 8px;">
+            <h1 style="color: #ef4444; margin: 0 0 15px 0;">ACCESS DENIED</h1>
+            <p style="margin: 0; color: #fca5a5;">You have rejected this verification request.</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">The verifier's access token remains blocked.</p>
+          </div>
+        </body>
+      </html>
+    `)
+  } catch (err: any) {
+    return c.html(`<h3>Error: ${err.message}</h3>`, 500)
+  }
+})
+
+// ─── VERIFIER INSTITUTIONAL TOKENS APIs (ADMIN/REGISTRAR ONLY) ───
+
+// Issue a long-lived institutional API token
+app.post("/api/tokens/issue", verifyAuth, async (c) => {
+  try {
+    const { institutionName, expiresDays, issuerAddress, role } = await c.req.json()
+
+    if (!institutionName) {
+      return c.json({ error: "Institution Name is required" }, 400)
+    }
+
+    const token = "ct_" + Math.random().toString(36).slice(2) + Date.now().toString(36)
+    const expiresAt = expiresDays ? new Date(Date.now() + Number(expiresDays) * 24 * 60 * 60 * 1000) : null
+
+    await db.insert(issuedTokens).values({
+      token,
+      institutionName,
+      issuerAddress: issuerAddress || "0x",
+      role: role || "registrar",
+      expiresAt,
+      isActive: true
+    })
+
+    await logAudit(role || "registrar", issuerAddress || "0x", "issue_token", `Issued verifier token to ${institutionName}`)
+
+    return c.json({
+      success: true,
+      token,
+      institutionName,
+      expiresAt: expiresAt ? expiresAt.toISOString() : null
+    })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Get all tokens issued by current user or all tokens if admin
+app.get("/api/tokens", verifyAuth, async (c) => {
+  try {
+    const issuerAddress = c.req.query("issuerAddress")?.toLowerCase()
+    const role = c.req.query("role")
+
+    let list
+    if (role === "admin") {
+      list = await db.select().from(issuedTokens).orderBy(sql`${issuedTokens.createdAt} DESC`)
+    } else if (issuerAddress) {
+      list = await db.select().from(issuedTokens)
+        .where(eq(issuedTokens.issuerAddress, issuerAddress))
+        .orderBy(sql`${issuedTokens.createdAt} DESC`)
+    } else {
+      list = await db.select().from(issuedTokens).orderBy(sql`${issuedTokens.createdAt} DESC`)
+    }
+
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Revoke/delete a verifier token
+app.delete("/api/tokens/:id", verifyAuth, async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const operator = c.req.query("operator") || "0x"
+
+    await db.update(issuedTokens)
+      .set({ isActive: false })
+      .where(eq(issuedTokens.id, id))
+
+    await logAudit("system", operator, "revoke_token", `Revoked verifier token ID: ${id}`)
+
+    return c.json({ success: true, message: "Token revoked successfully" })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Email verified transcript directly
+app.post("/api/public/email-transcript", async (c) => {
+  try {
+    const { to, recordId, registryAddress, studentName, studentId, gpa, major, gradYear, fileHash, universityName } = await c.req.json()
+
+    if (!to || !recordId || !studentName) {
+      return c.json({ error: "Missing required email recipient details" }, 400)
+    }
+
+    if (!transporter) {
+      return c.json({ error: "Email transporter is not configured on the server." }, 500)
+    }
+
+    const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+    const verifyUrl = `${frontendBase}/verify/${recordId}?registry=${registryAddress || ''}`
+
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+      to,
+      subject: `📜 CredAxis Verified Transcript — ${studentName}`,
+      html: `
+        <div style="font-family: monospace; border: 1px solid #333; padding: 25px; max-width: 600px; background-color: #0b0b0f; color: #fff; border-radius: 8px;">
+          <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 12px; margin-top: 0;">📜 CREDAXIS VERIFICATION RECEIPT</h2>
+          <p>An official academic credential transcript has been successfully verified on-chain via the CredAxis protocol.</p>
+          <table style="width: 100%; border-collapse: collapse; margin: 25px 0;">
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888; width: 40%;">Institution:</td><td style="padding: 8px; font-weight: bold; color: #fff;">${universityName || 'Accredited University'}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student Name:</td><td style="padding: 8px; color: #fff;">${studentName}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student ID:</td><td style="padding: 8px; color: #fff;">${studentId}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Degree Program:</td><td style="padding: 8px; color: #fff;">${major}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Cumulative GPA:</td><td style="padding: 8px; font-weight: bold; color: #10b981;">${parseFloat(gpa).toFixed(2)} / 4.00</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Graduation Year:</td><td style="padding: 8px; color: #fff;">${gradYear}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Transcript Record Hash:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #6c5bf0;">${recordId}</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">PDF SHA-256 Checksum:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #a3e635;">${fileHash}</td></tr>
+          </table>
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Verify Authenticity On-Chain</a>
+          </div>
+          <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 30px;">
+            This verification audit receipt is cryptographically tied to the transaction logs of the university registry contract.
+          </p>
+        </div>
+      `
+    })
+
+    return c.json({ success: true, message: "Verified transcript details emailed successfully!" })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }

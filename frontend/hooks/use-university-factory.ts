@@ -1,7 +1,7 @@
 "use client"
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { type Address } from "viem"
+import { isAddress, type Address } from "viem"
 import { universityFactoryAbi, CONTRACT_ADDRESSES, CHAIN } from "@/lib/contracts"
 
 const factoryAddress = CONTRACT_ADDRESSES.universityFactory
@@ -65,7 +65,7 @@ export function useIsUniversityContract(address: Address) {
     functionName: "isUniversityProxy",
     args: [address],
     chainId: CHAIN.id,
-    query: { enabled: !!factoryAddress && !!address },
+    query: { enabled: !!factoryAddress && !!address && isAddress(address) },
   })
 }
 

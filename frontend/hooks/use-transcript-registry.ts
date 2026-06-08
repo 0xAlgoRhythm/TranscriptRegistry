@@ -1,7 +1,7 @@
 "use client"
 
 import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi"
-import { type Address } from "viem"
+import { isAddress, type Address } from "viem"
 import { transcriptRegistryAbi, CHAIN } from "@/lib/contracts"
 
 export function useRegistryStats(registryAddress: Address) {
@@ -10,7 +10,7 @@ export function useRegistryStats(registryAddress: Address) {
     abi: transcriptRegistryAbi,
     functionName: "getContractStats",
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) },
   })
 }
 
@@ -20,7 +20,7 @@ export function useUniversityName(registryAddress: Address) {
     abi: transcriptRegistryAbi,
     functionName: "universityName",
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) },
   })
 }
 
@@ -30,7 +30,7 @@ export function useRegistrar(registryAddress: Address) {
     abi: transcriptRegistryAbi,
     functionName: "registrar",
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) },
   })
 }
 
@@ -41,7 +41,7 @@ export function useTranscript(registryAddress: Address, recordId: `0x${string}`)
     functionName: "getTranscript",
     args: [recordId],
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress && !!recordId },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) && !!recordId },
   })
 }
 
@@ -55,7 +55,7 @@ export function useStudentTranscripts(
     functionName: "getStudentTranscripts",
     args: [studentHashValue],
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress && !!studentHashValue },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) && !!studentHashValue },
   })
 }
 
@@ -70,7 +70,7 @@ export function useCheckAccess(
     functionName: "checkAccess",
     args: [recordId, verifier],
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress && !!recordId && !!verifier },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) && !!recordId && !!verifier && isAddress(verifier) },
   })
 }
 
@@ -85,7 +85,7 @@ export function useAccessControl(
     functionName: "accessControl",
     args: [recordId, verifier],
     chainId: CHAIN.id,
-    query: { enabled: !!registryAddress && !!recordId && !!verifier },
+    query: { enabled: !!registryAddress && isAddress(registryAddress) && !!recordId && !!verifier && isAddress(verifier) },
   })
 }
 
