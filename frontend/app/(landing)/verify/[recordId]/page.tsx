@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter, useParams } from "next/navigation"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,7 @@ interface Course {
   grade: string
 }
 
-export default function PublicVerifyDetailPage() {
+function VerifyDetailPageContent() {
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -492,5 +492,17 @@ export default function PublicVerifyDetailPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PublicVerifyDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
+      </div>
+    }>
+      <VerifyDetailPageContent />
+    </Suspense>
   )
 }
