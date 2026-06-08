@@ -80,6 +80,20 @@ export default function IssuePage() {
     }
   }, [searchParams])
 
+  useEffect(() => {
+    if (isSuccess && requestIdToComplete) {
+      fetch(`${API_URL}/api/registrar/requests/${requestIdToComplete}/complete`, {
+        method: "PUT"
+      })
+      .then(res => {
+        if (res.ok) {
+          console.log("Transcript request marked completed in database.")
+        }
+      })
+      .catch(err => console.error("Failed to complete request in DB:", err))
+    }
+  }, [isSuccess, requestIdToComplete, API_URL])
+
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const { hash: calculatedFileHash, isCalculating, calculateHash, reset: resetHash } = useFileHash()
@@ -357,6 +371,12 @@ export default function IssuePage() {
     URL.revokeObjectURL(url)
   }
 
+  const previewPdf = () => {
+    if (!pdfBlob) return
+    const url = URL.createObjectURL(pdfBlob)
+    window.open(url, "_blank")
+  }
+
   // ─── IPFS Metadata Upload ──────────────────────────────────────────────────
   const uploadToIPFS = useCallback(async () => {
     if (!gpa || !major || !gradYear || !calculatedFileHash) return
@@ -597,6 +617,44 @@ export default function IssuePage() {
                 Enter academic details, courses, and grades. The cumulative GPA will be automatically computed on a 4.0 scale.
               </p>
             </div>
+
+            {hasOldTranscript && (
+              <div className="rounded-lg border border-ca-accent/30 bg-ca-accent/5 p-4 font-mono text-xs flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5 text-ca-accent font-bold uppercase">
+                    <AlertTriangle className="h-4 w-4" /> Existing Transcript Detected
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Program and course records have been pre-populated from previous transcript (ID: {oldTranscriptRecordId.slice(0, 10)}...) to ensure consistency.
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Status: {editLocked ? "🔒 Academic data locked" : "🔓 Academic data unlocked for editing"}
+                  </p>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto shrink-0">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setEditLocked(!editLocked)}
+                    className="font-mono text-[10px] px-3 h-8 border-border/60 hover:bg-muted/40 text-foreground w-full md:w-auto"
+                  >
+                    {editLocked ? "Edit Data" : "Lock Data"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      setShouldAmendOld(true)
+                      handleNext()
+                    }}
+                    className="font-mono text-[10px] px-3 h-8 bg-ca-accent text-white hover:bg-ca-accent/90 w-full md:w-auto animate-pulse"
+                  >
+                    Update & Proceed
+                  </Button>
+                </div>
+              </div>
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-1.5 md:col-span-2">
@@ -604,9 +662,10 @@ export default function IssuePage() {
                 <input
                   type="text"
                   value={major}
+                  disabled={editLocked}
                   onChange={(e) => { setMajor(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
                   placeholder="e.g. B.S. Computer Science"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed disabled:bg-muted/10"
                 />
               </div>
               <div className="space-y-1.5">
@@ -614,9 +673,10 @@ export default function IssuePage() {
                 <input
                   type="text"
                   value={gradYear}
+                  disabled={editLocked}
                   onChange={(e) => { setGradYear(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
                   placeholder="e.g. 2026"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed disabled:bg-muted/10"
                 />
               </div>
             </div>
@@ -629,8 +689,9 @@ export default function IssuePage() {
                   type="button"
                   variant="outline"
                   size="sm"
+                  disabled={editLocked}
                   onClick={addCourseRow}
-                  className="h-8 font-mono text-[11px] px-3.5 border border-border/60 bg-card hover:bg-muted/40 text-foreground"
+                  className="h-8 font-mono text-[11px] px-3.5 border border-border/60 bg-card hover:bg-muted/40 text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   + Add Course Row
                 </Button>
@@ -643,18 +704,20 @@ export default function IssuePage() {
                       <input
                         type="text"
                         value={course.code}
+                        disabled={editLocked}
                         placeholder="Code (e.g. CS101)"
                         onChange={(e) => handleCourseChange(idx, "code", e.target.value)}
-                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
                     <div className="w-full md:w-2/5">
                       <input
                         type="text"
                         value={course.name}
+                        disabled={editLocked}
                         placeholder="Course Name"
                         onChange={(e) => handleCourseChange(idx, "name", e.target.value)}
-                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs text-foreground focus:outline-none focus:border-ca-accent"
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs text-foreground focus:outline-none focus:border-ca-accent disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
                     <div className="w-1/2 md:w-1/6">
@@ -663,16 +726,18 @@ export default function IssuePage() {
                         min="1"
                         max="6"
                         value={course.credits || ""}
+                        disabled={editLocked}
                         placeholder="Credits"
                         onChange={(e) => handleCourseChange(idx, "credits", e.target.value)}
-                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent disabled:opacity-75 disabled:cursor-not-allowed"
                       />
                     </div>
                     <div className="w-1/2 md:w-1/6">
                       <select
                         value={course.grade}
+                        disabled={editLocked}
                         onChange={(e) => handleCourseChange(idx, "grade", e.target.value)}
-                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent"
+                        className="w-full rounded border border-border/60 bg-card py-1.5 px-2.5 text-xs font-mono text-foreground focus:outline-none focus:border-ca-accent disabled:opacity-75 disabled:cursor-not-allowed"
                       >
                         {["A", "A-", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"].map(g => (
                           <option key={g} value={g}>{g}</option>
@@ -682,7 +747,7 @@ export default function IssuePage() {
                     <button
                       type="button"
                       onClick={() => removeCourseRow(idx)}
-                      disabled={courses.length <= 1}
+                      disabled={courses.length <= 1 || editLocked}
                       className="p-1.5 text-muted-foreground hover:text-ca-danger transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       title="Remove course"
                     >
@@ -723,9 +788,14 @@ export default function IssuePage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4" /> PDF Generated & Hashed
                   </div>
-                  <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={downloadPdf}>
-                    <Download className="h-3 w-3 mr-1" /> Download PDF
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={previewPdf}>
+                      <Eye className="h-3 w-3 mr-1" /> Preview PDF
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={downloadPdf}>
+                      <Download className="h-3 w-3 mr-1" /> Download PDF
+                    </Button>
+                  </div>
                 </div>
                 <HashDisplay hash={calculatedFileHash} chars={14} />
               </div>
