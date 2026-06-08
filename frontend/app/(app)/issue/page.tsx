@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { type Address, keccak256, encodePacked } from "viem"
 import { useAccount } from "wagmi"
-import { useRegisterTranscript, useUniversityName } from "@/hooks/use-transcript-registry"
+import { useRegisterTranscript, useUniversityName, useUpdateTranscriptStatus } from "@/hooks/use-transcript-registry"
 import { useFileHash } from "@/hooks/use-file-hash"
 import { StepWizard } from "@/components/ui/step-wizard"
 import { AddressInput } from "@/components/ui/address-input"
@@ -59,6 +59,10 @@ export default function IssuePage() {
   const [gradYear, setGradYear] = useState("")
   const [tempRecordId, setTempRecordId] = useState("")
   
+  const [hasOldTranscript, setHasOldTranscript] = useState(false)
+  const [oldTranscriptRecordId, setOldTranscriptRecordId] = useState("")
+  const [shouldAmendOld, setShouldAmendOld] = useState(true)
+
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const { hash: calculatedFileHash, isCalculating, calculateHash, reset: resetHash } = useFileHash()
@@ -90,8 +94,43 @@ export default function IssuePage() {
     setGpa(computed.toFixed(2))
   }, [courses])
 
-  const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
+  const { updateStatus, hash: updateTxHash, isPending: updateIsPending, isConfirming: updateIsConfirming, isSuccess: updateIsSuccess, error: updateError } = useUpdateTranscriptStatus()
+
+  const checkExistingTranscript = useCallback(async (walletAddr: string) => {
+    try {
+      const hashVal = keccak256(encodePacked(["address"], [walletAddr as Address]))
+      const tRes = await fetch(`${API_URL}/api/transcripts/by-student/${hashVal}`)
+      if (tRes.ok) {
+        const txList = await tRes.json()
+        if (Array.isArray(txList) && txList.length > 0) {
+          const latestTx = txList[0]
+          const metaRes = await fetch(`${API_URL}/api/ipfs/metadata/${latestTx.metadataCid}`)
+          if (metaRes.ok) {
+            const metaData = await metaRes.json()
+            const oldRecord = metaData.metadataJson
+            if (oldRecord) {
+              setMajor(oldRecord.major || oldRecord.degree || "")
+              setGradYear(oldRecord.gradYear || oldRecord.graduationDate || "")
+              if (Array.isArray(oldRecord.courses)) {
+                setCourses(oldRecord.courses)
+              }
+              setHasOldTranscript(true)
+              setOldTranscriptRecordId(latestTx.recordId)
+              setStudentStatusMsg(`✓ Approved student profile verified. Existing transcript detected (${latestTx.recordId.slice(0, 10)}...). Previous academic data has been pre-populated.`)
+            }
+          }
+        } else {
+          setHasOldTranscript(false)
+          setOldTranscriptRecordId("")
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check existing transcripts:", e)
+    }
+  }, [API_URL])
 
   // Auto-suggestion / Auto-complete states
   const [universities, setUniversities] = useState<any[]>([])
@@ -144,6 +183,7 @@ export default function IssuePage() {
                 if (studentId !== profile.studentId) {
                   setStudentId(profile.studentId)
                 }
+                checkExistingTranscript(profile.walletAddress)
               } else if (profile.status === "pending") {
                 setStudentStatus("pending")
                 setStudentStatusMsg("⏳ Verification pending — approve this student first.")
@@ -168,7 +208,7 @@ export default function IssuePage() {
       setStudentAddress("")
       setStudentSuggestions([])
     }
-  }, [studentId, API_URL])
+  }, [studentId, API_URL, checkExistingTranscript])
 
   const handleSelectStudent = (s: any) => {
     if (!s.walletAddress) {
@@ -183,6 +223,7 @@ export default function IssuePage() {
       setStudentName(s.fullName || "")
       setStudentAddress(s.walletAddress)
       setStudentId(s.studentId)
+      checkExistingTranscript(s.walletAddress)
     } else if (s.status === "pending") {
       setStudentStatus("pending")
       setStudentStatusMsg("⏳ Verification pending — approve this student first.")
