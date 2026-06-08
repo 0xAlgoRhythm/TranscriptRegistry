@@ -129,3 +129,13 @@ export const issuedTokens = pgTable("issued_tokens", {
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     isActive: boolean("is_active").default(true).notNull(),
 });
+export const transcriptRequests = pgTable("transcript_requests", {
+    id: serial("id").primaryKey(),
+    studentWallet: text("student_wallet").notNull(),
+    studentName: text("student_name").notNull(),
+    studentId: text("student_id").notNull(),
+    email: text("email").notNull(),
+    universityId: integer("university_id").references(() => universities.universityId).notNull(),
+    status: text("status").default("pending").notNull(), // pending | completed
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
+});

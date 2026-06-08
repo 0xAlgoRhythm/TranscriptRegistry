@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { db } from "./db/connection.js";
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens } from "./db/schema.js";
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens, transcriptRequests } from "./db/schema.js";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { startIndexer } from "./indexer/sync.js";
@@ -390,6 +390,150 @@ app.get("/api/transcripts/by-registry/:addr", async (c) => {
         const addr = c.req.param("addr").toLowerCase();
         const list = await db.select().from(transcripts).where(eq(transcripts.registryAddr, addr));
         return c.json(list);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Student request a transcript (auto-delivers if exists, queues and alerts registrar if not)
+app.post("/api/transcripts/request", async (c) => {
+    try {
+        const { studentWallet, email } = await c.req.json();
+        if (!studentWallet) {
+            return c.json({ error: "Missing required studentWallet address" }, 400);
+        }
+        const cleanWallet = studentWallet.toLowerCase();
+        // 1. Resolve student profile
+        const student = await db.query.students.findFirst({
+            where: eq(students.walletAddress, cleanWallet)
+        });
+        if (!student) {
+            return c.json({ error: "Student profile not found. Please onboarding first." }, 404);
+        }
+        // 2. Check if active transcript exists
+        const studentHashVal = keccak256(encodePacked(["address"], [cleanWallet]));
+        const activeTx = await db.query.transcripts.findFirst({
+            where: and(eq(transcripts.studentHash, studentHashVal), eq(transcripts.status, "Active")),
+            orderBy: (transcripts, { desc }) => [desc(transcripts.issuedAt)]
+        });
+        if (activeTx) {
+            // Transcript exists -> retrieve metadata and auto-mail verification receipt
+            const upload = await db.query.ipfsUploads.findFirst({
+                where: eq(ipfsUploads.fileHash, activeTx.fileHash)
+            });
+            const metadataJson = upload?.metadataJson || {};
+            if (transporter) {
+                const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+                const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`;
+                await transporter.sendMail({
+                    from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+                    to: student.email,
+                    subject: "📜 CredAxis — Auto-Delivered Official Transcript Receipt",
+                    html: `
+            <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+              <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
+              <p>Hello <strong>${student.fullName}</strong>,</p>
+              <p>An active transcript was found registered for your profile. Here is your official verified transcript credential receipt.</p>
+              <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
+                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
+                <p style="margin: 5px 0;"><strong>Program:</strong> ${metadataJson.major || "N/A"}</p>
+                <p style="margin: 5px 0;"><strong>GPA:</strong> ${metadataJson.gpa || "N/A"}</p>
+                <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${activeTx.recordId}</p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
+              </div>
+              <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                This email was sent automatically because you requested it from your student dashboard.
+              </p>
+            </div>
+          `
+                });
+                console.log(`[REQUEST API] Auto-mailed transcript to ${student.email}`);
+            }
+            return c.json({ status: "sent", message: "Official transcript found! A verification receipt has been emailed to you." });
+        }
+        // Transcript does not exist -> resolve university registrar to record request queue
+        const uni = await db.query.universities.findFirst({
+            where: eq(universities.universityId, student.universityId)
+        });
+        const existingReq = await db.query.transcriptRequests.findFirst({
+            where: and(eq(transcriptRequests.studentWallet, cleanWallet), eq(transcriptRequests.status, "pending"))
+        });
+        if (!existingReq) {
+            await db.insert(transcriptRequests).values({
+                studentWallet: cleanWallet,
+                studentName: student.fullName,
+                studentId: student.studentId,
+                email: student.email,
+                universityId: student.universityId,
+                status: "pending",
+            });
+            // Notify the registrar
+            if (transporter && uni && uni.registrarEmail) {
+                const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+                const issueUrl = `${frontendBase}/issue?studentId=${encodeURIComponent(student.studentId)}`;
+                await transporter.sendMail({
+                    from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+                    to: uni.registrarEmail,
+                    subject: `🔔 CredAxis — Transcript Request: ${student.fullName}`,
+                    html: `
+            <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+              <h2 style="color: #eab308; border-bottom: 1px solid #222; padding-bottom: 10px;">PENDING TRANSCRIPT REQUEST</h2>
+              <p>Hello Registrar,</p>
+              <p>A student has requested their official transcript. Since they do not have an active transcript on-chain, please issue it.</p>
+              <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
+                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> ${student.email}</p>
+                <p style="margin: 5px 0; font-size: 11px;"><strong>Wallet:</strong> ${student.walletAddress}</p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${issueUrl}" style="background-color: #eab308; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">ISSUE TRANSCRIPT NOW</a>
+              </div>
+              <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                This is a secure institutional notification from the CredAxis on-chain protocol.
+              </p>
+            </div>
+          `
+                });
+                console.log(`[REQUEST API] Notified registrar ${uni.registrarEmail} for student request`);
+            }
+        }
+        return c.json({ status: "requested", message: "Transcript request submitted to your university registrar." });
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Get pending transcript requests for a registrar
+app.get("/api/registrar/requests/:registrarAddress", async (c) => {
+    try {
+        const registrarAddress = c.req.param("registrarAddress").toLowerCase();
+        const unis = await db.select().from(universities).where(eq(universities.registrar, registrarAddress));
+        if (!unis || unis.length === 0) {
+            return c.json([]);
+        }
+        const uniIds = unis.map(u => u.universityId);
+        const list = await db.select().from(transcriptRequests)
+            .where(and(inArray(transcriptRequests.universityId, uniIds), eq(transcriptRequests.status, "pending")))
+            .orderBy(sql `${transcriptRequests.createdAt} DESC`);
+        return c.json(list);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Complete a student transcript request
+app.put("/api/registrar/requests/:requestId/complete", async (c) => {
+    try {
+        const requestId = parseInt(c.req.param("requestId"));
+        const result = await db.update(transcriptRequests)
+            .set({ status: "completed" })
+            .where(eq(transcriptRequests.id, requestId))
+            .returning();
+        return c.json({ success: true, request: result[0] });
     }
     catch (err) {
         return c.json({ error: err.message }, 500);
