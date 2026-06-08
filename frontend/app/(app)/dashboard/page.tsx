@@ -52,7 +52,11 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [bulkStatus, setBulkStatus] = useState("")
   const [bulkError, setBulkError] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<"requests" | "bulk">("requests")
+  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests">("requests")
+
+  // Transcript request states
+  const [tRequests, setTRequests] = useState<any[]>([])
+  const [tRequestsLoading, setTRequestsLoading] = useState(true)
 
   // Wallet Binding states
   const [selectedStudentForWallet, setSelectedStudentForWallet] = useState<StudentRequest | null>(null)
@@ -87,9 +91,25 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     }
   }
 
+  const fetchTranscriptRequests = async () => {
+    try {
+      setTRequestsLoading(true)
+      const res = await fetch(`${API_URL}/api/registrar/requests/${registrarAddress.toLowerCase()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setTRequests(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch transcript requests:", e)
+    } finally {
+      setTRequestsLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (registrarAddress) {
       fetchStudents()
+      fetchTranscriptRequests()
     }
   }, [registrarAddress])
 
@@ -311,6 +331,16 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           }`}
         >
           Student Requests ({students.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("trequests")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "trequests"
+              ? "border-ca-accent text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Transcript Requests ({tRequests.length})
         </button>
         <button
           onClick={() => setActiveTab("bulk")}
@@ -891,6 +921,38 @@ export default function DashboardPage() {
                         </div>
                       </GlowCard>
                     </Link>
+
+                    <button 
+                      onClick={handleRequestTranscript} 
+                      disabled={requestLoading}
+                      className="block group text-left w-full focus:outline-none"
+                    >
+                      <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-ca-accent/10 rounded-lg text-ca-accent">
+                            {requestLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground group-hover:text-ca-accent transition-colors">
+                              {requestLoading ? "Requesting..." : "Request Transcript"}
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground">Auto-mail to inbox, or queue with registrar</p>
+                          </div>
+                        </div>
+                      </GlowCard>
+                    </button>
+
+                    {requestResult && (
+                      <div className={`p-3 rounded font-mono text-[10px] border ${
+                        requestResult.type === "success" 
+                          ? "bg-ca-success/8 text-ca-success border-ca-success/20" 
+                          : requestResult.type === "info" 
+                          ? "bg-ca-accent/8 text-ca-accent border-ca-accent/20" 
+                          : "bg-ca-danger/8 text-ca-danger border-ca-danger/20"
+                      }`}>
+                        {requestResult.text}
+                      </div>
+                    )}
                   </>
                 )}
 
