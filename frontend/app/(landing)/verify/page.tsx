@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
   ShieldCheck, Search, FileText, Mail, Download, Key, 
-  User, Building2, HelpCircle, Lock, AlertCircle, CheckCircle, Send
+  User, Building2, HelpCircle, Lock, AlertCircle, CheckCircle, Send, Loader2
 } from "lucide-react"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { formatTimestamp } from "@/lib/utils"
