@@ -20,7 +20,7 @@ const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, role: null },
   { label: "Transcripts", href: "/transcripts", icon: FileCheck2, role: "student" },
   { label: "Issue", href: "/issue", icon: FilePlus2, role: "registrar" },
-  { label: "Verify", href: "/verify", icon: SearchCode, role: null },
+  { label: "Verify", href: "/verify-onchain", icon: SearchCode, role: null },
   { label: "Admin", href: "/admin", icon: Settings2, role: "admin" },
 ]
 

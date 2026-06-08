@@ -32,7 +32,7 @@ const NAV_ITEMS = [
   { label: "Settings", href: "/dashboard/settings", icon: Settings2, role: "registrar" },
   
   // Public/All
-  { label: "Verify On-Chain", href: "/verify", icon: SearchCode, role: null },
+  { label: "Verify On-Chain", href: "/verify-onchain", icon: SearchCode, role: null },
   
   // Admin specific
   { label: "Dashboard", href: "/admin", icon: Settings, role: "admin" },

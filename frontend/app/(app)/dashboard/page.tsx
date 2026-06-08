@@ -861,7 +861,7 @@ export default function DashboardPage() {
                   </>
                 )}
 
-                <Link href="/verify" className="block group">
+                <Link href="/verify-onchain" className="block group">
                   <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-ca-success/10 rounded-lg text-ca-success">
