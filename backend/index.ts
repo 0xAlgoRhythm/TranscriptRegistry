@@ -446,35 +446,39 @@ app.post("/api/transcripts/request", async (c) => {
       const metadataJson = (upload?.metadataJson || {}) as any
 
       if (transporter) {
-        const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
-        const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`
+        try {
+          const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+          const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`
 
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
-          to: student.email,
-          subject: "📜 CredAxis — Auto-Delivered Official Transcript Receipt",
-          html: `
-            <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-              <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
-              <p>Hello <strong>${student.fullName}</strong>,</p>
-              <p>An active transcript was found registered for your profile. Here is your official verified transcript credential receipt.</p>
-              <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
-                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
-                <p style="margin: 5px 0;"><strong>Program:</strong> ${metadataJson.major || "N/A"}</p>
-                <p style="margin: 5px 0;"><strong>GPA:</strong> ${metadataJson.gpa || "N/A"}</p>
-                <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${activeTx.recordId}</p>
+          await transporter.sendMail({
+            from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+            to: student.email,
+            subject: "📜 CredAxis — Auto-Delivered Official Transcript Receipt",
+            html: `
+              <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+                <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
+                <p>Hello <strong>${student.fullName}</strong>,</p>
+                <p>An active transcript was found registered for your profile. Here is your official verified transcript credential receipt.</p>
+                <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                  <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
+                  <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
+                  <p style="margin: 5px 0;"><strong>Program:</strong> ${metadataJson.major || "N/A"}</p>
+                  <p style="margin: 5px 0;"><strong>GPA:</strong> ${metadataJson.gpa || "N/A"}</p>
+                  <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${activeTx.recordId}</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
+                </div>
+                <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                  This email was sent automatically because you requested it from your student dashboard.
+                </p>
               </div>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
-              </div>
-              <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-                This email was sent automatically because you requested it from your student dashboard.
-              </p>
-            </div>
-          `
-        })
-        console.log(`[REQUEST API] Auto-mailed transcript to ${student.email}`)
+            `
+          })
+          console.log(`[REQUEST API] Auto-mailed transcript to ${student.email}`)
+        } catch (emailErr: any) {
+          console.error(`[REQUEST API] Failed to auto-mail transcript to ${student.email}:`, emailErr.message)
+        }
       }
 
       return c.json({ status: "sent", message: "Official transcript found! A verification receipt has been emailed to you." })
@@ -504,34 +508,38 @@ app.post("/api/transcripts/request", async (c) => {
 
       // Notify the registrar
       if (transporter && uni && uni.registrarEmail) {
-        const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
-        const issueUrl = `${frontendBase}/issue?studentId=${encodeURIComponent(student.studentId)}`
+        try {
+          const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+          const issueUrl = `${frontendBase}/issue?studentId=${encodeURIComponent(student.studentId)}`
 
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
-          to: uni.registrarEmail,
-          subject: `🔔 CredAxis — Transcript Request: ${student.fullName}`,
-          html: `
-            <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-              <h2 style="color: #eab308; border-bottom: 1px solid #222; padding-bottom: 10px;">PENDING TRANSCRIPT REQUEST</h2>
-              <p>Hello Registrar,</p>
-              <p>A student has requested their official transcript. Since they do not have an active transcript on-chain, please issue it.</p>
-              <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
-                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
-                <p style="margin: 5px 0;"><strong>Email:</strong> ${student.email}</p>
-                <p style="margin: 5px 0; font-size: 11px;"><strong>Wallet:</strong> ${student.walletAddress}</p>
+          await transporter.sendMail({
+            from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+            to: uni.registrarEmail,
+            subject: `🔔 CredAxis — Transcript Request: ${student.fullName}`,
+            html: `
+              <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+                <h2 style="color: #eab308; border-bottom: 1px solid #222; padding-bottom: 10px;">PENDING TRANSCRIPT REQUEST</h2>
+                <p>Hello Registrar,</p>
+                <p>A student has requested their official transcript. Since they do not have an active transcript on-chain, please issue it.</p>
+                <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                  <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
+                  <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
+                  <p style="margin: 5px 0;"><strong>Email:</strong> ${student.email}</p>
+                  <p style="margin: 5px 0; font-size: 11px;"><strong>Wallet:</strong> ${student.walletAddress}</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="${issueUrl}" style="background-color: #eab308; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">ISSUE TRANSCRIPT NOW</a>
+                </div>
+                <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                  This is a secure institutional notification from the CredAxis on-chain protocol.
+                </p>
               </div>
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${issueUrl}" style="background-color: #eab308; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">ISSUE TRANSCRIPT NOW</a>
-              </div>
-              <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-                This is a secure institutional notification from the CredAxis on-chain protocol.
-              </p>
-            </div>
-          `
-        })
-        console.log(`[REQUEST API] Notified registrar ${uni.registrarEmail} for student request`)
+            `
+          })
+          console.log(`[REQUEST API] Notified registrar ${uni.registrarEmail} for student request`)
+        } catch (emailErr: any) {
+          console.error(`[REQUEST API] Failed to notify registrar ${uni.registrarEmail}:`, emailErr.message)
+        }
       }
     }
 
@@ -698,33 +706,37 @@ app.post("/api/institutions/requests", async (c) => {
 
     // Send email to student
     if (transporter) {
-      const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
-      const consentUrl = `${frontendBase}/transcripts`
+      try {
+        const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+        const consentUrl = `${frontendBase}/transcripts`
 
-      await transporter.sendMail({
-        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
-        to: studentEmail,
-        subject: `🔒 CredAxis — Transcript Access Request from ${inst.name}`,
-        html: `
-          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-            <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">ACCESS REQUEST</h2>
-            <p>Hello <strong>${studentName}</strong>,</p>
-            <p><strong>${inst.name}</strong> is requesting access to view your verified official transcript and academic credentials on the CredAxis platform.</p>
-            <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-              <p style="margin: 5px 0;"><strong>Requesting Org:</strong> ${inst.name}</p>
-              <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentName}</p>
-              <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentId}</p>
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+          to: studentEmail,
+          subject: `🔒 CredAxis — Transcript Access Request from ${inst.name}`,
+          html: `
+            <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+              <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">ACCESS REQUEST</h2>
+              <p>Hello <strong>${studentName}</strong>,</p>
+              <p><strong>${inst.name}</strong> is requesting access to view your verified official transcript and academic credentials on the CredAxis platform.</p>
+              <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                <p style="margin: 5px 0;"><strong>Requesting Org:</strong> ${inst.name}</p>
+                <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentName}</p>
+                <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentId}</p>
+              </div>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${consentUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">MANAGE ACCESS PERMISSIONS</a>
+              </div>
+              <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                You can approve or deny this request securely from your student dashboard.
+              </p>
             </div>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${consentUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">MANAGE ACCESS PERMISSIONS</a>
-            </div>
-            <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-              You can approve or deny this request securely from your student dashboard.
-            </p>
-          </div>
-        `
-      })
-      console.log(`[INST REQUEST] Sent release consent email to student ${studentEmail}`)
+          `
+        })
+        console.log(`[INST REQUEST] Sent release consent email to student ${studentEmail}`)
+      } catch (emailErr: any) {
+        console.error(`[INST REQUEST] Failed to send release consent email to student ${studentEmail}:`, emailErr.message)
+      }
     }
 
     return c.json({ success: true, request: result[0] })
