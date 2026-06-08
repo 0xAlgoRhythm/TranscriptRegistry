@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { RefreshCw, Save, ShieldAlert, History, Key, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { VerifierTokenManager } from "@/components/app/verifier-token-manager"
 
 export default function RegistrarSettingsPage() {
   const { address } = useAccount()
@@ -312,6 +313,11 @@ export default function RegistrarSettingsPage() {
                 </form>
               </div>
             </div>
+          </GlowCard>
+
+          {/* Token Bypass Keys Manager */}
+          <GlowCard className="p-6">
+            <VerifierTokenManager role="registrar" />
           </GlowCard>
 
           {/* Audit Logs */}

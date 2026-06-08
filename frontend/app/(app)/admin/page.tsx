@@ -25,6 +25,7 @@ import { TxPanel } from "@/components/ui/tx-panel"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Shield, Sparkles, Building2, Plus, AlertTriangle, Play, Pause, RefreshCw } from "lucide-react"
+import { VerifierTokenManager } from "@/components/app/verifier-token-manager"
 
 interface LogItem {
   type: string
@@ -595,6 +596,12 @@ export default function AdminPage() {
 
       {/* Governance Approvals */}
       <PendingGovernanceApprovals />
+
+      {/* Token Management */}
+      <div className="space-y-4">
+        <SectionLabel index={4} label="API INTEGRATIONS" />
+        <VerifierTokenManager role="admin" />
+      </div>
 
       {/* Activity Logs */}
       <ActivityLogs />

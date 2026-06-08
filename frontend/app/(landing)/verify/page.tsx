@@ -1,12 +1,13 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { useSearchParams, useRouter, useParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { 
-  ShieldCheck, FileText, Mail, Download, Key, Lock,
-  ArrowLeft, Building2, HelpCircle, AlertCircle, CheckCircle, Send, Loader2
+  ShieldCheck, Search, FileText, Mail, Download, Key, 
+  User, Building2, HelpCircle, Lock, AlertCircle, CheckCircle, Send
 } from "lucide-react"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { formatTimestamp } from "@/lib/utils"
@@ -18,15 +19,16 @@ interface Course {
   grade: string
 }
 
-export default function PublicVerifyDetailPage() {
-  const params = useParams()
-  const searchParams = useSearchParams()
+export default function PublicVerifyPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const recordId = params.recordId as string
-  const token = searchParams.get("token") || ""
+  const [searchQuery, setSearchQuery] = useState("")
+  const [tokenInput, setTokenInput] = useState("")
   
-  const [loading, setLoading] = useState(true)
+  // States for verification result
+  const [loading, setLoading] = useState(false)
+  const [searched, setSearched] = useState(false)
   const [error, setError] = useState("")
   const [result, setResult] = useState<any>(null)
   const [metaDetails, setMetaDetails] = useState<any>(null)
@@ -45,17 +47,37 @@ export default function PublicVerifyDetailPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
-  const verifyRecord = async () => {
-    if (!recordId) return
+  // Load from URL query parameters if present
+  useEffect(() => {
+    const recordId = searchParams.get("recordId")
+    const studentId = searchParams.get("studentId")
+    const token = searchParams.get("token")
+    
+    if (recordId || studentId) {
+      const queryVal = recordId || studentId || ""
+      setSearchQuery(queryVal)
+      if (token) {
+        setTokenInput(token)
+      }
+      triggerVerify(queryVal, token || "")
+    }
+  }, [searchParams])
+
+  const triggerVerify = async (query: string, token: string) => {
+    if (!query) return
     setLoading(true)
     setError("")
     setResult(null)
     setMetaDetails(null)
     setRequestSuccess(false)
     setShareSuccess(false)
+    setSearched(true)
 
     try {
-      let url = `${API_URL}/api/public/verify?recordId=${encodeURIComponent(recordId)}`
+      const isHash = query.startsWith("0x") && query.length > 20
+      const paramName = isHash ? "recordId" : "studentId"
+      
+      let url = `${API_URL}/api/public/verify?${paramName}=${encodeURIComponent(query)}`
       if (token) {
         url += `&token=${encodeURIComponent(token)}`
       }
@@ -64,11 +86,11 @@ export default function PublicVerifyDetailPage() {
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || "Verification failed. Record not found.")
+        setError(data.error || "No matching transcript record found.")
       } else {
         setResult(data)
         
-        // If access is granted, load metadata for courses & grades
+        // If authorized, load metadata for courses & detailed grades
         if (!data.requestAccessRequired && data.transcript?.metadataCid) {
           fetchMetadata(data.transcript.metadataCid)
         }
@@ -88,13 +110,22 @@ export default function PublicVerifyDetailPage() {
         setMetaDetails(data.metadataJson)
       }
     } catch (e) {
-      console.error("Failed to load metadata", e)
+      console.error("Failed to load metadata CID", cid, e)
     }
   }
 
-  useEffect(() => {
-    verifyRecord()
-  }, [recordId, token])
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!searchQuery) return
+    
+    // Update URL parameters
+    const isHash = searchQuery.startsWith("0x") && searchQuery.length > 20
+    const queryParam = isHash ? `recordId=${searchQuery}` : `studentId=${searchQuery}`
+    const tokenParam = tokenInput ? `&token=${tokenInput}` : ""
+    router.push(`/verify?${queryParam}${tokenParam}`)
+    
+    triggerVerify(searchQuery, tokenInput)
+  }
 
   const handleRequestAccess = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -200,45 +231,78 @@ export default function PublicVerifyDetailPage() {
       {/* Backdrop decoration */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(108,91,240,0.07),transparent_40%)] pointer-events-none" />
       
-      <div className="w-full max-w-3xl space-y-6 relative z-10 my-10 animate-fade-in">
-        {/* Navigation / Header */}
-        <div className="flex justify-between items-center">
-          <button
-            onClick={() => router.push("/verify")}
-            className="inline-flex items-center gap-1.5 text-xs font-mono tracking-wider text-muted-foreground hover:text-foreground transition-all"
-          >
-            <ArrowLeft className="h-4 w-4" /> BACK TO SEARCH
-          </button>
-          
-          <div className="flex items-center gap-1 text-[10px] font-mono text-muted-foreground uppercase">
-            <span>PUBLIC ACCESS AUDIT PORTAL</span>
+      <div className="w-full max-w-3xl space-y-8 relative z-10 my-10 animate-fade-in">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <div className="mx-auto w-12 h-12 rounded-full bg-ca-accent/10 flex items-center justify-center text-ca-accent mb-4 border border-ca-accent/20">
+            <ShieldCheck className="h-6 w-6" />
           </div>
+          <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">
+            On-Chain Verification Hub
+          </h1>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Audit transcript legitimacy directly against university registrar logs. Student privacy is fully protected.
+          </p>
         </div>
+
+        {/* Search Panel */}
+        <GlowCard className="p-6">
+          <form onSubmit={handleSearchSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+              <div className="md:col-span-8 relative">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Record ID (0x...) or Student Number..."
+                  className="w-full rounded-lg border border-border/60 bg-background/50 py-2.5 pl-10 pr-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
+                  required
+                />
+              </div>
+              <div className="md:col-span-4 relative">
+                <Key className="absolute left-3.5 top-3 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={tokenInput}
+                  onChange={(e) => setTokenInput(e.target.value)}
+                  placeholder="Bypass Token (Optional)"
+                  className="w-full rounded-lg border border-border/60 bg-background/50 py-2.5 pl-10 pr-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
+                />
+              </div>
+            </div>
+            
+            <Button type="submit" disabled={loading} className="w-full font-mono text-xs uppercase h-10 tracking-wider">
+              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}
+              Verify Academic Record
+            </Button>
+          </form>
+        </GlowCard>
 
         {/* Loading Spinner */}
         {loading && (
-          <div className="text-center py-24 font-mono text-xs text-muted-foreground animate-pulse flex flex-col items-center gap-3">
+          <div className="text-center py-12 font-mono text-xs text-muted-foreground animate-pulse flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 text-ca-accent animate-spin" />
-            <span>RETRIEVING LEDGER STATUS AND DECRYPTION KEYS...</span>
+            <span>RESOLVING CRYPTOGRAPHIC RECORDS...</span>
           </div>
         )}
 
         {/* Error State */}
-        {!loading && error && (
-          <GlowCard className="p-8 text-center space-y-4 border border-ca-danger/25 bg-ca-danger/5">
-            <AlertCircle className="h-10 w-10 text-ca-danger mx-auto animate-pulse" />
-            <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-ca-danger">RECORD NOT FOUND</h2>
-            <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+        {searched && !loading && error && (
+          <GlowCard className="p-8 text-center space-y-3 border border-ca-danger/20 bg-ca-danger/5">
+            <AlertCircle className="h-8 w-8 text-ca-danger mx-auto" />
+            <h2 className="text-md font-mono font-bold uppercase text-ca-danger">Record Verification Failed</h2>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto font-mono">
               {error}
             </p>
           </GlowCard>
         )}
 
-        {/* Results */}
-        {!loading && result && (
+        {/* Result States */}
+        {searched && !loading && result && (
           <div className="space-y-6">
             
-            {/* Case A: Privacy Protected */}
+            {/* Case A: Privacy Protected / Access Required */}
             {result.requestAccessRequired ? (
               <GlowCard className="p-6 md:p-8 space-y-6 border border-ca-warning/20 bg-card/40" glow>
                 <div className="flex items-center gap-3 border-b border-border/40 pb-4">
@@ -319,8 +383,10 @@ export default function PublicVerifyDetailPage() {
               </GlowCard>
             ) : (
               
-              // Case B: Authorized
+              // Case B: Authorized / Granted Full View
               <div className="space-y-6">
+                
+                {/* Verified Header & Branding */}
                 <GlowCard className="p-6 md:p-8 space-y-6" glow>
                   <div className="flex flex-col sm:flex-row items-center justify-between border-b border-border/40 pb-5 gap-4">
                     <div className="flex items-center gap-3">
@@ -344,7 +410,7 @@ export default function PublicVerifyDetailPage() {
                     </div>
                   </div>
 
-                  {/* Student Details */}
+                  {/* Student Credentials Summary */}
                   <div className="space-y-4">
                     <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-ca-accent">
                       Verified Academic Profile
@@ -390,7 +456,7 @@ export default function PublicVerifyDetailPage() {
                     </div>
                   </div>
 
-                  {/* Cryptographic Block */}
+                  {/* Cryptographic Proof Details */}
                   <div className="space-y-4 border-t border-border/20 pt-6">
                     <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-ca-accent">
                       Cryptographic Evidence Block
@@ -424,7 +490,7 @@ export default function PublicVerifyDetailPage() {
                     </div>
                   </div>
 
-                  {/* Courses */}
+                  {/* Course Records Details */}
                   {metaDetails?.courses && (
                     <div className="space-y-4 border-t border-border/20 pt-6 font-mono">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-ca-accent">
@@ -455,7 +521,7 @@ export default function PublicVerifyDetailPage() {
                     </div>
                   )}
 
-                  {/* Share */}
+                  {/* Share Verification Copy via Email */}
                   <div className="border-t border-border/20 pt-6 space-y-3 font-mono">
                     <h4 className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
                       <Mail className="h-4.5 w-4.5 text-ca-accent" /> Share Verified Transcript Receipt
