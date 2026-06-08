@@ -332,13 +332,39 @@ export default function IssuePage() {
                 Provide the smart contract address of the university registry through which you are issuing this record.
               </p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 relative">
               <AddressInput
                 label="Registry Smart Contract"
                 value={registryAddress}
                 onChange={setRegistryAddress}
                 placeholder="0x..."
+                onFocus={() => setShowUniSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowUniSuggestions(false), 200)}
               />
+              {showUniSuggestions && universities.filter(u => 
+                u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
+                u.contractAddress.toLowerCase().includes(registryAddress.toLowerCase())
+              ).length > 0 && (
+                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+                  {universities.filter(u => 
+                    u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
+                    u.contractAddress.toLowerCase().includes(registryAddress.toLowerCase())
+                  ).map(u => (
+                    <button
+                      key={u.contractAddress}
+                      type="button"
+                      onMouseDown={() => {
+                        setRegistryAddress(u.contractAddress)
+                        setShowUniSuggestions(false)
+                      }}
+                      className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
+                    >
+                      <span className="font-bold text-foreground">{u.name}</span>
+                      <span className="text-[10px] text-muted-foreground">{u.contractAddress}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {registryAddress && (
                 <div className="rounded-lg border border-border/40 bg-muted/20 p-4 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
@@ -364,16 +390,36 @@ export default function IssuePage() {
                 The student wallet address will be obfuscated using keccak256 on-chain, ensuring complete privacy.
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div className="space-y-1.5">
+            <div className="grid grid-cols-1 gap-4 relative">
+              <div className="space-y-1.5 relative">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student Lookup (ID, Name, Email, or Wallet)</label>
                 <input
                   type="text"
                   value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
+                  onChange={(e) => {
+                    setStudentId(e.target.value)
+                    setShowStudentSuggestions(true)
+                  }}
+                  onFocus={() => setShowStudentSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowStudentSuggestions(false), 200)}
                   placeholder="Search by ID, legal name, email, or wallet address..."
                   className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
                 />
+                {showStudentSuggestions && studentSuggestions.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+                    {studentSuggestions.map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onMouseDown={() => handleSelectStudent(s)}
+                        className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
+                      >
+                        <span className="font-bold text-foreground">{s.fullName}</span>
+                        <span className="text-[10px] text-muted-foreground">ID: {s.studentId} | {s.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {studentStatus !== "idle" && (
