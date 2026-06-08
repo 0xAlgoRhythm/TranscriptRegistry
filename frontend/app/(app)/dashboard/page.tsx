@@ -355,7 +355,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       </div>
 
       {/* Tab Contents */}
-      {activeTab === "requests" ? (
+      {activeTab === "requests" && (
         <GlowCard className="p-6 relative overflow-hidden" glow>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
             <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
@@ -500,7 +500,9 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
             </div>
           )}
         </GlowCard>
-      ) : (
+      )}
+
+      {activeTab === "bulk" && (
         <GlowCard className="p-6 relative overflow-hidden" glow>
           <div className="space-y-1 mb-6 border-b border-border/40 pb-3">
             <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
@@ -568,6 +570,76 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
               )}
             </Button>
           </form>
+        </GlowCard>
+      )}
+
+      {activeTab === "trequests" && (
+        <GlowCard className="p-6 relative overflow-hidden" glow>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+              Pending Transcript Requests
+            </h3>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              onClick={fetchTranscriptRequests}
+              className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {tRequestsLoading ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+              LOADING TRANSCRIPT REQUESTS...
+            </div>
+          ) : tRequests.length === 0 ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+              NO PENDING TRANSCRIPT REQUESTS FOUND
+            </div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse font-mono text-xs">
+                <thead>
+                  <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+                    <th className="p-3 font-bold">Student Name</th>
+                    <th className="p-3 font-bold">Student ID</th>
+                    <th className="p-3 font-bold">Email</th>
+                    <th className="p-3 font-bold">Wallet Address</th>
+                    <th className="p-3 font-bold">Requested At</th>
+                    <th className="p-3 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tRequests.map((r) => (
+                    <tr key={r.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                      <td className="p-3 text-foreground font-semibold">{r.studentName}</td>
+                      <td className="p-3">{r.studentId}</td>
+                      <td className="p-3 text-muted-foreground">{r.email}</td>
+                      <td className="p-3 text-muted-foreground">
+                        {r.studentWallet ? truncateAddress(r.studentWallet, 4) : "N/A"}
+                      </td>
+                      <td className="p-3 text-muted-foreground">
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-3 text-right">
+                        <Link href={`/issue?studentId=${encodeURIComponent(r.studentId)}&requestId=${r.id}`}>
+                          <Button
+                            size="sm"
+                            type="button"
+                            className="font-mono text-[9px] px-2 py-1 h-6 bg-ca-accent hover:bg-ca-accent/90 text-white"
+                          >
+                            ISSUE TRANSCRIPT
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </GlowCard>
       )}
 
