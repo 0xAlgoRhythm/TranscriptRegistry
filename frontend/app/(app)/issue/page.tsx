@@ -406,24 +406,24 @@ export default function IssuePage() {
               />
               {showUniSuggestions && universities.filter(u => 
                 u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
-                u.contractAddress.toLowerCase().includes(registryAddress.toLowerCase())
+                (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
               ).length > 0 && (
                 <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
                   {universities.filter(u => 
                     u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
-                    u.contractAddress.toLowerCase().includes(registryAddress.toLowerCase())
+                    (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
                   ).map(u => (
                     <button
-                      key={u.contractAddress}
+                      key={u.contractAddr}
                       type="button"
                       onMouseDown={() => {
-                        setRegistryAddress(u.contractAddress)
+                        setRegistryAddress(u.contractAddr)
                         setShowUniSuggestions(false)
                       }}
                       className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
                     >
                       <span className="font-bold text-foreground">{u.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{u.contractAddress}</span>
+                      <span className="text-[10px] text-muted-foreground">{u.contractAddr}</span>
                     </button>
                   ))}
                 </div>
