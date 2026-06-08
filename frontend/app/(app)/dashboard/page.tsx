@@ -25,7 +25,8 @@ import {
   X,
   AlertTriangle,
   Upload,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react"
 import Link from "next/link"
 
@@ -674,6 +675,38 @@ export default function DashboardPage() {
   // State for live logs
   const [logs, setLogs] = useState<any[]>([])
   const [logsLoading, setLogsLoading] = useState(false)
+
+  // Student request states
+  const [requestLoading, setRequestLoading] = useState(false)
+  const [requestResult, setRequestResult] = useState<{ text: string, type: "success" | "info" | "error" } | null>(null)
+
+  const handleRequestTranscript = async () => {
+    if (!address) return
+    try {
+      setRequestLoading(true)
+      setRequestResult(null)
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+      const res = await fetch(`${API_URL}/api/transcripts/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentWallet: address })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        if (data.status === "sent") {
+          setRequestResult({ text: data.message, type: "success" })
+        } else {
+          setRequestResult({ text: data.message, type: "info" })
+        }
+      } else {
+        setRequestResult({ text: data.error || "Failed to submit request.", type: "error" })
+      }
+    } catch (err) {
+      setRequestResult({ text: "Error submitting transcript request.", type: "error" })
+    } finally {
+      setRequestLoading(false)
+    }
+  }
 
   const isAdmin = address && adminAddress && address.toLowerCase() === adminAddress.toLowerCase()
   const totalUniversities = stats ? Number(stats[0]) : 0
