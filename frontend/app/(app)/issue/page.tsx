@@ -57,49 +57,112 @@ export default function IssuePage() {
   const { register, hash: txHash, isPending, isConfirming, isSuccess, error } = useRegisterTranscript()
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
-  // ─── Auto-check student profile ───────────────────────────────────────────
+  // Auto-suggestion / Auto-complete states
+  const [universities, setUniversities] = useState<any[]>([])
+  const [showUniSuggestions, setShowUniSuggestions] = useState(false)
+  const [studentSuggestions, setStudentSuggestions] = useState<any[]>([])
+  const [showStudentSuggestions, setShowStudentSuggestions] = useState(false)
+
+  // Fetch universities for registry address suggestions
   useEffect(() => {
-    if (studentId && studentId.length >= 3) {
-      setStudentStatus("checking")
-      setStudentStatusMsg("Verifying student profile status...")
-      fetch(`${API_URL}/api/students/profile-by-id/${encodeURIComponent(studentId)}`)
+    fetch(`${API_URL}/api/universities`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUniversities(data)
+        }
+      })
+      .catch((err) => console.error("Failed to load universities:", err))
+  }, [API_URL])
+
+  // ─── Auto-check student profile & suggestions ──────────────────────────────
+  useEffect(() => {
+    if (studentId && studentId.length >= 2) {
+      // 1. Fetch matching search suggestions
+      fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(studentId)}`)
         .then(async (res) => {
           if (res.ok) {
-            const profile = await res.json()
-            if (!profile.walletAddress) {
-              setStudentStatus("pending")
-              setStudentStatusMsg("Student found but has no bound wallet address. Please bind a wallet in the dashboard first.")
-            } else if (profile.status === "approved") {
-              setStudentStatus("approved")
-              setStudentStatusMsg("✓ Approved student profile verified.")
-              setStudentName(profile.fullName || "")
-              setStudentAddress(profile.walletAddress)
-              if (studentId !== profile.studentId) {
-                setStudentId(profile.studentId)
-              }
-            } else if (profile.status === "pending") {
-              setStudentStatus("pending")
-              setStudentStatusMsg("⏳ Verification pending — approve this student first.")
-            } else {
-              setStudentStatus("rejected")
-              setStudentStatusMsg("✗ Student profile is rejected.")
-            }
-          } else {
-            setStudentStatus("not_found")
-            setStudentStatusMsg("Student not registered. They must onboard or be whitelisted.")
+            const list = await res.json()
+            // Filter list to keep only students that match this registrar's university registry contract if loaded
+            setStudentSuggestions(list)
           }
         })
-        .catch(() => {
-          setStudentStatus("not_found")
-          setStudentStatusMsg("Error connecting to backend server.")
-        })
+        .catch(() => {})
+
+      // 2. Perform direct verify lookup
+      if (studentId.length >= 3) {
+        setStudentStatus("checking")
+        setStudentStatusMsg("Verifying student profile status...")
+        fetch(`${API_URL}/api/students/profile-by-id/${encodeURIComponent(studentId)}`)
+          .then(async (res) => {
+            if (res.ok) {
+              const profile = await res.json()
+              if (!profile.walletAddress) {
+                setStudentStatus("pending")
+                setStudentStatusMsg("Student found but has no bound wallet address. Please bind a wallet in the dashboard first.")
+              } else if (profile.status === "approved") {
+                setStudentStatus("approved")
+                setStudentStatusMsg("✓ Approved student profile verified.")
+                setStudentName(profile.fullName || "")
+                setStudentAddress(profile.walletAddress)
+                if (studentId !== profile.studentId) {
+                  setStudentId(profile.studentId)
+                }
+              } else if (profile.status === "pending") {
+                setStudentStatus("pending")
+                setStudentStatusMsg("⏳ Verification pending — approve this student first.")
+              } else {
+                setStudentStatus("rejected")
+                setStudentStatusMsg("✗ Student profile is rejected.")
+              }
+            } else {
+              setStudentStatus("not_found")
+              setStudentStatusMsg("Student not registered. They must onboard or be whitelisted.")
+            }
+          })
+          .catch(() => {
+            setStudentStatus("not_found")
+            setStudentStatusMsg("Error connecting to backend server.")
+          })
+      }
     } else {
       setStudentStatus("idle")
       setStudentStatusMsg("")
       setStudentName("")
       setStudentAddress("")
+      setStudentSuggestions([])
     }
   }, [studentId, API_URL])
+
+  const handleSelectStudent = (s: any) => {
+    if (!s.walletAddress) {
+      setStudentStatus("pending")
+      setStudentStatusMsg("Student found but has no bound wallet address. Please bind a wallet in the dashboard first.")
+      setStudentId(s.studentId)
+      setStudentName(s.fullName || "")
+      setStudentAddress("")
+    } else if (s.status === "approved") {
+      setStudentStatus("approved")
+      setStudentStatusMsg("✓ Approved student profile verified.")
+      setStudentName(s.fullName || "")
+      setStudentAddress(s.walletAddress)
+      setStudentId(s.studentId)
+    } else if (s.status === "pending") {
+      setStudentStatus("pending")
+      setStudentStatusMsg("⏳ Verification pending — approve this student first.")
+      setStudentId(s.studentId)
+      setStudentName(s.fullName || "")
+      setStudentAddress(s.walletAddress || "")
+    } else {
+      setStudentStatus("rejected")
+      setStudentStatusMsg("✗ Student profile is rejected.")
+      setStudentId(s.studentId)
+      setStudentName(s.fullName || "")
+      setStudentAddress(s.walletAddress || "")
+    }
+    setStudentSuggestions([])
+    setShowStudentSuggestions(false)
+  }
 
   // ─── PDF Generation ─────────────────────────────────────────────────────────
   const handleGeneratePDF = async () => {
