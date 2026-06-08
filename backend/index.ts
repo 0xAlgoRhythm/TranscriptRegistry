@@ -443,7 +443,7 @@ app.post("/api/transcripts/request", async (c) => {
       const upload = await db.query.ipfsUploads.findFirst({
         where: eq(ipfsUploads.fileHash, activeTx.fileHash)
       })
-      const metadataJson = upload?.metadataJson || {}
+      const metadataJson = (upload?.metadataJson || {}) as any
 
       if (transporter) {
         const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
