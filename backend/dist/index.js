@@ -421,7 +421,7 @@ app.post("/api/transcripts/request", async (c) => {
             const upload = await db.query.ipfsUploads.findFirst({
                 where: eq(ipfsUploads.fileHash, activeTx.fileHash)
             });
-            const metadataJson = upload?.metadataJson || {};
+            const metadataJson = (upload?.metadataJson || {});
             if (transporter) {
                 const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
                 const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`;
