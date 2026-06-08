@@ -616,6 +616,44 @@ app.get("/api/students/profile/:walletAddress", async (c) => {
         return c.json({ error: err.message }, 500);
     }
 });
+// Get student profile by ID, Name, Email, or Wallet Address (Case-insensitive)
+app.get("/api/students/profile-by-id/:studentId", async (c) => {
+    try {
+        const studentId = c.req.param("studentId").trim().toLowerCase();
+        const profile = await db.query.students.findFirst({
+            where: sql `LOWER(${students.studentId}) = ${studentId} 
+                 OR LOWER(${students.email}) = ${studentId} 
+                 OR LOWER(${students.walletAddress}) = ${studentId}
+                 OR LOWER(${students.fullName}) = ${studentId}`
+        });
+        if (!profile) {
+            return c.json({ error: "Profile not found" }, 404);
+        }
+        return c.json(profile);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Search for students by any matching query parameter (Name, Email, ID, Wallet)
+app.get("/api/students/search", async (c) => {
+    try {
+        const q = c.req.query("q")?.trim().toLowerCase();
+        if (!q) {
+            return c.json([]);
+        }
+        const cleanQ = `%${q}%`;
+        const list = await db.select().from(students)
+            .where(sql `LOWER(${students.fullName}) LIKE ${cleanQ} 
+                 OR LOWER(${students.email}) LIKE ${cleanQ} 
+                 OR LOWER(${students.studentId}) LIKE ${cleanQ} 
+                 OR LOWER(${students.walletAddress}) LIKE ${cleanQ}`);
+        return c.json(list);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
 // ─── REGISTRAR DASHBOARD ENDPOINTS ───
 // Get all students under a registrar's university
 app.get("/api/registrar/students/:registrarAddress", async (c) => {

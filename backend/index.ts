@@ -648,7 +648,12 @@ app.get("/api/students/profile/:walletAddress", async (c) => {
     if (!profile) {
       return c.json({ error: "Profile not found" }, 404)
     }
+    return c.json(profile)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
 })
+
 
 // Get student profile by ID, Name, Email, or Wallet Address (Case-insensitive)
 app.get("/api/students/profile-by-id/:studentId", async (c) => {
