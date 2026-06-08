@@ -116,6 +116,21 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
             }
           }
 
+          // 2.5. Check if Institution via API
+          try {
+            const instRes = await fetch(`${API_URL}/api/institutions/profile/${address.toLowerCase()}`)
+            if (instRes.ok) {
+              const instProfile = await instRes.json()
+              if (instProfile && instProfile.status !== "not_registered") {
+                setRole("institution")
+                setResolving(false)
+                return
+              }
+            }
+          } catch (instErr) {
+            console.error("Failed to check institution profile:", instErr)
+          }
+
           // 3. Default to Student
           setRole("student")
         } catch (e) {

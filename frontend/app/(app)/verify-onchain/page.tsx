@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { type Address, keccak256, encodePacked } from "viem"
+import { type Address, keccak256, encodePacked, isAddress } from "viem"
 import { useAccount } from "wagmi"
 import { useTranscript, useCheckAccess, useVerifyTranscript } from "@/hooks/use-transcript-registry"
 import { useFileHash } from "@/hooks/use-file-hash"
-import { formatTimestamp, truncateAddress } from "@/lib/utils"
+import { formatTimestamp, truncateAddress, cn } from "@/lib/utils"
 import { TRANSCRIPT_STATUS, type TranscriptStatus } from "@/lib/contracts"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
@@ -30,9 +30,13 @@ export default function VerifyPage() {
   const [universities, setUniversities] = useState<any[]>([])
   const [showUniSuggestions, setShowUniSuggestions] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [inputValue, setInputValue] = useState("")
   const [studentSuggestions, setStudentSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
+
+  const [studentTranscripts, setStudentTranscripts] = useState<any[]>([])
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false)
 
   const [verifyMode, setVerifyMode] = useState<"single" | "batch">("single")
   const [batchInput, setBatchInput] = useState("")
@@ -52,28 +56,32 @@ export default function VerifyPage() {
       .catch((err) => console.error("Failed to load universities:", err))
   }, [API_URL])
 
-  // Search students with debounce
+  // Debounce inputValue to searchQuery to avoid blocking UI (INP optimization)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(inputValue)
+    }, 200)
+    return () => clearTimeout(timer)
+  }, [inputValue])
+
+  // Search students when searchQuery changes
   useEffect(() => {
     if (searchQuery.trim().length >= 2) {
+      const match = searchQuery.match(/\(([^)]+)\)$/)
+      if (match) {
+        setSearchLoading(false)
+        return
+      }
       setSearchLoading(true)
-      const delayDebounceFn = setTimeout(() => {
-        const match = searchQuery.match(/\(([^)]+)\)$/)
-        if (match) {
-          setSearchLoading(false)
-          return
-        }
-        fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(searchQuery)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (Array.isArray(data)) {
-              setStudentSuggestions(data)
-            }
-          })
-          .catch((err) => console.error("Error searching students:", err))
-          .finally(() => setSearchLoading(false))
-      }, 300)
-
-      return () => clearTimeout(delayDebounceFn)
+      fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(searchQuery)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setStudentSuggestions(data)
+          }
+        })
+        .catch((err) => console.error("Error searching students:", err))
+        .finally(() => setSearchLoading(false))
     } else {
       setStudentSuggestions([])
       setSearchLoading(false)
@@ -198,9 +206,9 @@ export default function VerifyPage() {
                 <div className="relative">
                   <input
                     type="text"
-                    value={searchQuery}
+                    value={inputValue}
                     onChange={(e) => {
-                      setSearchQuery(e.target.value)
+                      setInputValue(e.target.value)
                       setShowSuggestions(true)
                     }}
                     onFocus={() => setShowSuggestions(true)}
@@ -215,7 +223,9 @@ export default function VerifyPage() {
                           key={s.id}
                           type="button"
                           onMouseDown={async () => {
-                            setSearchQuery(`${s.fullName} (${s.studentId})`)
+                            const selectedName = `${s.fullName} (${s.studentId})`
+                            setInputValue(selectedName)
+                            setSearchQuery(selectedName)
                             setShowSuggestions(false)
                             
                             // Automatically find and set registry address for this student's university
@@ -231,11 +241,14 @@ export default function VerifyPage() {
                                 const res = await fetch(`${API_URL}/api/transcripts/by-student/${hashVal}`)
                                 if (res.ok) {
                                   const txList = await res.json()
-                                  if (Array.isArray(txList) && txList.length > 0) {
-                                    setRecordId(txList[0].recordId)
-                                    setLooked(false)
-                                  } else {
-                                    setRecordId("")
+                                  if (Array.isArray(txList)) {
+                                    setStudentTranscripts(txList)
+                                    if (txList.length > 0) {
+                                      setRecordId(txList[0].recordId)
+                                      setLooked(false)
+                                    } else {
+                                      setRecordId("")
+                                    }
                                   }
                                 }
                               } catch (e) {
@@ -243,6 +256,7 @@ export default function VerifyPage() {
                               }
                             } else {
                               setRecordId("")
+                              setStudentTranscripts([])
                             }
                           }}
                           className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
@@ -309,6 +323,62 @@ export default function VerifyPage() {
                   required
                 />
               </div>
+
+              {studentTranscripts.length > 0 && (
+                <div className="space-y-2 border border-border/40 rounded-lg p-3 bg-card/30 backdrop-blur-sm">
+                  <span className="text-[10px] font-mono tracking-wider text-muted-foreground uppercase block">
+                    Select Student Transcript to Verify ({studentTranscripts.length} found)
+                  </span>
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
+                    {studentTranscripts.map((t) => {
+                      const isSelected = recordId.toLowerCase() === t.recordId.toLowerCase()
+                      return (
+                        <button
+                          key={t.recordId}
+                          type="button"
+                          onClick={() => {
+                            setRecordId(t.recordId)
+                            setLooked(false)
+                          }}
+                          className={cn(
+                            "w-full text-left rounded-md p-3 border text-xs font-mono transition-all flex flex-col gap-1.5",
+                            isSelected
+                              ? "bg-ca-accent/15 border-ca-accent text-foreground shadow-sm ring-1 ring-ca-accent/20"
+                              : "bg-card/50 border-border/40 text-muted-foreground hover:border-border/80 hover:bg-muted/10 hover:text-foreground"
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-foreground truncate max-w-[200px]">
+                              {t.universityId ? `University Record #${t.id}` : `Record #${t.id}`}
+                            </span>
+                            <span className={cn(
+                              "text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wide uppercase",
+                              t.status === "Active"
+                                ? "bg-green-500/15 text-green-500 border border-green-500/30"
+                                : t.status === "Amended"
+                                ? "bg-yellow-500/15 text-yellow-500 border border-yellow-500/30"
+                                : "bg-red-500/15 text-red-500 border border-red-500/30"
+                            )}>
+                              {t.status || "Active"}
+                            </span>
+                          </div>
+                          
+                          <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
+                            <div className="flex justify-between">
+                              <span>Record ID:</span>
+                              <span className="text-foreground">{t.recordId.slice(0, 16)}...{t.recordId.slice(-14)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Issued:</span>
+                              <span className="text-foreground">{t.issuedAt ? new Date(t.issuedAt).toLocaleString() : "Unknown"}</span>
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
 
               <Button
                 type="submit"

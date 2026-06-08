@@ -20,6 +20,7 @@ export function Topbar() {
       case "registrar": return "University Registrar"
       case "student": return "Student Hub"
       case "verifier": return "Public Verifier"
+      case "institution": return "Third-Party Institution"
       default: return "No Role Selected"
     }
   }
@@ -30,6 +31,7 @@ export function Topbar() {
       case "registrar": return "border-ca-accent/30 bg-ca-accent/5 text-ca-accent"
       case "student": return "border-ca-teal/30 bg-ca-teal/5 text-ca-teal"
       case "verifier": return "border-ca-success/30 bg-ca-success/5 text-ca-success"
+      case "institution": return "border-ca-success/30 bg-ca-success/5 text-ca-success"
       default: return "border-border/60 bg-muted/40 text-muted-foreground"
     }
   }

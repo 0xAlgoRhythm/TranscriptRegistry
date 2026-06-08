@@ -154,4 +154,27 @@ export const transcriptRequests = pgTable("transcript_requests", {
   createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
 })
 
+export const institutions = pgTable("institutions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").unique().notNull(),
+  walletAddress: text("wallet_address").unique().notNull(),
+  status: text("status").default("pending").notNull(), // pending | approved | rejected
+  createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  actionAt: timestamp("action_at", { withTimezone: true }),
+  actionBy: text("action_by"),
+})
+
+export const institutionRequests = pgTable("institution_requests", {
+  id: serial("id").primaryKey(),
+  institutionId: integer("institution_id").references(() => institutions.id).notNull(),
+  studentName: text("student_name").notNull(),
+  studentId: text("student_id").notNull(),
+  studentEmail: text("student_email").notNull(),
+  status: text("status").default("pending").notNull(), // pending | approved | rejected
+  recordId: text("record_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  actionAt: timestamp("action_at", { withTimezone: true }),
+})
+
 

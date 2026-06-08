@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { type Address } from "viem"
 import { useStudentTranscripts, useTranscript } from "@/hooks/use-transcript-registry"
@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/ui/status-badge"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { EmptyState } from "@/components/ui/empty-state"
 import { Button } from "@/components/ui/button"
-import { FileText, School, ChevronRight, RefreshCcw, Send, Loader2 } from "lucide-react"
+import { FileText, School, ChevronRight, RefreshCcw, Send, Loader2, X, Check, CheckCircle2, Clock, XCircle } from "lucide-react"
 import Link from "next/link"
 
 const TranscriptCard = React.memo(function TranscriptCard({
@@ -80,6 +80,117 @@ export default function TranscriptsPage() {
 
   const [requestLoading, setRequestLoading] = useState(false)
   const [requestResult, setRequestResult] = useState<{ text: string, type: "success" | "info" | "error" } | null>(null)
+
+  const [studentEmail, setStudentEmail] = useState("")
+  const [instRequests, setInstRequests] = useState<any[]>([])
+  const [instRequestsLoading, setInstRequestsLoading] = useState(false)
+  const [activeReleaseRequest, setActiveReleaseRequest] = useState<any | null>(null)
+  const [studentTranscripts, setStudentTranscripts] = useState<any[]>([])
+  const [transcriptsLoading, setTranscriptsLoading] = useState(false)
+  const [selectedTranscriptId, setSelectedTranscriptId] = useState("")
+  const [releaseLoading, setReleaseLoading] = useState(false)
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  const fetchStudentProfileAndRequests = async () => {
+    if (!address) return
+    try {
+      const profileRes = await fetch(`${API_URL}/api/students/profile/${address.toLowerCase()}`)
+      if (profileRes.ok) {
+        const profile = await profileRes.json()
+        if (profile && profile.email) {
+          setStudentEmail(profile.email)
+          fetchInstitutionRequests(profile.email)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load student profile for email releases", e)
+    }
+  }
+
+  const fetchInstitutionRequests = async (email: string) => {
+    try {
+      setInstRequestsLoading(true)
+      const res = await fetch(`${API_URL}/api/student/institution-requests/${email.toLowerCase()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setInstRequests(data)
+      }
+    } catch (e) {
+      console.error("Failed to load institution requests", e)
+    } finally {
+      setInstRequestsLoading(false)
+    }
+  }
+
+  const handleOpenReleaseModal = async (req: any) => {
+    setActiveReleaseRequest(req)
+    setSelectedTranscriptId("")
+    try {
+      setTranscriptsLoading(true)
+      const hashVal = studentHash(address || "0x00")
+      const res = await fetch(`${API_URL}/api/transcripts/by-student/${hashVal}`)
+      if (res.ok) {
+        const data = await res.json()
+        setStudentTranscripts(data)
+        if (data && data.length > 0) {
+          setSelectedTranscriptId(data[0].recordId)
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch student transcripts", e)
+    } finally {
+      setTranscriptsLoading(false)
+    }
+  }
+
+  const handleApproveRelease = async () => {
+    if (!activeReleaseRequest || !selectedTranscriptId) return
+    try {
+      setReleaseLoading(true)
+      const res = await fetch(`${API_URL}/api/student/institution-requests/${activeReleaseRequest.id}/approve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recordId: selectedTranscriptId })
+      })
+      if (res.ok) {
+        setActiveReleaseRequest(null)
+        if (studentEmail) {
+          fetchInstitutionRequests(studentEmail)
+        }
+      } else {
+        alert("Failed to approve access release.")
+      }
+    } catch (err) {
+      alert("Error approving release.")
+    } finally {
+      setReleaseLoading(false)
+    }
+  }
+
+  const handleRejectRelease = async (reqId: number) => {
+    if (!confirm("Are you sure you want to deny this access request?")) return
+    try {
+      const res = await fetch(`${API_URL}/api/student/institution-requests/${reqId}/reject`, {
+        method: "PUT"
+      })
+      if (res.ok) {
+        if (studentEmail) {
+          fetchInstitutionRequests(studentEmail)
+        }
+      } else {
+        alert("Failed to deny request.")
+      }
+    } catch (err) {
+      alert("Error denying request.")
+    }
+  }
+
+  useEffect(() => {
+    if (address) {
+      fetchStudentProfileAndRequests()
+    }
+  }, [address])
 
   const handleRequestTranscript = async () => {
     if (!address) return
@@ -207,6 +318,179 @@ export default function TranscriptsPage() {
           </div>
         )}
       </div>
+
+      {/* Institution Requests release section */}
+      {studentEmail && (
+        <div className="space-y-4 pt-6 border-t border-border/20">
+          <SectionLabel index={3} label="THIRD-PARTY RELEASES" />
+          <GlowCard className="p-6 relative overflow-hidden" glow>
+            <div className="flex justify-between items-center border-b border-border/40 pb-3 mb-4">
+              <div>
+                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                  Institution Access Requests
+                </h3>
+                <p className="text-[10px] text-muted-foreground">Approve release of academic credentials to verified institutions</p>
+              </div>
+              <button
+                onClick={() => fetchInstitutionRequests(studentEmail)}
+                className="text-[10px] font-mono text-muted-foreground hover:text-foreground flex items-center gap-1"
+              >
+                <RefreshCcw className="h-3 w-3" /> REFRESH
+              </button>
+            </div>
+
+            {instRequestsLoading ? (
+              <div className="text-center py-6 font-mono text-xs text-muted-foreground animate-pulse">
+                LOADING ACCESS REQUESTS...
+              </div>
+            ) : instRequests.length === 0 ? (
+              <div className="text-center py-6 font-mono text-xs text-muted-foreground">
+                NO ACCESS REQUESTS FROM THIRD-PARTY INSTITUTIONS FOUND
+              </div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <table className="w-full text-left border-collapse font-mono text-xs">
+                  <thead>
+                    <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+                      <th className="p-3 font-bold">Requesting Institution</th>
+                      <th className="p-3 font-bold">Contact Email</th>
+                      <th className="p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold">Requested At</th>
+                      <th className="p-3 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {instRequests.map((r) => (
+                      <tr key={r.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                        <td className="p-3 text-foreground font-semibold">{r.institutionName}</td>
+                        <td className="p-3 text-muted-foreground">{r.institutionEmail}</td>
+                        <td className="p-3">
+                          {r.status === "approved" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-ca-success/10 text-ca-success">
+                              <CheckCircle2 className="h-3 w-3" /> Released
+                            </span>
+                          ) : r.status === "rejected" ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-ca-danger/10 text-ca-danger">
+                              <XCircle className="h-3 w-3" /> Denied
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-ca-accent/10 text-ca-accent">
+                              <Clock className="h-3 w-3 animate-pulse" /> Pending Consent
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 text-muted-foreground">
+                          {new Date(r.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 text-right">
+                          {r.status === "pending" ? (
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => handleOpenReleaseModal(r)}
+                                className="font-mono text-[9px] px-2 py-1 h-7 bg-ca-success hover:bg-ca-success/90 text-white font-bold"
+                              >
+                                APPROVE
+                              </Button>
+                              <Button
+                                size="sm"
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleRejectRelease(r.id)}
+                                className="font-mono text-[9px] px-2 py-1 h-7 border-ca-danger/30 hover:bg-ca-danger/10 text-ca-danger font-bold"
+                              >
+                                DENY
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase">{r.status}</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </GlowCard>
+        </div>
+      )}
+
+      {/* Release Selection Modal */}
+      {activeReleaseRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in">
+          <GlowCard className="p-6 w-full max-w-md space-y-4" glow>
+            <div className="flex items-center justify-between border-b border-border/40 pb-3">
+              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                Approve Transcript Release
+              </h3>
+              <button onClick={() => setActiveReleaseRequest(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <p className="text-xs text-muted-foreground font-mono leading-relaxed">
+              Select which transcript record to release to <strong>{activeReleaseRequest.institutionName}</strong>. 
+              Once released, they will be able to verify your academic details.
+            </p>
+
+            {transcriptsLoading ? (
+              <div className="text-center py-6 font-mono text-xs text-muted-foreground animate-pulse">
+                LOADING REGISTERED TRANSCRIPTS...
+              </div>
+            ) : studentTranscripts.length === 0 ? (
+              <div className="space-y-4 text-center py-4 font-mono">
+                <p className="text-xs text-ca-danger font-bold">NO REGISTERED TRANSCRIPTS DETECTED</p>
+                <p className="text-[10px] text-muted-foreground leading-normal">
+                  You do not have any transcripts issued in our system yet. An academic record must be issued to you by a registrar before you can approve third-party release.
+                </p>
+                <Button 
+                  size="sm"
+                  onClick={() => setActiveReleaseRequest(null)}
+                  className="w-full font-mono text-xs"
+                >
+                  CLOSE
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4 font-mono text-xs">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase text-muted-foreground">Select Transcript</label>
+                  <select
+                    value={selectedTranscriptId}
+                    onChange={(e) => setSelectedTranscriptId(e.target.value)}
+                    className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-3 text-xs focus:border-ca-accent focus:outline-none"
+                  >
+                    {studentTranscripts.map((t) => (
+                      <option key={t.recordId} value={t.recordId}>
+                        Record {t.recordId.slice(0, 10)}... (Status: {t.status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    onClick={() => setActiveReleaseRequest(null)}
+                    variant="outline"
+                    className="w-full text-xs"
+                  >
+                    CANCEL
+                  </Button>
+                  <Button
+                    onClick={handleApproveRelease}
+                    disabled={releaseLoading || !selectedTranscriptId}
+                    className="w-full bg-ca-success text-white hover:bg-ca-success/90 text-xs font-bold"
+                  >
+                    {releaseLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "APPROVE RELEASE"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </GlowCard>
+        </div>
+      )}
     </div>
   )
 }

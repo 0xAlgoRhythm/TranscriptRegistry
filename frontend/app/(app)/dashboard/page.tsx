@@ -52,11 +52,15 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [bulkStatus, setBulkStatus] = useState("")
   const [bulkError, setBulkError] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests">("requests")
+  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests" | "winstitutions">("requests")
 
   // Transcript request states
   const [tRequests, setTRequests] = useState<any[]>([])
   const [tRequestsLoading, setTRequestsLoading] = useState(true)
+
+  // Pending whitelist institutions states
+  const [pendingInsts, setPendingInsts] = useState<any[]>([])
+  const [instsLoading, setInstsLoading] = useState(false)
 
   // Wallet Binding states
   const [selectedStudentForWallet, setSelectedStudentForWallet] = useState<StudentRequest | null>(null)
@@ -106,10 +110,60 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     }
   }
 
+  const fetchPendingInsts = async () => {
+    try {
+      setInstsLoading(true)
+      const res = await fetch(`${API_URL}/api/institutions/pending`)
+      if (res.ok) {
+        const data = await res.json()
+        setPendingInsts(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch pending institutions:", e)
+    } finally {
+      setInstsLoading(false)
+    }
+  }
+
+  const handleApproveInst = async (id: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/institutions/${id}/approve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionBy: registrarAddress })
+      })
+      if (res.ok) {
+        fetchPendingInsts()
+      } else {
+        alert("Failed to approve institution")
+      }
+    } catch (err) {
+      alert("Error during approval")
+    }
+  }
+
+  const handleRejectInst = async (id: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/institutions/${id}/reject`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actionBy: registrarAddress })
+      })
+      if (res.ok) {
+        fetchPendingInsts()
+      } else {
+        alert("Failed to reject institution")
+      }
+    } catch (err) {
+      alert("Error during rejection")
+    }
+  }
+
   useEffect(() => {
     if (registrarAddress) {
       fetchStudents()
       fetchTranscriptRequests()
+      fetchPendingInsts()
     }
   }, [registrarAddress])
 
@@ -341,6 +395,16 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           }`}
         >
           Transcript Requests ({tRequests.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("winstitutions")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "winstitutions"
+              ? "border-ca-accent text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Institution Whitelist ({pendingInsts.length})
         </button>
         <button
           onClick={() => setActiveTab("bulk")}
@@ -633,6 +697,84 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                             ISSUE TRANSCRIPT
                           </Button>
                         </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </GlowCard>
+      )}
+
+      {activeTab === "winstitutions" && (
+        <GlowCard className="p-6 relative overflow-hidden" glow>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+              Pending Institution Whitelist
+            </h3>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              onClick={fetchPendingInsts}
+              className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {instsLoading ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+              LOADING PENDING INSTITUTIONS...
+            </div>
+          ) : pendingInsts.length === 0 ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+              NO PENDING WHITELIST REQUESTS FOUND
+            </div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse font-mono text-xs">
+                <thead>
+                  <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+                    <th className="p-3 font-bold">Organization Name</th>
+                    <th className="p-3 font-bold">Contact Email</th>
+                    <th className="p-3 font-bold">Wallet Address</th>
+                    <th className="p-3 font-bold">Requested At</th>
+                    <th className="p-3 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingInsts.map((inst) => (
+                    <tr key={inst.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                      <td className="p-3 text-foreground font-semibold">{inst.name}</td>
+                      <td className="p-3 text-muted-foreground">{inst.email}</td>
+                      <td className="p-3 font-mono text-muted-foreground">
+                        {truncateAddress(inst.walletAddress, 6)}
+                      </td>
+                      <td className="p-3 text-muted-foreground">
+                        {new Date(inst.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            type="button"
+                            onClick={() => handleApproveInst(inst.id)}
+                            className="font-mono text-[9px] px-2 py-1 h-7 bg-ca-success hover:bg-ca-success/90 text-white font-bold"
+                          >
+                            APPROVE
+                          </Button>
+                          <Button
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                            onClick={() => handleRejectInst(inst.id)}
+                            className="font-mono text-[9px] px-2 py-1 h-7 border-ca-danger/30 hover:bg-ca-danger/10 text-ca-danger font-bold"
+                          >
+                            REJECT
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}

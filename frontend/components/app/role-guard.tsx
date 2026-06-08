@@ -23,15 +23,18 @@ export function RoleGuard({ children }: RoleGuardProps) {
   const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/")
   const isRegistrarRoute = pathname === "/issue" || pathname === "/issued" || pathname.startsWith("/issued/")
   const isStudentRoute = pathname === "/transcripts" || pathname.startsWith("/transcripts/") || pathname === "/access"
+  const isInstitutionRoute = pathname === "/institution" || pathname.startsWith("/institution/")
 
   const hasAdminAccess = role === "admin"
   const hasRegistrarAccess = role === "registrar"
   const hasStudentAccess = role === "student"
+  const hasInstitutionAccess = role === "institution"
 
   const isAuthorized = 
     (!isAdminRoute || hasAdminAccess) &&
     (!isRegistrarRoute || hasRegistrarAccess) &&
-    (!isStudentRoute || hasStudentAccess)
+    (!isStudentRoute || hasStudentAccess) &&
+    (!isInstitutionRoute || hasInstitutionAccess)
 
 
   if (isLoading) {

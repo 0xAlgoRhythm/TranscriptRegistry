@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { db } from "./db/connection.js"
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens, transcriptRequests } from "./db/schema.js"
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens, transcriptRequests, institutions, institutionRequests } from "./db/schema.js"
 import { createRemoteJWKSet, jwtVerify } from "jose"
 import { eq, and, sql, inArray } from "drizzle-orm"
 import { startIndexer } from "./indexer/sync.js"
@@ -571,6 +571,298 @@ app.put("/api/registrar/requests/:requestId/complete", async (c) => {
       .where(eq(transcriptRequests.id, requestId))
       .returning()
     return c.json({ success: true, request: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 1. Register a new institution
+app.post("/api/institutions/register", async (c) => {
+  try {
+    const { name, email, walletAddress } = await c.req.json()
+    if (!name || !email || !walletAddress) {
+      return c.json({ error: "Missing required fields name, email, or walletAddress" }, 400)
+    }
+    const cleanWallet = walletAddress.toLowerCase()
+    const cleanEmail = email.toLowerCase()
+
+    // Check if already registered
+    const existing = await db.query.institutions.findFirst({
+      where: and(
+        sql`LOWER(${institutions.walletAddress}) = ${cleanWallet} OR LOWER(${institutions.email}) = ${cleanEmail}`
+      )
+    })
+    if (existing) {
+      return c.json({ error: "Institution with this email or wallet address is already registered." }, 400)
+    }
+
+    const result = await db.insert(institutions).values({
+      name,
+      email: cleanEmail,
+      walletAddress: cleanWallet,
+      status: "pending"
+    }).returning()
+
+    return c.json({ success: true, institution: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 2. Resolve institution profile by wallet
+app.get("/api/institutions/profile/:wallet", async (c) => {
+  try {
+    const wallet = c.req.param("wallet").toLowerCase()
+    const result = await db.query.institutions.findFirst({
+      where: eq(institutions.walletAddress, wallet)
+    })
+    if (!result) {
+      return c.json({ status: "not_registered" })
+    }
+    return c.json(result)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 3. Get pending whitelisting requests
+app.get("/api/institutions/pending", async (c) => {
+  try {
+    const result = await db.select().from(institutions).where(eq(institutions.status, "pending"))
+    return c.json(result)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 4. Approve whitelist request
+app.put("/api/institutions/:id/approve", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const { actionBy } = await c.req.json()
+    const result = await db.update(institutions)
+      .set({
+        status: "approved",
+        actionAt: new Date(),
+        actionBy: actionBy || "system"
+      })
+      .where(eq(institutions.id, id))
+      .returning()
+    return c.json({ success: true, institution: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Reject whitelist request
+app.put("/api/institutions/:id/reject", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const { actionBy } = await c.req.json()
+    const result = await db.update(institutions)
+      .set({
+        status: "rejected",
+        actionAt: new Date(),
+        actionBy: actionBy || "system"
+      })
+      .where(eq(institutions.id, id))
+      .returning()
+    return c.json({ success: true, institution: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 5. Institution requests a student transcript (creates entry + sends email)
+app.post("/api/institutions/requests", async (c) => {
+  try {
+    const { institutionId, studentName, studentId, studentEmail } = await c.req.json()
+    if (!institutionId || !studentName || !studentId || !studentEmail) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const inst = await db.query.institutions.findFirst({
+      where: eq(institutions.id, institutionId)
+    })
+    if (!inst || inst.status !== "approved") {
+      return c.json({ error: "Unauthorized or unapproved institution" }, 403)
+    }
+
+    const result = await db.insert(institutionRequests).values({
+      institutionId,
+      studentName,
+      studentId,
+      studentEmail: studentEmail.toLowerCase(),
+      status: "pending"
+    }).returning()
+
+    // Send email to student
+    if (transporter) {
+      const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+      const consentUrl = `${frontendBase}/transcripts`
+
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: studentEmail,
+        subject: `🔒 CredAxis — Transcript Access Request from ${inst.name}`,
+        html: `
+          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+            <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">ACCESS REQUEST</h2>
+            <p>Hello <strong>${studentName}</strong>,</p>
+            <p><strong>${inst.name}</strong> is requesting access to view your verified official transcript and academic credentials on the CredAxis platform.</p>
+            <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+              <p style="margin: 5px 0;"><strong>Requesting Org:</strong> ${inst.name}</p>
+              <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentName}</p>
+              <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentId}</p>
+            </div>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${consentUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">MANAGE ACCESS PERMISSIONS</a>
+            </div>
+            <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+              You can approve or deny this request securely from your student dashboard.
+            </p>
+          </div>
+        `
+      })
+      console.log(`[INST REQUEST] Sent release consent email to student ${studentEmail}`)
+    }
+
+    return c.json({ success: true, request: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 6. Get requests made by an institution
+app.get("/api/institutions/requests/:wallet", async (c) => {
+  try {
+    const wallet = c.req.param("wallet").toLowerCase()
+    const inst = await db.query.institutions.findFirst({
+      where: eq(institutions.walletAddress, wallet)
+    })
+    if (!inst) {
+      return c.json([])
+    }
+    const list = await db.select().from(institutionRequests)
+      .where(eq(institutionRequests.institutionId, inst.id))
+      .orderBy(sql`${institutionRequests.createdAt} DESC`)
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 7. Get requests for a student
+app.get("/api/student/institution-requests/:email", async (c) => {
+  try {
+    const email = c.req.param("email").toLowerCase()
+    const list = await db.select({
+      id: institutionRequests.id,
+      studentName: institutionRequests.studentName,
+      studentId: institutionRequests.studentId,
+      studentEmail: institutionRequests.studentEmail,
+      status: institutionRequests.status,
+      recordId: institutionRequests.recordId,
+      createdAt: institutionRequests.createdAt,
+      institutionName: institutions.name,
+      institutionEmail: institutions.email
+    })
+    .from(institutionRequests)
+    .innerJoin(institutions, eq(institutionRequests.institutionId, institutions.id))
+    .where(eq(institutionRequests.studentEmail, email))
+    .orderBy(sql`${institutionRequests.createdAt} DESC`)
+    return c.json(list)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 8. Approve student consent request
+app.put("/api/student/institution-requests/:id/approve", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const { recordId } = await c.req.json()
+    if (!recordId) {
+      return c.json({ error: "Missing required recordId" }, 400)
+    }
+    const result = await db.update(institutionRequests)
+      .set({
+        status: "approved",
+        recordId,
+        actionAt: new Date()
+      })
+      .where(eq(institutionRequests.id, id))
+      .returning()
+    return c.json({ success: true, request: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 9. Reject student consent request
+app.put("/api/student/institution-requests/:id/reject", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const result = await db.update(institutionRequests)
+      .set({
+        status: "rejected",
+        actionAt: new Date()
+      })
+      .where(eq(institutionRequests.id, id))
+      .returning()
+    return c.json({ success: true, request: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// 10. Update institution profile (wallet & email updates)
+app.put("/api/institutions/update-profile", async (c) => {
+  try {
+    const { oldWallet, name, email, walletAddress } = await c.req.json()
+    if (!oldWallet || !name || !email || !walletAddress) {
+      return c.json({ error: "Missing fields" }, 400)
+    }
+    const cleanOldWallet = oldWallet.toLowerCase()
+    const cleanNewWallet = walletAddress.toLowerCase()
+    const cleanEmail = email.toLowerCase()
+
+    const inst = await db.query.institutions.findFirst({
+      where: eq(institutions.walletAddress, cleanOldWallet)
+    })
+    if (!inst) {
+      return c.json({ error: "Institution profile not found" }, 404)
+    }
+
+    // Check if new email or new wallet is taken by another record
+    if (cleanNewWallet !== cleanOldWallet) {
+      const dupWallet = await db.query.institutions.findFirst({
+        where: eq(institutions.walletAddress, cleanNewWallet)
+      })
+      if (dupWallet) {
+        return c.json({ error: "New wallet address is already registered by another institution." }, 400)
+      }
+    }
+    if (cleanEmail !== inst.email) {
+      const dupEmail = await db.query.institutions.findFirst({
+        where: eq(institutions.email, cleanEmail)
+      })
+      if (dupEmail) {
+        return c.json({ error: "New email is already registered by another institution." }, 400)
+      }
+    }
+
+    const result = await db.update(institutions)
+      .set({
+        name,
+        email: cleanEmail,
+        walletAddress: cleanNewWallet,
+        actionAt: new Date()
+      })
+      .where(eq(institutions.id, inst.id))
+      .returning()
+
+    return c.json({ success: true, institution: result[0] })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }

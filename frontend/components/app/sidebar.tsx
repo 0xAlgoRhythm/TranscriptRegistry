@@ -34,6 +34,9 @@ const NAV_ITEMS = [
   // Public/All
   { label: "Verify On-Chain", href: "/verify-onchain", icon: SearchCode, role: null },
   
+  // Institution specific
+  { label: "Institution Portal", href: "/institution", icon: LayoutDashboard, role: "institution" },
+  
   // Admin specific
   { label: "Dashboard", href: "/admin", icon: Settings, role: "admin" },
   { label: "Global Settings & Audit", href: "/admin/settings", icon: History, role: "admin" },
@@ -94,7 +97,7 @@ export function Sidebar() {
             ⚙️ Demo Role Switcher
           </span>
           <div className="grid grid-cols-2 gap-1.5 font-mono text-[9px]">
-            {(["student", "registrar", "verifier", "admin"] as UserRole[]).map((r) => (
+            {(["student", "registrar", "verifier", "admin", "institution"] as UserRole[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRole(r)}

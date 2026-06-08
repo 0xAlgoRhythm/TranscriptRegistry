@@ -1,7 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 
-export type UserRole = "admin" | "registrar" | "student" | "verifier"
+export type UserRole = "admin" | "registrar" | "student" | "verifier" | "institution"
 
 interface RoleState {
   role: UserRole | null
