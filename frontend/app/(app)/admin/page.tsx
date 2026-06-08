@@ -97,7 +97,7 @@ function ActivityLogs() {
               if (log.type === "status_changed") dotColor = "bg-ca-danger"
 
               return (
-                <div key={index} className="flex items-start justify-between border-b border-border/20 pb-3 last:border-0 last:pb-0">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-border/20 pb-3 last:border-0 last:pb-0 gap-2">
                   <div className="space-y-1">
                     <p className="text-foreground font-semibold flex items-center gap-1.5 uppercase text-[10px]">
                       <span className={cn("h-1.5 w-1.5 rounded-full", dotColor)} />
@@ -111,7 +111,7 @@ function ActivityLogs() {
                       {log.txHash && ` | Tx: ${log.txHash.slice(0, 10)}...`}
                     </p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0 pl-4">
+                  <span className="text-[10px] text-muted-foreground shrink-0 sm:pl-4">
                     {new Date(log.timestamp).toLocaleString()}
                   </span>
                 </div>

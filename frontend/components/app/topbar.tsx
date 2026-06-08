@@ -92,7 +92,7 @@ export function Topbar() {
           title={isDemoMode ? "Disable Demo Mode" : "Enable Demo Mode"}
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span>{isDemoMode ? "DEMO ACTIVE" : "DEMO MODE"}</span>
+          <span className="hidden md:inline">{isDemoMode ? "DEMO ACTIVE" : "DEMO MODE"}</span>
         </button>
 
         {!ready ? (
@@ -101,14 +101,15 @@ export function Topbar() {
           <Button
             onClick={login}
             size="sm"
-            className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-4"
+            className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-3 sm:px-4"
           >
-            CONNECT WALLET
+            <span className="hidden sm:inline">CONNECT WALLET</span>
+            <span className="sm:hidden">CONNECT</span>
           </Button>
         ) : (
           <div className="flex items-center gap-2">
             {address && (
-              <span className="rounded border border-border/50 bg-muted/20 px-3 py-1 font-mono text-xs text-foreground shadow-sm">
+              <span className="hidden sm:inline-block rounded border border-border/50 bg-muted/20 px-3 py-1 font-mono text-xs text-foreground shadow-sm">
                 {truncateAddress(address)}
               </span>
             )}

@@ -334,7 +334,7 @@ export default function VerifyPage() {
           {batchResults.length > 0 && (
             <div className="pt-6 border-t border-border/40 space-y-3">
               <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">Results</h4>
-              <div className="border border-border/40 rounded-lg overflow-hidden">
+              <div className="border border-border/40 rounded-lg overflow-x-auto w-full">
                 <table className="w-full text-left text-xs font-mono">
                   <thead className="bg-card">
                     <tr>

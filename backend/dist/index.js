@@ -624,7 +624,11 @@ app.get("/api/students/profile-by-id/:studentId", async (c) => {
             where: sql `LOWER(${students.studentId}) = ${studentId} 
                  OR LOWER(${students.email}) = ${studentId} 
                  OR LOWER(${students.walletAddress}) = ${studentId}
-                 OR LOWER(${students.fullName}) = ${studentId}`
+                 OR LOWER(${students.fullName}) = ${studentId}`,
+            orderBy: (students, { desc }) => [
+                sql `CASE WHEN ${students.status} = 'approved' THEN 1 WHEN ${students.status} = 'pending' THEN 2 ELSE 3 END ASC`,
+                desc(students.id)
+            ]
         });
         if (!profile) {
             return c.json({ error: "Profile not found" }, 404);
@@ -647,7 +651,8 @@ app.get("/api/students/search", async (c) => {
             .where(sql `LOWER(${students.fullName}) LIKE ${cleanQ} 
                  OR LOWER(${students.email}) LIKE ${cleanQ} 
                  OR LOWER(${students.studentId}) LIKE ${cleanQ} 
-                 OR LOWER(${students.walletAddress}) LIKE ${cleanQ}`);
+                 OR LOWER(${students.walletAddress}) LIKE ${cleanQ}`)
+            .orderBy(sql `CASE WHEN ${students.status} = 'approved' THEN 1 WHEN ${students.status} = 'pending' THEN 2 ELSE 3 END ASC`, sql `${students.id} DESC`);
         return c.json(list);
     }
     catch (err) {
