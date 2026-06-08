@@ -74,6 +74,9 @@ export default function IssuePage() {
               setStudentStatusMsg("✓ Approved student profile verified.")
               setStudentName(profile.fullName || "")
               setStudentAddress(profile.walletAddress)
+              if (studentId !== profile.studentId) {
+                setStudentId(profile.studentId)
+              }
             } else if (profile.status === "pending") {
               setStudentStatus("pending")
               setStudentStatusMsg("⏳ Verification pending — approve this student first.")
@@ -300,12 +303,12 @@ export default function IssuePage() {
             </div>
             <div className="grid grid-cols-1 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student ID Lookup</label>
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student Lookup (ID, Name, Email, or Wallet)</label>
                 <input
                   type="text"
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Enter Student ID..."
+                  placeholder="Search by ID, legal name, email, or wallet address..."
                   className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
                 />
               </div>
