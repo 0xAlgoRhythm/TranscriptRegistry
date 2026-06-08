@@ -113,12 +113,6 @@ export default function VerifyPage() {
     verify(registryAddress as Address, recordId as `0x${string}`, calculatedFileHash)
   }
 
-  const [verifyMode, setVerifyMode] = useState<"single" | "batch">("single")
-  const [batchInput, setBatchInput] = useState("")
-  const [batchResults, setBatchResults] = useState<any[]>([])
-  const [isBatchVerifying, setIsBatchVerifying] = useState(false)
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-
   const handleBatchVerify = async () => {
     if (!batchInput.trim()) return
     setIsBatchVerifying(true)
