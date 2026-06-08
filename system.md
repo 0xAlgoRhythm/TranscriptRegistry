@@ -6,7 +6,7 @@ This report details the architectural design, workflow diagrams, and a security-
 
 ## 1. System Components & Flow Diagram
 
-The diagram below maps the interaction boundaries between the University Registrar, the Graduate/Student, the Public Verifier, the backend database, and the Sepolia Ethereum blockchain.
+The diagram below maps the interaction boundaries between the Platform Admin, the University Registrar, the Graduate/Student, the Public Verifier, the backend database, and the Sepolia Ethereum blockchain.
 
 ```mermaid
 sequenceDiagram
@@ -30,26 +30,38 @@ sequenceDiagram
     BE->>BE: Create Pending Student profile mapped by StudentID/Email
     Student->>BE: Login via Privy (links Wallet)
     BE->>BE: Set Student Wallet, change status to "Approved"
+    Registrar->>BE: Calculate GPA & Generate PDF Transcript
+    Note over Registrar, BE: Embeds a unique pre-mint tempRecordId in the QR Code URL
     Registrar->>BE: Upload Student PDF (SHA-256 calculation & IPFS Pinata Pinning)
-    BE->>BE: Generate metadata.json & CID
+    BE->>BE: Store tempRecordId in ipfs_uploads db table alongside metadata Json
     Registrar->>Ledger: registerTranscript(studentHash, metadataCID, SHA256_Hash)
     Ledger-->>Indexer: emit TranscriptRegistered(recordId, studentHash, metadataCID, SHA256_Hash)
-    Indexer->>BE: Sync Transcript data, store recordId to DB
+    Indexer->>BE: Sync Transcript data, store final mined recordId to transcripts table
 
     Note over Student, Ledger: 3. Access Delegation Flow
     Student->>Ledger: grantAccess(recordId, verifierAddr, duration)
     Ledger-->>Indexer: emit AccessGranted(recordId, verifier, student, expiresAt)
     Indexer->>BE: Record active grant window in DB access_grants table
 
-    Note over Verifier, Ledger: 4. Cryptographic Verification Flow
-    Verifier->>BE: Check permission status for recordId
-    BE-->>Verifier: Return access status (true/false)
-    Verifier->>Ledger: verifyTranscript(recordId, Uploaded_PDF_SHA256)
-    Ledger->>Ledger: Assert msg.sender is authorized & duration not expired
-    Ledger->>Ledger: Compare Uploaded_PDF_SHA256 == stored fileHash
-    Ledger-->>Verifier: Return validation result (bool)
-    Ledger-->>Indexer: emit TranscriptVerified(recordId, verifier, timestamp)
-    Indexer->>BE: Log successful validation to verifications table
+    Note over Verifier, Ledger: 4. Cryptographic Verification Flows
+
+    alt Flow A: Verifier scans Transcript QR Code (Direct Record ID lookup)
+        Verifier->>BE: Query public verify by recordId / tempRecordId
+        BE->>BE: If not found in transcripts, lookup tempRecordId in ipfs_uploads & map by fileHash
+        BE-->>Verifier: Auto-authorize (Direct printout possession implies consent)
+        Verifier->>Ledger: verifyTranscript(recordId, Uploaded_PDF_SHA256)
+        Ledger-->>Verifier: Return validated details & integrity checks
+    else Flow B: Verifier searches by Student ID (Index number)
+        Verifier->>BE: Search case-insensitive studentId
+        BE->>BE: Match student profile, find corresponding transcript
+        BE-->>Verifier: Access Protected (Block full access, prompt request form)
+        Verifier->>BE: Submit Request Access Form (Name, Organization, Email)
+        BE->>Student: Send Access Request email with approval links
+        Student->>BE: Click "Approve Access"
+        BE->>Verifier: Send email with unique 30-day verification token
+        Verifier->>BE: Access public verify passing Student ID + Token
+        BE-->>Verifier: Authorize and render verified details
+    end
 ```
 
 ---
@@ -70,11 +82,6 @@ The smart contract layer consists of two core structures:
 * **Isolated Registries:** University contract boundaries prevent multi-tenant data contamination. An issue with one university contract does not compromise other university registries.
 * **On-Chain Zero-Knowledge-like Privacy:** Storing a hash of the student's address rather than the raw address prevents public observers from scanning the blockchain to map transcripts directly to specific identities.
 
-### Suggestions for Improvement
-> [!TIP]
-> - **Registry Upgradability:** Transition all deployments to use proxy clones (`Clones.sol` / ERC-1167) instead of full contract deployments. Deploying full contracts for each university consumes heavy gas (~1.8M gas). Clones reduce this to ~100k gas.
-> - **Custom Revert Errors:** Replace `require` string error messages with Solidity custom errors (`error Unauthorized()`) to reduce bytecode size and transaction execution gas cost.
-
 ---
 
 ## 3. Off-Chain Indexer Audit (`sync.ts`)
@@ -94,13 +101,16 @@ The indexer leverages `viem` to continuously parse the Sepolia network starting 
 
 ---
 
-## 4. Backend Express API Audit (`index.ts`)
+## 4. Backend Express/Hono API Audit (`index.ts`)
 
-The Express server handles IPFS uploads (using Pinata SDK), student profile registrations, access control checking, and analytics endpoints.
+The backend server handles IPFS uploads (using Pinata API), student profile registrations, access control checking, and institutional verifier tokens.
 
-### Key Implementation Patterns
-* **Auth Gate Verification:** Employs a robust `verifyAuth` middleware that pulls Privy's signing keys from the Privy JWKS keyset and validates incoming JWT signatures, securing sensitive routes like `/api/ipfs/upload`.
-* **Drizzle ORM Connection:** Connects cleanly to Postgres, with transactions mapped explicitly via Drizzle schemas.
+### Key Security & Logic Patterns
+* **Privy JWT Bypass Priority:** The `verifyAuth` middleware checks incoming headers for static bypass tokens (`credaxis-registrar` or `demo_token`) first, ensuring settings page operations function correctly in production environments without triggering remote signature checks.
+* **Pre-Mint ID Mapping:** Binds the `tempRecordId` generated during PDF creation to the `recordId` column of the `ipfsUploads` table. In verification searches, if a `recordId` query does not match an on-chain record in `transcripts`, it resolves the pre-mint ID to the actual mined record via the unique `fileHash`.
+* **Database Hashing Robustness:** Validates wallet addresses via `isAddress` before performing `keccak256(encodePacked(...))` hashing in student lookups. This prevents 500 server crashes if a profile in the database contains an invalid Ethereum address format.
+* **Student Privacy Consent Rules:** Auto-authorizes verification access when queried directly by `recordId` (physical QR code scans). When queried by `studentId` (index number), it enforces consent rules, blocking the view and requesting student approval.
+* **Case-Insensitive Student Search:** Searches index IDs case-insensitively using Drizzle SQL: `LOWER(studentId) = query.toLowerCase()`.
 
 ---
 
@@ -108,33 +118,10 @@ The Express server handles IPFS uploads (using Pinata SDK), student profile regi
 
 The React/Next.js frontend employs standard App Router structures.
 
-### Design and Styling
-* **Tailwind v4 Clean Utility Tokens:** Custom OKLCH color palettes (such as `bg-ca-accent`, `text-ca-teal`, and `border-ca-border`) are configured inside `@theme inline` in `globals.css` and compiled as first-class utility classes.
-* **Global Theme Provider:** Theme state is initialized on mount from `localStorage` inside the global `Web3Provider` wrapper, eliminating duplicate layout-level state changes.
-* **Responsive Visual Contrast:** Surfaces and borders are cleanly structured using physical color tokens that transition correctly between Light and Dark mode.
-* **Interactive Prototyping:** A custom Zustand role-switch store is wired to a developer panel in `settings` to allow instant role testing without deploying new smart contracts.
-
----
-
-## 6. Unified Authentication Architecture (Email & Web3)
-
-To bridge the gap between non-crypto-native users and blockchain infrastructure, the platform implements a hybrid identity system:
-
-### 6.1 Administrator Identity Verification
-Because the Platform Admin must sign transactions via the Factory Contract owner wallet, the system uses Web3 identity primarily. However, for a unified experience:
-- The system recognizes a hard-coded super-admin email (`johnokyere282@icloud.com`).
-- By utilizing **Privy Account Linking**, the Admin can log in via email and link their `0x` owner wallet. The frontend `rbac-provider.tsx` automatically resolves authorization by checking both the active wallet and all linked Privy accounts against the known admin credentials.
-
-### 6.2 Manual Wallet Binding for Students
-When registrars bulk-whitelist students via CSV, those profiles initially exist strictly off-chain as Web2 records without associated wallets.
-- **Registrar Authority:** The dashboard includes an "Edit Wallet" feature allowing the Registrar to manually input and bind a wallet address to a whitelisted student.
-- **Immediate Issuance:** This allows the Registrar to issue transcripts immediately without waiting for the student to onboard via the frontend.
-
-### 6.3 Domain Isolation
-The sidebar and routing strictly segment views:
-- **Platform Admins** see the global ecosystem, server logs, and the "Registered Institutions" (Registrar Manager) panel.
-- **Registrars** are restricted to their assigned University Dashboard and transcript issuance flows.
-
-
-
-
+### Design and Usability Enhancements
+* **Wagmi Safety Filters:** Input validation (`isAddress`) is applied to address inputs before activating Wagmi contract read queries, preventing threads from freezing during typing.
+* **Auto-Populating Verification UI:** On the Verify page:
+  - Focusing the Registry Contract input lists all registered institutions (e.g. KNUST) to select from.
+  - Adding a "Search Student" auto-suggest input box allows verifiers to query by Name or ID. Selecting a student automatically sets their university contract address and retrieves their latest transcript record ID.
+* **Tailwind Utility Tokens:** Tailwind CSS color tokens are custom-compiled, transitioning correctly between Light and Dark mode.
+* **Zustand store:** Wired to settings for rapid developer testing of role changes.

@@ -1,16 +1,49 @@
-import { createPublicClient, http, parseAbiItem } from "viem"
+import { createPublicClient, http, parseAbiItem, isAddress, keccak256, encodePacked } from "viem"
 import { sepolia } from "viem/chains"
 import { db } from "../db/connection.js"
-import { universities, transcripts, transcriptStatusHistory, indexerState, verifications, registrarEmails } from "../db/schema.js"
+import { universities, transcripts, transcriptStatusHistory, indexerState, verifications, registrarEmails, students } from "../db/schema.js"
 import { eq, sql } from "drizzle-orm"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
+import nodemailer from "nodemailer"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") })
+
+// Set up Nodemailer transport
+let transporter: nodemailer.Transporter | null = null;
+const smtpHost = process.env.SMTP_HOST;
+const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587;
+const smtpUser = process.env.SMTP_USER || process.env.GMAIL_USER;
+const smtpPass = (process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || "").replace(/\s/g, "");
+
+if (smtpHost && smtpUser && smtpPass) {
+  transporter = nodemailer.createTransport({
+    host: smtpHost,
+    port: smtpPort,
+    secure: smtpPort === 465,
+    auth: {
+      user: smtpUser,
+      pass: smtpPass,
+    },
+  });
+  console.log(`[INDEXER EMAIL] Nodemailer initialized with ${smtpUser} via ${smtpHost}`);
+} else if (process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+  const gmailPass = process.env.GMAIL_APP_PASSWORD.replace(/\s/g, "");
+  transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: gmailPass,
+    },
+  });
+  console.log(`[INDEXER EMAIL] Nodemailer initialized with ${process.env.GMAIL_USER}`);
+} else {
+  console.log(`[INDEXER EMAIL] Nodemailer not initialized. Missing configuration in .env`);
+}
 
 const RPC_URL = process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.drpc.org"
 const FACTORY_ADDRESS = (process.env.FACTORY_ADDRESS || "0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e") as `0x${string}`
@@ -132,6 +165,55 @@ export async function startIndexer() {
               txHash: log.transactionHash,
               blockNumber: log.blockNumber,
             }).onConflictDoNothing()
+
+            // Resolve student and send notification email
+            try {
+              const allStudents = await db.select().from(students)
+              let studentMatch = null
+              for (const s of allStudents) {
+                if (s.walletAddress && isAddress(s.walletAddress)) {
+                  const h = keccak256(encodePacked(["address"], [s.walletAddress as `0x${string}`]))
+                  if (h === studentHash) {
+                    studentMatch = s
+                    break
+                  }
+                }
+              }
+
+              if (studentMatch && transporter) {
+                const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
+                const verifyUrl = `${frontendBase}/verify/${recordId}?registry=${registryAddr}`
+                
+                await transporter.sendMail({
+                  from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+                  to: studentMatch.email,
+                  subject: `📜 CredAxis — Your Transcript Has Been Issued On-Chain!`,
+                  html: `
+                    <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
+                      <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED ON-CHAIN</h2>
+                      <p>Hello <strong>${studentMatch.fullName}</strong>,</p>
+                      <p>Your official academic transcript has been successfully registered on-chain by <strong>${uni ? uni.name : "your university"}</strong>.</p>
+                      <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
+                        <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentMatch.fullName}</p>
+                        <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentMatch.studentId}</p>
+                        <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${recordId}</p>
+                        <p style="margin: 5px 0; font-size: 11px;"><strong>Registry Contract:</strong> ${registryAddr}</p>
+                      </div>
+                      <p>This record is immutable and cryptographically secured. You can view its status or manage access permissions at any time via your dashboard.</p>
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
+                      </div>
+                      <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
+                        This email was sent automatically by the CredAxis on-chain indexing agent.
+                      </p>
+                    </div>
+                  `
+                })
+                console.log(`[INDEXER EMAIL] Notification sent to student: ${studentMatch.email}`)
+              }
+            } catch (emailErr) {
+              console.error("[INDEXER EMAIL] Failed to send issuance email alert:", emailErr)
+            }
           }
         }
 
