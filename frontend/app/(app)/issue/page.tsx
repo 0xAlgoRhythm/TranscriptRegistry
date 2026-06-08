@@ -57,6 +57,7 @@ export default function IssuePage() {
   const [gpa, setGpa] = useState("")
   const [major, setMajor] = useState("")
   const [gradYear, setGradYear] = useState("")
+  const [tempRecordId, setTempRecordId] = useState("")
   
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
@@ -254,8 +255,9 @@ export default function IssuePage() {
 
       // Determine a pseudo recordId based on current data
       const studentHashVal = keccak256(encodePacked(["address"], [studentAddress as Address]))
-      const tempRecordId = "0x" + studentHashVal.substring(2, 10) + Date.now().toString(16)
-      const verifierUrl = `${window.location.origin}/verify/${tempRecordId}?registry=${registryAddress}`
+      const tempId = "0x" + studentHashVal.substring(2, 10) + Date.now().toString(16)
+      setTempRecordId(tempId)
+      const verifierUrl = `${window.location.origin}/verify/${tempId}?registry=${registryAddress}`
 
       // 3. Generate PDF
       const blob = await generateTranscriptPDF({
@@ -268,7 +270,7 @@ export default function IssuePage() {
         universityName: typeof uniName === "string" ? uniName : "University",
         logoUrl: fetchedLogoUrl,
         stampUrl,
-        recordId: tempRecordId,
+        recordId: tempId,
         verifierUrl
       })
 
@@ -320,6 +322,7 @@ export default function IssuePage() {
           gradYear,
           fileHash: calculatedFileHash,
           logoUrl,
+          tempRecordId,
         }),
       })
       const data = await res.json()
@@ -331,7 +334,7 @@ export default function IssuePage() {
       setIpfsError(err.message || "Failed to upload to IPFS")
       setIpfsStatus("error")
     }
-  }, [gpa, major, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, logoUrl, API_URL])
+  }, [gpa, major, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, logoUrl, API_URL, tempRecordId])
 
   // ─── Wizard config ─────────────────────────────────────────────────────────
   const steps = [

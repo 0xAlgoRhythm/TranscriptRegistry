@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { type Address } from "viem"
+import { type Address, keccak256, encodePacked } from "viem"
 import { useAccount } from "wagmi"
 import { useTranscript, useCheckAccess, useVerifyTranscript } from "@/hooks/use-transcript-registry"
 import { useFileHash } from "@/hooks/use-file-hash"
@@ -26,6 +26,59 @@ export default function VerifyPage() {
   // File hash calculator
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { hash: calculatedFileHash, isCalculating, calculateHash, reset: resetHash } = useFileHash()
+
+  const [universities, setUniversities] = useState<any[]>([])
+  const [showUniSuggestions, setShowUniSuggestions] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [studentSuggestions, setStudentSuggestions] = useState<any[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [searchLoading, setSearchLoading] = useState(false)
+
+  const [verifyMode, setVerifyMode] = useState<"single" | "batch">("single")
+  const [batchInput, setBatchInput] = useState("")
+  const [batchResults, setBatchResults] = useState<any[]>([])
+  const [isBatchVerifying, setIsBatchVerifying] = useState(false)
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+
+  // Fetch universities for suggestions dropdown
+  useEffect(() => {
+    fetch(`${API_URL}/api/universities`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUniversities(data)
+        }
+      })
+      .catch((err) => console.error("Failed to load universities:", err))
+  }, [API_URL])
+
+  // Search students with debounce
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      setSearchLoading(true)
+      const delayDebounceFn = setTimeout(() => {
+        const match = searchQuery.match(/\(([^)]+)\)$/)
+        if (match) {
+          setSearchLoading(false)
+          return
+        }
+        fetch(`${API_URL}/api/students/search?q=${encodeURIComponent(searchQuery)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (Array.isArray(data)) {
+              setStudentSuggestions(data)
+            }
+          })
+          .catch((err) => console.error("Error searching students:", err))
+          .finally(() => setSearchLoading(false))
+      }, 300)
+
+      return () => clearTimeout(delayDebounceFn)
+    } else {
+      setStudentSuggestions([])
+      setSearchLoading(false)
+    }
+  }, [searchQuery, API_URL])
 
   const { data: transcript, isLoading: transcriptLoading } = useTranscript(
     registryAddress as Address,
@@ -142,15 +195,111 @@ export default function VerifyPage() {
             </div>
 
             <form onSubmit={handleLookup} className="space-y-4">
-              <AddressInput
-                label="University Registry Contract"
-                value={registryAddress}
-                onChange={(val) => {
-                  setRegistryAddress(val)
-                  setLooked(false)
-                }}
-                placeholder="0x..."
-              />
+              {/* Student Search Box */}
+              <div className="space-y-1.5 relative">
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase flex items-center justify-between">
+                  <span>Search Student (Name or Index Number)</span>
+                  {searchLoading && <span className="text-[10px] text-ca-accent animate-pulse">Searching...</span>}
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value)
+                      setShowSuggestions(true)
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    placeholder="Search by student name or index ID..."
+                    className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  />
+                  {showSuggestions && studentSuggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+                      {studentSuggestions.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onMouseDown={async () => {
+                            setSearchQuery(`${s.fullName} (${s.studentId})`)
+                            setShowSuggestions(false)
+                            
+                            // Automatically find and set registry address for this student's university
+                            const uni = universities.find(u => u.universityId === s.universityId)
+                            if (uni) {
+                              setRegistryAddress(uni.contractAddr)
+                            }
+                            
+                            // Automatically lookup the transcript record ID for this student
+                            if (s.walletAddress) {
+                              const hashVal = keccak256(encodePacked(["address"], [s.walletAddress as Address]))
+                              try {
+                                const res = await fetch(`${API_URL}/api/transcripts/by-student/${hashVal}`)
+                                if (res.ok) {
+                                  const txList = await res.json()
+                                  if (Array.isArray(txList) && txList.length > 0) {
+                                    setRecordId(txList[0].recordId)
+                                    setLooked(false)
+                                  } else {
+                                    setRecordId("")
+                                  }
+                                }
+                              } catch (e) {
+                                console.error("Error looking up transcript by student hash:", e)
+                              }
+                            } else {
+                              setRecordId("")
+                            }
+                          }}
+                          className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
+                        >
+                          <span className="font-bold text-foreground text-left">{s.fullName}</span>
+                          <span className="text-[10px] text-muted-foreground text-left">ID: {s.studentId} | {s.email}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* University Registry Contract Input with Suggestions */}
+              <div className="space-y-1.5 relative">
+                <AddressInput
+                  label="University Registry Contract"
+                  value={registryAddress}
+                  onChange={(val) => {
+                    setRegistryAddress(val)
+                    setLooked(false)
+                  }}
+                  onFocus={() => setShowUniSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowUniSuggestions(false), 200)}
+                  placeholder="0x..."
+                />
+                {showUniSuggestions && universities.filter(u => 
+                  u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
+                  (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
+                ).length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+                    {universities.filter(u => 
+                      u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
+                      (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
+                    ).map(u => (
+                      <button
+                        key={u.contractAddr}
+                        type="button"
+                        onMouseDown={() => {
+                          setRegistryAddress(u.contractAddr)
+                          setShowUniSuggestions(false)
+                        }}
+                        className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
+                      >
+                        <span className="font-bold text-foreground text-left">{u.name}</span>
+                        <span className="text-[10px] text-muted-foreground text-left">{u.contractAddr}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Transcript Record ID</label>
@@ -162,7 +311,7 @@ export default function VerifyPage() {
                     setLooked(false)
                   }}
                   placeholder="0x... (32-byte hash)"
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono text-xs focus:border-ca-accent focus:outline-none"
+                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none"
                   required
                 />
               </div>
