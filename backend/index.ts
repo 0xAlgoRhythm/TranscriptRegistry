@@ -1081,7 +1081,7 @@ app.get("/api/public/verify", async (c) => {
     let studentDetails: any = null
     const allStudents = await db.select().from(students)
     for (const s of allStudents) {
-      if (s.walletAddress) {
+      if (s.walletAddress && isAddress(s.walletAddress)) {
         const h = keccak256(encodePacked(["address"], [s.walletAddress as `0x${string}`]))
         if (h === tx.studentHash) {
           studentDetails = {
@@ -1132,7 +1132,7 @@ app.post("/api/public/request-access", async (c) => {
     let studentDetails: any = null
     const allStudents = await db.select().from(students)
     for (const s of allStudents) {
-      if (s.walletAddress) {
+      if (s.walletAddress && isAddress(s.walletAddress)) {
         const h = keccak256(encodePacked(["address"], [s.walletAddress as `0x${string}`]))
         if (h === tx.studentHash) {
           studentDetails = s
