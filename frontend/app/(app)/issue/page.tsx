@@ -921,18 +921,101 @@ export default function IssuePage() {
                   </p>
                 </div>
               </div>
-                    Waiting for Confirmations...
-                  </>
-                ) : (
-                  "Issue Official Transcript"
-                )}
-              </Button>
+
+              {hasOldTranscript && shouldAmendOld ? (
+                <div className="space-y-6">
+                  {/* Step A: Deactivate previous record */}
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[10px] font-mono uppercase text-muted-foreground flex justify-between">
+                      <span>Step 1: Deactivate Previous Record</span>
+                      {updateIsSuccess && <span className="text-ca-success font-bold">✓ COMPLETED</span>}
+                    </div>
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="w-full font-mono text-sm tracking-wider uppercase h-12"
+                      variant={updateIsSuccess ? "outline" : "default"}
+                      disabled={!isStepValid() || updateIsPending || updateIsConfirming || updateIsSuccess || isEmbeddedWallet}
+                      onClick={() => updateStatus(registryAddress as Address, oldTranscriptRecordId as `0x${string}`, 2, `Amended by new transcript: ${tempRecordId}`)}
+                    >
+                      {updateIsPending || updateIsConfirming ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Confirming Deactivation...
+                        </>
+                      ) : updateIsSuccess ? (
+                        "Previous Record Deactivated ✓"
+                      ) : (
+                        "Deactivate Previous Record"
+                      )}
+                    </Button>
+                    {updateTxHash && (
+                      <TxPanel 
+                        hash={updateTxHash as string} 
+                        status={updateError ? "error" : updateIsSuccess ? "success" : updateIsConfirming ? "pending" : updateIsPending ? "signing" : "idle"} 
+                        error={updateError?.message || undefined}
+                        title="Deactivate Previous Transcript Transaction"
+                      />
+                    )}
+                  </div>
+
+                  {/* Step B: Issue new record */}
+                  <div className="flex flex-col gap-2 pt-2 border-t border-border/20">
+                    <div className="text-[10px] font-mono uppercase text-muted-foreground flex justify-between">
+                      <span>Step 2: Issue New Transcript</span>
+                      {isSuccess && <span className="text-ca-success font-bold">✓ COMPLETED</span>}
+                    </div>
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="w-full font-mono text-sm tracking-wider uppercase h-14 bg-ca-accent hover:bg-ca-accent/90 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!isStepValid() || !updateIsSuccess || isPending || isConfirming || isEmbeddedWallet}
+                      onClick={handleIssue}
+                    >
+                      {isPending || isConfirming ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Waiting for Confirmations...
+                        </>
+                      ) : isSuccess ? (
+                        "Transcript Successfully Issued ✓"
+                      ) : (
+                        "Issue Official Transcript"
+                      )}
+                    </Button>
+                    <TxPanel 
+                      hash={txHash as string} 
+                      status={error ? "error" : isSuccess ? "success" : isConfirming ? "pending" : isPending ? "signing" : "idle"} 
+                      error={error?.message || undefined} 
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Single button setup */
+                <div className="space-y-4">
+                  <Button
+                    size="lg"
+                    className="w-full font-mono text-sm tracking-wider uppercase h-14 bg-ca-accent hover:bg-ca-accent/90 text-white shadow-lg"
+                    disabled={!isStepValid() || isPending || isConfirming || isEmbeddedWallet}
+                    onClick={handleIssue}
+                  >
+                    {(isPending || isConfirming) ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        Waiting for Confirmations...
+                      </>
+                    ) : (
+                      "Issue Official Transcript"
+                    )}
+                  </Button>
+                  <TxPanel 
+                    hash={txHash as string} 
+                    status={error ? "error" : isSuccess ? "success" : isConfirming ? "pending" : isPending ? "signing" : "idle"} 
+                    error={error?.message || undefined} 
+                  />
+                </div>
+              )}
             </div>
-            <TxPanel 
-              hash={txHash as string} 
-              status={error ? "error" : isSuccess ? "success" : isConfirming ? "pending" : isPending ? "signing" : "idle"} 
-              error={error?.message || undefined} 
-            />
           </div>
         )}
 
