@@ -10,7 +10,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
-import { keccak256, encodePacked } from "viem";
+import { keccak256, encodePacked, isAddress } from "viem";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -984,7 +984,7 @@ app.get("/api/public/verify", async (c) => {
         let studentDetails = null;
         const allStudents = await db.select().from(students);
         for (const s of allStudents) {
-            if (s.walletAddress) {
+            if (s.walletAddress && isAddress(s.walletAddress)) {
                 const h = keccak256(encodePacked(["address"], [s.walletAddress]));
                 if (h === tx.studentHash) {
                     studentDetails = {
@@ -1030,7 +1030,7 @@ app.post("/api/public/request-access", async (c) => {
         let studentDetails = null;
         const allStudents = await db.select().from(students);
         for (const s of allStudents) {
-            if (s.walletAddress) {
+            if (s.walletAddress && isAddress(s.walletAddress)) {
                 const h = keccak256(encodePacked(["address"], [s.walletAddress]));
                 if (h === tx.studentHash) {
                     studentDetails = s;
