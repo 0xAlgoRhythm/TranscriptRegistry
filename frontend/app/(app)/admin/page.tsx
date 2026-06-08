@@ -125,10 +125,22 @@ function ActivityLogs() {
   )
 }
 
-const UniversityRow = React.memo(function UniversityRow({ id }: { id: bigint }) {
+interface UniversityRowProps {
+  id: bigint
+  onDeactivate: (id: bigint, reason: string) => void
+  onReactivate: (id: bigint) => void
+  isDeactivatePending: boolean
+  isReactivatePending: boolean
+}
+
+const UniversityRow = React.memo(function UniversityRow({ 
+  id, 
+  onDeactivate, 
+  onReactivate, 
+  isDeactivatePending, 
+  isReactivatePending 
+}: UniversityRowProps) {
   const { data } = useUniversity(id)
-  const deactivate = useDeactivateUniversity()
-  const reactivate = useReactivateUniversity()
 
   if (!data) return null
 
@@ -150,8 +162,8 @@ const UniversityRow = React.memo(function UniversityRow({ id }: { id: bigint }) 
         {isActive ? (
           <Button
             size="sm"
-            onClick={() => deactivate.deactivate(id, "Administrative Suspension")}
-            disabled={deactivate.isPending || deactivate.isConfirming}
+            onClick={() => onDeactivate(id, "Administrative Suspension")}
+            disabled={isDeactivatePending}
             className="bg-ca-danger/15 text-ca-danger hover:bg-ca-danger/25 border border-ca-danger/30 font-mono text-[10px] py-1 h-7"
           >
             <Pause className="h-3 w-3 mr-1" /> SUSPEND
@@ -159,8 +171,8 @@ const UniversityRow = React.memo(function UniversityRow({ id }: { id: bigint }) 
         ) : (
           <Button
             size="sm"
-            onClick={() => reactivate.reactivate(id)}
-            disabled={reactivate.isPending || reactivate.isConfirming}
+            onClick={() => onReactivate(id)}
+            disabled={isReactivatePending}
             className="bg-ca-success/15 text-ca-success hover:bg-ca-success/25 border border-ca-success/30 font-mono text-[10px] py-1 h-7"
           >
             <Play className="h-3 w-3 mr-1" /> REACTIVATE
@@ -174,6 +186,17 @@ const UniversityRow = React.memo(function UniversityRow({ id }: { id: bigint }) 
 function UniversityList() {
   const { data: count } = useUniversityCount()
   const total = count ? Number(count) : 0
+
+  const deactivateHook = useDeactivateUniversity()
+  const reactivateHook = useReactivateUniversity()
+
+  const handleDeactivate = React.useCallback((id: bigint, reason: string) => {
+    deactivateHook.deactivate(id, reason)
+  }, [deactivateHook.deactivate])
+
+  const handleReactivate = React.useCallback((id: bigint) => {
+    reactivateHook.reactivate(id)
+  }, [reactivateHook.reactivate])
 
   if (total === 0) {
     return (
@@ -197,7 +220,14 @@ function UniversityList() {
         </thead>
         <tbody>
           {Array.from({ length: total }, (_, i) => (
-            <UniversityRow key={i} id={BigInt(i)} />
+            <UniversityRow 
+              key={i} 
+              id={BigInt(i)} 
+              onDeactivate={handleDeactivate}
+              onReactivate={handleReactivate}
+              isDeactivatePending={deactivateHook.isPending || deactivateHook.isConfirming}
+              isReactivatePending={reactivateHook.isPending || reactivateHook.isConfirming}
+            />
           ))}
         </tbody>
       </table>
@@ -216,11 +246,14 @@ function DeployUniversityForm() {
   const [email, setEmail] = useState("")
 
   const { deploy, hash, isPending, isConfirming, isSuccess, error } = useDeployUniversity()
+  const [isPendingTransition, startTransition] = React.useTransition()
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name || !registrar || !email) return
-    deploy(name, registrar as Address)
+    startTransition(() => {
+      deploy(name, registrar as Address)
+    })
   }
 
   React.useEffect(() => {
