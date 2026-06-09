@@ -15,6 +15,13 @@
       "when": 1780907458681,
       "tag": "0001_tan_celestials",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781004358481,
+      "tag": "0002_chunky_wolfsbane",
+      "breakpoints": true
     }
   ]
 }
