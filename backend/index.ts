@@ -1094,13 +1094,37 @@ app.post("/api/students", async (c) => {
     console.log(`[EMAIL NOTIFICATION] Preparing to send email for new student ${fullName}`);
     if (transporter) {
       try {
-        await transporter.sendMail({
-          from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
-          to: process.env.SMTP_USER || process.env.GMAIL_USER, // sending to self/admin
-          subject: "New Student Verification Request",
-          text: `A new student (${fullName}, ID: ${studentId}, Email: ${cleanEmail}) has submitted a profile verification request.\n\nPlease review and accept or reject the application in the admin portal.`,
+        const uni = await db.query.universities.findFirst({
+          where: eq(universities.universityId, universityId)
         });
-        console.log(`[EMAIL] Notification sent successfully.`);
+        
+        const adminEmail = process.env.SMTP_USER || process.env.GMAIL_USER || "";
+        const recipient = uni?.registrarEmail || adminEmail;
+        
+        const messageHtml = `
+          <p>Hello,</p>
+          <p>A new student has submitted a profile verification request for your institution.</p>
+          <div class="details-box">
+            <p><span class="label">Name:</span> <strong>${fullName}</strong></p>
+            <p><span class="label">Student ID:</span> <strong>${studentId}</strong></p>
+            <p><span class="label">Email:</span> <strong><a href="mailto:${cleanEmail}" style="color: #3b82f6; text-decoration: none;">${cleanEmail}</a></strong></p>
+            <p><span class="label">University:</span> <strong>${uni ? uni.name : "N/A"}</strong></p>
+          </div>
+          <p>Please review and accept or reject this application in the institutional portal.</p>
+          <div class="button-container">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin" class="button">Review Application</a>
+          </div>
+        `;
+
+        await transporter.sendMail({
+          from: process.env.SMTP_FROM || adminEmail,
+          to: recipient,
+          replyTo: cleanEmail,
+          subject: `New Student Verification Request - ${fullName}`,
+          text: `A new student (${fullName}, ID: ${studentId}, Email: ${cleanEmail}) has submitted a profile verification request.\n\nPlease review and accept or reject the application in the admin portal.`,
+          html: generateEmailTemplate("New Student Verification Request", messageHtml)
+        });
+        console.log(`[EMAIL] Notification sent successfully to ${recipient}.`);
       } catch (err) {
         console.error(`[EMAIL] Failed to send notification:`, err);
       }
