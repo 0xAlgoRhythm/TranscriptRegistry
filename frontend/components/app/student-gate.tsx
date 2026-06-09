@@ -114,10 +114,20 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
 
     const defaultEmail = getPrivyEmail(user) || ""
 
-    if (!fullName || !studentId || !selectedUni || (!defaultEmail && !customEmail)) {
-      startTransition(() => {
-        setError("Please fill in all fields.")
-      })
+    if (!fullName) {
+      startTransition(() => setError("Please enter your full name."))
+      return
+    }
+    if (!studentId) {
+      startTransition(() => setError("Please enter your student ID."))
+      return
+    }
+    if (!selectedUni) {
+      startTransition(() => setError("Please select your university."))
+      return
+    }
+    if (!defaultEmail && !customEmail) {
+      startTransition(() => setError("Please enter your email address."))
       return
     }
 
