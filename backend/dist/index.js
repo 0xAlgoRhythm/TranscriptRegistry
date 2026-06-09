@@ -249,7 +249,7 @@ app.get("/api/governance/requests", async (c) => {
 app.post("/api/governance/requests", async (c) => {
     try {
         const { type, universityId, contractAddr, currentValue, newValue } = await c.req.json();
-        if (!type || !universityId || !contractAddr || !currentValue || !newValue) {
+        if (!type || (universityId === undefined || universityId === null || universityId === "") || !contractAddr || !currentValue || !newValue) {
             return c.json({ error: "Missing required fields" }, 400);
         }
         const result = await db.insert(governanceRequests).values({
@@ -974,7 +974,7 @@ app.get("/api/ipfs/metadata/:cid", async (c) => {
 app.post("/api/students", async (c) => {
     try {
         const { walletAddress, fullName, studentId, universityId, email } = await c.req.json();
-        if (!walletAddress || !fullName || !studentId || !universityId || !email) {
+        if (!walletAddress || !fullName || !studentId || (universityId === undefined || universityId === null || universityId === "") || !email) {
             return c.json({ error: "Missing required fields" }, 400);
         }
         const cleanWallet = walletAddress.toLowerCase();
