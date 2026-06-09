@@ -450,33 +450,29 @@ app.post("/api/transcripts/request", async (c) => {
         try {
           const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000"
           const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`
+          const messageHtml = `
+            <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
+            <p>Hello <strong>${student.fullName}</strong>,</p>
+            <p>Your university registrar has just uploaded and secured your official academic transcript metadata on IPFS.</p>
+            <div class="details-box">
+              <p><span class="label">Student Name:</span> <strong>${student.fullName}</strong></p>
+              <p><span class="label">Student ID:</span> <strong>${student.studentId}</strong></p>
+              <p><span class="label">Major:</span> <strong>${metadataJson?.major || 'N/A'}</strong></p>
+              <p><span class="label">GPA:</span> <strong>${metadataJson?.gpa || 'N/A'}</strong></p>
+            </div>
+            <p>You can verify this credential instantly through the platform.</p>
+            <div class="button-container">
+              <a href="${verifyUrl}" class="button">View Transcript</a>
+            </div>
+          `;
 
           await transporter.sendMail({
             from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
             to: student.email,
             subject: "📜 CredAxis — Auto-Delivered Official Transcript Receipt",
-            html: `
-              <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-                <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
-                <p>Hello <strong>${student.fullName}</strong>,</p>
-                <p>An active transcript was found registered for your profile. Here is your official verified transcript credential receipt.</p>
-                <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-                  <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
-                  <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
-                  <p style="margin: 5px 0;"><strong>Program:</strong> ${metadataJson.major || "N/A"}</p>
-                  <p style="margin: 5px 0;"><strong>GPA:</strong> ${metadataJson.gpa || "N/A"}</p>
-                  <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${activeTx.recordId}</p>
-                </div>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
-                </div>
-                <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-                  This email was sent automatically because you requested it from your student dashboard.
-                </p>
-              </div>
-            `
+            html: generateEmailTemplate("Official Transcript Receipt", messageHtml)
           })
-          console.log(`[REQUEST API] Auto-mailed transcript to ${student.email}`)
+          console.log(`[EMAIL] Auto-receipt sent to student: ${student.email}`)
         } catch (emailErr: any) {
           console.error(`[REQUEST API] Failed to auto-mail transcript to ${student.email}:`, emailErr.message)
         }
