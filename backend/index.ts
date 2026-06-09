@@ -1555,13 +1555,13 @@ app.get("/api/public/verify", async (c) => {
     if (recordId) {
       queryByRecordId = true
       tx = await db.query.transcripts.findFirst({
-        where: eq(transcripts.recordId, recordId)
+        where: sql`LOWER(${transcripts.recordId}) = LOWER(${recordId})`
       })
 
       if (!tx) {
         // Look up by tempRecordId in ipfsUploads table
         const upload = await db.query.ipfsUploads.findFirst({
-          where: sql`${ipfsUploads.recordId} = ${recordId} OR ${ipfsUploads.metadataJson}->>'tempRecordId' = ${recordId}`
+          where: sql`LOWER(${ipfsUploads.recordId}) = LOWER(${recordId}) OR LOWER(${ipfsUploads.metadataJson}->>'tempRecordId') = LOWER(${recordId})`
         })
         if (upload) {
           tx = await db.query.transcripts.findFirst({
