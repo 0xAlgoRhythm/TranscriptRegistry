@@ -88,6 +88,7 @@ export const students = pgTable("students", {
   universityId: integer("university_id").references(() => universities.universityId).notNull(),
   status: text("status").default("pending").notNull(), // pending | approved | rejected
   email: text("email").notNull(),
+  approvalToken: text("approval_token"),
   createdAt: timestamp("created_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
   actionAt: timestamp("action_at", { withTimezone: true }),
