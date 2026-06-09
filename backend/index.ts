@@ -11,6 +11,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 import nodemailer from "nodemailer"
 import { keccak256, encodePacked, isAddress } from "viem"
+import { generateEmailTemplate } from "./utils/email.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
