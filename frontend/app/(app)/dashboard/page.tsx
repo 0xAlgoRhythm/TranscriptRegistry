@@ -52,7 +52,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [bulkStatus, setBulkStatus] = useState("")
   const [bulkError, setBulkError] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests" | "winstitutions">("requests")
+  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests" | "winstitutions" | "issued">("requests")
 
   // Transcript request states
   const [tRequests, setTRequests] = useState<any[]>([])
@@ -61,6 +61,10 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   // Pending whitelist institutions states
   const [pendingInsts, setPendingInsts] = useState<any[]>([])
   const [instsLoading, setInstsLoading] = useState(false)
+
+  // Issued transcripts states
+  const [issuedTranscripts, setIssuedTranscripts] = useState<any[]>([])
+  const [issuedLoading, setIssuedLoading] = useState(false)
 
   // Wallet Binding states
   const [selectedStudentForWallet, setSelectedStudentForWallet] = useState<StudentRequest | null>(null)
@@ -125,6 +129,21 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     }
   }
 
+  const fetchIssuedTranscripts = async () => {
+    try {
+      setIssuedLoading(true)
+      const res = await fetch(`${API_URL}/api/transcripts/by-registrar/${registrarAddress.toLowerCase()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setIssuedTranscripts(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch issued transcripts:", e)
+    } finally {
+      setIssuedLoading(false)
+    }
+  }
+
   const handleApproveInst = async (id: number) => {
     try {
       const res = await fetch(`${API_URL}/api/institutions/${id}/approve`, {
@@ -164,6 +183,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       fetchStudents()
       fetchTranscriptRequests()
       fetchPendingInsts()
+      fetchIssuedTranscripts()
     }
   }, [registrarAddress])
 
@@ -395,6 +415,16 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           }`}
         >
           Transcript Requests ({tRequests.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("issued")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "issued"
+              ? "border-ca-accent text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Issued Transcripts ({issuedTranscripts.length})
         </button>
         <button
           onClick={() => setActiveTab("winstitutions")}
@@ -700,6 +730,101 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                       </td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </GlowCard>
+      )}
+
+      {activeTab === "issued" && (
+        <GlowCard className="p-6 relative overflow-hidden" glow>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
+            <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+              Issued Academic Credentials
+            </h3>
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              onClick={fetchIssuedTranscripts}
+              className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
+          {issuedLoading ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+              LOADING ISSUED TRANSCRIPTS...
+            </div>
+          ) : issuedTranscripts.length === 0 ? (
+            <div className="text-center py-8 font-mono text-xs text-muted-foreground">
+              NO ISSUED TRANSCRIPTS FOUND
+            </div>
+          ) : (
+            <div className="overflow-x-auto w-full">
+              <table className="w-full text-left border-collapse font-mono text-xs">
+                <thead>
+                  <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
+                    <th className="p-3 font-bold">Record ID</th>
+                    <th className="p-3 font-bold">Student Hash</th>
+                    <th className="p-3 font-bold">Date Issued</th>
+                    <th className="p-3 font-bold">Status</th>
+                    <th className="p-3 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {issuedTranscripts.map((t) => {
+                    const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#"
+                    return (
+                      <tr key={t.recordId} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                        <td className="p-3 font-semibold text-foreground">
+                          {t.recordId.slice(0, 16)}...{t.recordId.slice(-14)}
+                        </td>
+                        <td className="p-3 text-muted-foreground">
+                          {t.studentHash.slice(0, 14)}...
+                        </td>
+                        <td className="p-3 text-muted-foreground">
+                          {new Date(t.issuedAt || t.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            t.status === "Active"
+                              ? "bg-green-500/10 text-green-400 border border-green-500/30"
+                              : t.status === "Amended"
+                              ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30"
+                              : "bg-red-500/10 text-red-400 border border-red-500/30"
+                          }`}>
+                            {t.status || "Active"}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex gap-2 justify-end items-center">
+                            {t.metadataCid && (
+                              <a
+                                href={ipfsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center font-mono text-[9px] font-bold tracking-wider uppercase bg-green-950/20 text-green-400 border border-green-900/50 hover:bg-green-950/45 px-2.5 py-1.5 rounded transition-all"
+                              >
+                                IPFS
+                              </a>
+                            )}
+                            <Link href={`/issued/${t.recordId}?registry=${t.registryAddr}`}>
+                              <Button
+                                size="sm"
+                                type="button"
+                                className="font-mono text-[9px] px-2.5 py-1.5 h-7 bg-ca-accent hover:bg-ca-accent/90 text-white"
+                              >
+                                DETAILS
+                              </Button>
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>

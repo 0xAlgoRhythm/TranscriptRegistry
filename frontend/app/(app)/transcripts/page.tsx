@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useAccount } from "wagmi"
 import { type Address } from "viem"
 import { useStudentTranscripts, useTranscript } from "@/hooks/use-transcript-registry"
-import { studentHash, truncateAddress, formatTimestamp } from "@/lib/utils"
+import { studentHash, truncateAddress, formatTimestamp, cn } from "@/lib/utils"
 import { TRANSCRIPT_STATUS, type TranscriptStatus } from "@/lib/contracts"
 import { StatCard } from "@/components/ui/stat-card"
 import { GlowCard } from "@/components/ui/glow-card"
@@ -70,6 +70,8 @@ const TranscriptCard = React.memo(function TranscriptCard({
 export default function TranscriptsPage() {
   const { address } = useAccount()
   const [registryAddress, setRegistryAddress] = useState("")
+  const [universities, setUniversities] = useState<any[]>([])
+  const [showUniSuggestions, setShowUniSuggestions] = useState(false)
 
   const hashValue = address ? studentHash(address) : ("0x" as `0x${string}`)
   
@@ -92,21 +94,47 @@ export default function TranscriptsPage() {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
-  const fetchStudentProfileAndRequests = async () => {
-    if (!address) return
-    try {
-      const profileRes = await fetch(`${API_URL}/api/students/profile/${address.toLowerCase()}`)
-      if (profileRes.ok) {
-        const profile = await profileRes.json()
-        if (profile && profile.email) {
-          setStudentEmail(profile.email)
-          fetchInstitutionRequests(profile.email)
+  // Load universities
+  useEffect(() => {
+    fetch(`${API_URL}/api/universities`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setUniversities(data)
         }
+      })
+      .catch((err) => console.error("Failed to load universities:", err))
+  }, [API_URL])
+
+  // Fetch student profile and auto-populate registry address
+  useEffect(() => {
+    if (!address) return
+
+    const loadProfileAndRequests = async () => {
+      try {
+        const profileRes = await fetch(`${API_URL}/api/students/profile/${address.toLowerCase()}`)
+        if (profileRes.ok) {
+          const profile = await profileRes.json()
+          if (profile) {
+            if (profile.email) {
+              setStudentEmail(profile.email)
+              fetchInstitutionRequests(profile.email)
+            }
+            if (profile.universityId !== undefined && universities.length > 0 && !registryAddress) {
+              const studentUni = universities.find(u => u.universityId === profile.universityId)
+              if (studentUni) {
+                setRegistryAddress(studentUni.contractAddr)
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load student profile for email releases", e)
       }
-    } catch (e) {
-      console.error("Failed to load student profile for email releases", e)
     }
-  }
+
+    loadProfileAndRequests()
+  }, [address, universities, registryAddress, API_URL])
 
   const fetchInstitutionRequests = async (email: string) => {
     try {
@@ -186,9 +214,10 @@ export default function TranscriptsPage() {
     }
   }
 
+  // Access checking effect
   useEffect(() => {
     if (address) {
-      fetchStudentProfileAndRequests()
+      // already handled by auto-populate effect
     }
   }, [address])
 
@@ -257,7 +286,7 @@ export default function TranscriptsPage() {
         </div>
       )}
 
-      {/* University Registry Input Card */}
+      {/* University Registry Input Card Dropdown */}
       <GlowCard className="p-6 space-y-4">
         <div className="flex justify-between items-center">
           <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-foreground">
@@ -272,11 +301,75 @@ export default function TranscriptsPage() {
             </button>
           )}
         </div>
-        <AddressInput
-          placeholder="Enter university registry contract address (0x...)"
-          value={registryAddress}
-          onChange={setRegistryAddress}
-        />
+        
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowUniSuggestions(!showUniSuggestions)}
+            className="w-full rounded-lg border border-border/60 bg-card py-3 px-4 text-xs font-mono text-left flex justify-between items-center hover:border-ca-accent transition-colors focus:outline-none"
+          >
+            <span className="truncate">
+              {registryAddress
+                ? universities.find(u => u.contractAddr.toLowerCase() === registryAddress.toLowerCase())?.name || registryAddress
+                : "Select from registered universities..."}
+            </span>
+            <span className="text-muted-foreground text-[10px]">▼</span>
+          </button>
+
+          {showUniSuggestions && (
+            <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+              {universities.map(u => {
+                const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase()
+                return (
+                  <button
+                    key={u.contractAddr}
+                    type="button"
+                    onMouseDown={() => {
+                      setRegistryAddress(u.contractAddr)
+                      setShowUniSuggestions(false)
+                    }}
+                    className={cn(
+                      "w-full text-left rounded px-3.5 py-3 hover:bg-muted/40 transition-colors flex flex-col gap-1.5 border-b border-border/20 last:border-0",
+                      isSelected && "bg-ca-accent/10 border-ca-accent"
+                    )}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="font-bold text-foreground">{u.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-ca-accent/15 text-ca-accent font-semibold">
+                        ID: {u.universityId}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5">
+                      <div className="flex justify-between">
+                        <span>Registry Contract:</span>
+                        <span className="text-foreground">{u.contractAddr.slice(0, 14)}...{u.contractAddr.slice(-12)}</span>
+                      </div>
+                      {u.deployedAt && (
+                        <div className="flex justify-between">
+                          <span>Deployed Date:</span>
+                          <span className="text-foreground">
+                            {new Date(u.deployedAt).toLocaleDateString()} (Block #{u.blockNumber ? String(u.blockNumber) : "N/A"})
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+              <div className="p-2 border-t border-border/20 mt-1 bg-card">
+                <label className="text-[9px] text-muted-foreground uppercase block mb-1">Or enter custom contract address</label>
+                <input
+                  type="text"
+                  value={registryAddress}
+                  onChange={(e) => setRegistryAddress(e.target.value)}
+                  placeholder="0x..."
+                  className="w-full rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  onMouseDown={(e) => e.stopPropagation()}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </GlowCard>
 
       {/* Transcripts Grid */}

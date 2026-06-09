@@ -15,6 +15,7 @@ import { HashDisplay } from "@/components/ui/hash-display"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { useWallets } from "@privy-io/react-auth"
 import { useSearchParams } from "next/navigation"
+import { cn } from "@/lib/utils"
 import {
   ArrowLeft, ArrowRight, ShieldCheck, CloudUpload,
   Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download, Eye
@@ -182,6 +183,18 @@ export default function IssuePage() {
       })
       .catch((err) => console.error("Failed to load universities:", err))
   }, [API_URL])
+
+  // Auto-populate registry address for logged-in registrar
+  useEffect(() => {
+    if (address && universities.length > 0 && !registryAddress) {
+      const myUni = universities.find(
+        (u) => u.registrar.toLowerCase() === address.toLowerCase()
+      )
+      if (myUni) {
+        setRegistryAddress(myUni.contractAddr)
+      }
+    }
+  }, [address, universities, registryAddress])
 
   // ─── Auto-check student profile & suggestions ──────────────────────────────
   useEffect(() => {
@@ -478,39 +491,80 @@ export default function IssuePage() {
                 Provide the smart contract address of the university registry through which you are issuing this record.
               </p>
             </div>
-            <div className="space-y-4 relative">
-              <AddressInput
-                label="Registry Smart Contract"
-                value={registryAddress}
-                onChange={setRegistryAddress}
-                placeholder="0x..."
-                onFocus={() => setShowUniSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowUniSuggestions(false), 200)}
-              />
-              {showUniSuggestions && universities.filter(u => 
-                u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
-                (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
-              ).length > 0 && (
-                <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
-                  {universities.filter(u => 
-                    u.name.toLowerCase().includes(registryAddress.toLowerCase()) ||
-                    (u.contractAddr && u.contractAddr.toLowerCase().includes(registryAddress.toLowerCase()))
-                  ).map(u => (
-                    <button
-                      key={u.contractAddr}
-                      type="button"
-                      onMouseDown={() => {
-                        setRegistryAddress(u.contractAddr)
-                        setShowUniSuggestions(false)
-                      }}
-                      className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
-                    >
-                      <span className="font-bold text-foreground">{u.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{u.contractAddr}</span>
-                    </button>
-                  ))}
+            <div className="space-y-4">
+              <div className="relative">
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase block mb-1.5">
+                  Select University Registry Contract
+                </label>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowUniSuggestions(!showUniSuggestions)}
+                    className="w-full rounded-lg border border-border/60 bg-card py-3 px-4 text-xs font-mono text-left flex justify-between items-center hover:border-ca-accent transition-colors focus:outline-none"
+                  >
+                    <span className="truncate">
+                      {registryAddress
+                        ? universities.find(u => u.contractAddr.toLowerCase() === registryAddress.toLowerCase())?.name || registryAddress
+                        : "Select from registered universities..."}
+                    </span>
+                    <span className="text-muted-foreground text-[10px]">▼</span>
+                  </button>
+
+                  {showUniSuggestions && (
+                    <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
+                      {universities.map(u => {
+                        const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase()
+                        return (
+                          <button
+                            key={u.contractAddr}
+                            type="button"
+                            onMouseDown={() => {
+                              setRegistryAddress(u.contractAddr)
+                              setShowUniSuggestions(false)
+                            }}
+                            className={cn(
+                              "w-full text-left rounded px-3.5 py-3 hover:bg-muted/40 transition-colors flex flex-col gap-1.5 border-b border-border/20 last:border-0",
+                              isSelected && "bg-ca-accent/10 border-ca-accent"
+                            )}
+                          >
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-foreground">{u.name}</span>
+                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-ca-accent/15 text-ca-accent font-semibold">
+                                ID: {u.universityId}
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-muted-foreground flex flex-col gap-0.5">
+                              <div className="flex justify-between">
+                                <span>Registry Contract:</span>
+                                <span className="text-foreground">{u.contractAddr.slice(0, 14)}...{u.contractAddr.slice(-12)}</span>
+                              </div>
+                              {u.deployedAt && (
+                                <div className="flex justify-between">
+                                  <span>Deployed Date:</span>
+                                  <span className="text-foreground">
+                                    {new Date(u.deployedAt).toLocaleDateString()} (Block #{u.blockNumber ? String(u.blockNumber) : "N/A"})
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        )
+                      })}
+                      <div className="p-2 border-t border-border/20 mt-1 bg-card">
+                        <label className="text-[9px] text-muted-foreground uppercase block mb-1">Or enter custom contract address</label>
+                        <input
+                          type="text"
+                          value={registryAddress}
+                          onChange={(e) => setRegistryAddress(e.target.value)}
+                          placeholder="0x..."
+                          className="w-full rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                          onMouseDown={(e) => e.stopPropagation()} // Prevent closing dropdown on input click
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
               {registryAddress && (
                 <div className="rounded-lg border border-border/40 bg-muted/20 p-4 font-mono text-xs space-y-2">
                   <div className="flex justify-between">
