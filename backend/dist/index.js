@@ -11,6 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
 import { keccak256, encodePacked, isAddress } from "viem";
+import { generateEmailTemplate } from "./utils/email.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
@@ -426,32 +427,28 @@ app.post("/api/transcripts/request", async (c) => {
                 try {
                     const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
                     const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`;
+                    const messageHtml = `
+            <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
+            <p>Hello <strong>${student.fullName}</strong>,</p>
+            <p>Your university registrar has just uploaded and secured your official academic transcript metadata on IPFS.</p>
+            <div class="details-box">
+              <p><span class="label">Student Name:</span> <strong>${student.fullName}</strong></p>
+              <p><span class="label">Student ID:</span> <strong>${student.studentId}</strong></p>
+              <p><span class="label">Major:</span> <strong>${metadataJson?.major || 'N/A'}</strong></p>
+              <p><span class="label">GPA:</span> <strong>${metadataJson?.gpa || 'N/A'}</strong></p>
+            </div>
+            <p>You can verify this credential instantly through the platform.</p>
+            <div class="button-container">
+              <a href="${verifyUrl}" class="button">View Transcript</a>
+            </div>
+          `;
                     await transporter.sendMail({
                         from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
                         to: student.email,
                         subject: "📜 CredAxis — Auto-Delivered Official Transcript Receipt",
-                        html: `
-              <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-                <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
-                <p>Hello <strong>${student.fullName}</strong>,</p>
-                <p>An active transcript was found registered for your profile. Here is your official verified transcript credential receipt.</p>
-                <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-                  <p style="margin: 5px 0;"><strong>Student Name:</strong> ${student.fullName}</p>
-                  <p style="margin: 5px 0;"><strong>Student ID:</strong> ${student.studentId}</p>
-                  <p style="margin: 5px 0;"><strong>Program:</strong> ${metadataJson.major || "N/A"}</p>
-                  <p style="margin: 5px 0;"><strong>GPA:</strong> ${metadataJson.gpa || "N/A"}</p>
-                  <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${activeTx.recordId}</p>
-                </div>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
-                </div>
-                <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-                  This email was sent automatically because you requested it from your student dashboard.
-                </p>
-              </div>
-            `
+                        html: generateEmailTemplate("Official Transcript Receipt", messageHtml)
                     });
-                    console.log(`[REQUEST API] Auto-mailed transcript to ${student.email}`);
+                    console.log(`[EMAIL] Auto-receipt sent to student: ${student.email}`);
                 }
                 catch (emailErr) {
                     console.error(`[REQUEST API] Failed to auto-mail transcript to ${student.email}:`, emailErr.message);
@@ -1019,13 +1016,34 @@ app.post("/api/students", async (c) => {
         console.log(`[EMAIL NOTIFICATION] Preparing to send email for new student ${fullName}`);
         if (transporter) {
             try {
-                await transporter.sendMail({
-                    from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
-                    to: process.env.SMTP_USER || process.env.GMAIL_USER, // sending to self/admin
-                    subject: "New Student Verification Request",
-                    text: `A new student (${fullName}, ID: ${studentId}, Email: ${cleanEmail}) has submitted a profile verification request.\n\nPlease review and accept or reject the application in the admin portal.`,
+                const uni = await db.query.universities.findFirst({
+                    where: eq(universities.universityId, universityId)
                 });
-                console.log(`[EMAIL] Notification sent successfully.`);
+                const adminEmail = process.env.SMTP_USER || process.env.GMAIL_USER || "";
+                const recipient = uni?.registrarEmail || adminEmail;
+                const messageHtml = `
+          <p>Hello,</p>
+          <p>A new student has submitted a profile verification request for your institution.</p>
+          <div class="details-box">
+            <p><span class="label">Name:</span> <strong>${fullName}</strong></p>
+            <p><span class="label">Student ID:</span> <strong>${studentId}</strong></p>
+            <p><span class="label">Email:</span> <strong><a href="mailto:${cleanEmail}" style="color: #3b82f6; text-decoration: none;">${cleanEmail}</a></strong></p>
+            <p><span class="label">University:</span> <strong>${uni ? uni.name : "N/A"}</strong></p>
+          </div>
+          <p>Please review and accept or reject this application in the institutional portal.</p>
+          <div class="button-container">
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin" class="button">Review Application</a>
+          </div>
+        `;
+                await transporter.sendMail({
+                    from: process.env.SMTP_FROM || adminEmail,
+                    to: recipient,
+                    replyTo: cleanEmail,
+                    subject: `New Student Verification Request - ${fullName}`,
+                    text: `A new student (${fullName}, ID: ${studentId}, Email: ${cleanEmail}) has submitted a profile verification request.\n\nPlease review and accept or reject the application in the admin portal.`,
+                    html: generateEmailTemplate("New Student Verification Request", messageHtml)
+                });
+                console.log(`[EMAIL] Notification sent successfully to ${recipient}.`);
             }
             catch (err) {
                 console.error(`[EMAIL] Failed to send notification:`, err);
@@ -1491,31 +1509,31 @@ app.post("/api/public/request-access", async (c) => {
             const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
             const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`;
             const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`;
+            const messageHtml = `
+        <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT ACCESS REQUEST</h2>
+        <p>Hello <strong>${studentDetails.fullName}</strong>,</p>
+        <p>An external verifier has requested permission to verify your official academic transcript on-chain.</p>
+        <div class="details-box">
+          <p><span class="label">Requester:</span> <strong>${requesterName}</strong></p>
+          <p><span class="label">Organization:</span> <strong>${requesterOrg}</strong></p>
+          <p><span class="label">Email:</span> <strong><a href="mailto:${requesterEmail}" style="color: #3b82f6; text-decoration: none;">${requesterEmail}</a></strong></p>
+          <p><span class="label">Record Hash:</span> <strong>${recordId}</strong></p>
+        </div>
+        <p>To protect your privacy, this verifier cannot see your GPA, major, or grades unless you approve.</p>
+        <div class="button-container" style="display: flex; justify-content: center; gap: 20px;">
+          <a href="${approveUrl}" class="button" style="background-color: #10b981; margin-right: 15px;">APPROVE ACCESS</a>
+          <a href="${rejectUrl}" class="button" style="background-color: #ef4444; color: #fff;">REJECT ACCESS</a>
+        </div>
+        <p style="font-size: 10px; color: #71717a; border-top: 1px solid #27272a; padding-top: 15px; margin-top: 20px;">
+          This access request token is unique. Approving gives access for 30 days. You can revoke it anytime.
+        </p>
+      `;
             await transporter.sendMail({
                 from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
                 to: studentDetails.email,
+                replyTo: requesterEmail,
                 subject: "🔒 CredAxis — Access Request to Verify your Transcript",
-                html: `
-          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-            <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT ACCESS REQUEST</h2>
-            <p>Hello <strong>${studentDetails.fullName}</strong>,</p>
-            <p>An external verifier has requested permission to verify your official academic transcript on-chain.</p>
-            <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-              <p style="margin: 5px 0;"><strong>Requester:</strong> ${requesterName}</p>
-              <p style="margin: 5px 0;"><strong>Organization:</strong> ${requesterOrg}</p>
-              <p style="margin: 5px 0;"><strong>Email:</strong> ${requesterEmail}</p>
-              <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${recordId}</p>
-            </div>
-            <p>To protect your privacy, this verifier cannot see your GPA, major, or grades unless you approve.</p>
-            <div style="text-align: center; margin: 30px 0; display: flex; justify-content: center; gap: 20px;">
-              <a href="${approveUrl}" style="background-color: #10b981; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 15px;">APPROVE ACCESS</a>
-              <a href="${rejectUrl}" style="background-color: #ef4444; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">REJECT ACCESS</a>
-            </div>
-            <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-              This access request token is unique. Approving gives access for 30 days. You can revoke it anytime.
-            </p>
-          </div>
-        `
+                html: generateEmailTemplate("Transcript Access Request", messageHtml)
             });
         }
         return c.json({ success: true, message: "Verification request sent to student email." });

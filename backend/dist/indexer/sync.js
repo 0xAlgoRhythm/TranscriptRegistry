@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import nodemailer from "nodemailer";
+import { generateEmailTemplate } from "../utils/email.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
@@ -165,30 +166,26 @@ export async function startIndexer() {
                             if (studentMatch && transporter) {
                                 const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
                                 const verifyUrl = `${frontendBase}/verify/${recordId}?registry=${registryAddr}`;
+                                const messageHtml = `
+                  <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT SECURED ON-CHAIN</h2>
+                  <p>Hello <strong>${studentMatch.fullName}</strong>,</p>
+                  <p>Your official academic transcript has been successfully registered on-chain by <strong>${uni ? uni.name : "your university"}</strong>.</p>
+                  <div class="details-box">
+                    <p><span class="label">Student Name:</span> <strong>${studentMatch.fullName}</strong></p>
+                    <p><span class="label">Student ID:</span> <strong>${studentMatch.studentId}</strong></p>
+                    <p><span class="label">Record Hash:</span> <strong>${recordId}</strong></p>
+                    <p><span class="label">Registry:</span> <strong>${registryAddr}</strong></p>
+                  </div>
+                  <p>You can verify this credential instantly through the platform.</p>
+                  <div class="button-container">
+                    <a href="${verifyUrl}" class="button">View Transcript</a>
+                  </div>
+                `;
                                 await transporter.sendMail({
                                     from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
                                     to: studentMatch.email,
                                     subject: `📜 CredAxis — Your Transcript Has Been Issued On-Chain!`,
-                                    html: `
-                    <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-                      <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT SECURED ON-CHAIN</h2>
-                      <p>Hello <strong>${studentMatch.fullName}</strong>,</p>
-                      <p>Your official academic transcript has been successfully registered on-chain by <strong>${uni ? uni.name : "your university"}</strong>.</p>
-                      <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-                        <p style="margin: 5px 0;"><strong>Student Name:</strong> ${studentMatch.fullName}</p>
-                        <p style="margin: 5px 0;"><strong>Student ID:</strong> ${studentMatch.studentId}</p>
-                        <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${recordId}</p>
-                        <p style="margin: 5px 0; font-size: 11px;"><strong>Registry Contract:</strong> ${registryAddr}</p>
-                      </div>
-                      <p>This record is immutable and cryptographically secured. You can view its status or manage access permissions at any time via your dashboard.</p>
-                      <div style="text-align: center; margin: 30px 0;">
-                        <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">VIEW VERIFIED TRANSCRIPT</a>
-                      </div>
-                      <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-                        This email was sent automatically by the CredAxis on-chain indexing agent.
-                      </p>
-                    </div>
-                  `
+                                    html: generateEmailTemplate("Transcript Issued On-Chain", messageHtml)
                                 });
                                 console.log(`[INDEXER EMAIL] Notification sent to student: ${studentMatch.email}`);
                             }
