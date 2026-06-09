@@ -1074,6 +1074,8 @@ app.post("/api/students", async (c) => {
       return c.json({ status: "approved", message: "Onboarding completed. Profile automatically approved via registrar whitelist." })
     }
 
+    const approvalToken = "st_app_" + Math.random().toString(36).slice(2) + Date.now().toString(36)
+
     // Otherwise, create a pending application
     await db.insert(students).values({
       walletAddress: cleanWallet,
@@ -1082,6 +1084,7 @@ app.post("/api/students", async (c) => {
       universityId,
       email: cleanEmail,
       status: "pending",
+      approvalToken,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -1097,6 +1100,10 @@ app.post("/api/students", async (c) => {
         const adminEmail = process.env.SMTP_USER || process.env.GMAIL_USER || "";
         const recipient = uni?.registrarEmail || adminEmail;
         
+        const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+        const approveUrl = `${apiBase}/api/students/approve-via-token?token=${approvalToken}`;
+        const rejectUrl = `${apiBase}/api/students/reject-via-token?token=${approvalToken}`;
+
         const messageHtml = `
           <p>Hello,</p>
           <p>A new student has submitted a profile verification request for your institution.</p>
@@ -1106,9 +1113,10 @@ app.post("/api/students", async (c) => {
             <p><span class="label">Email:</span> <strong><a href="mailto:${cleanEmail}" style="color: #3b82f6; text-decoration: none;">${cleanEmail}</a></strong></p>
             <p><span class="label">University:</span> <strong>${uni ? uni.name : "N/A"}</strong></p>
           </div>
-          <p>Please review and accept or reject this application in the institutional portal.</p>
-          <div class="button-container">
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin" class="button">Review Application</a>
+          <p>Please review and accept or reject this application instantly using the buttons below, or log into the institutional portal.</p>
+          <div class="button-container" style="display: flex; justify-content: center; gap: 20px;">
+            <a href="${approveUrl}" class="button" style="background-color: #10b981; margin-right: 15px; color: #fff;">APPROVE APPLICATION</a>
+            <a href="${rejectUrl}" class="button" style="background-color: #ef4444; color: #fff;">REJECT APPLICATION</a>
           </div>
         `;
 
@@ -1131,6 +1139,83 @@ app.post("/api/students", async (c) => {
     return c.json({ status: "pending", message: "Application submitted. Awaiting registrar approval." })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
+  }
+})
+
+// ─── EMAIL ONE-CLICK APPROVAL ENDPOINTS ───
+
+app.get("/api/students/approve-via-token", async (c) => {
+  try {
+    const token = c.req.query("token")
+    if (!token) return c.html("<h3>Error: Missing token</h3>", 400)
+
+    const studentRecord = await db.query.students.findFirst({
+      where: eq(students.approvalToken, token)
+    })
+
+    if (!studentRecord) return c.html("<h3>Error: Invalid or expired token</h3>", 404)
+
+    if (studentRecord.status !== "pending") {
+      return c.html("<h3>This application has already been processed.</h3>", 400)
+    }
+
+    await db.update(students)
+      .set({
+        status: "approved",
+        actionAt: new Date()
+      })
+      .where(eq(students.id, studentRecord.id))
+
+    return c.html(`
+      <html>
+        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
+          <div style="border: 1px solid #10b981; padding: 40px; display: inline-block; background: #0d1f14; border-radius: 8px;">
+            <h1 style="color: #10b981; margin: 0 0 15px 0;">STUDENT APPROVED</h1>
+            <p style="margin: 0; color: #a3e635;">You have successfully approved this student's profile.</p>
+            <p style="font-size: 12px; color: #888; margin-top: 10px;">The student can now bind their wallet and request transcripts.</p>
+          </div>
+        </body>
+      </html>
+    `)
+  } catch (err: any) {
+    return c.html(`<h3>Error: ${err.message}</h3>`, 500)
+  }
+})
+
+app.get("/api/students/reject-via-token", async (c) => {
+  try {
+    const token = c.req.query("token")
+    if (!token) return c.html("<h3>Error: Missing token</h3>", 400)
+
+    const studentRecord = await db.query.students.findFirst({
+      where: eq(students.approvalToken, token)
+    })
+
+    if (!studentRecord) return c.html("<h3>Error: Invalid or expired token</h3>", 404)
+
+    if (studentRecord.status !== "pending") {
+      return c.html("<h3>This application has already been processed.</h3>", 400)
+    }
+
+    await db.update(students)
+      .set({
+        status: "rejected",
+        actionAt: new Date()
+      })
+      .where(eq(students.id, studentRecord.id))
+
+    return c.html(`
+      <html>
+        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
+          <div style="border: 1px solid #ef4444; padding: 40px; display: inline-block; background: #270e0f; border-radius: 8px;">
+            <h1 style="color: #ef4444; margin: 0 0 15px 0;">STUDENT REJECTED</h1>
+            <p style="margin: 0; color: #fca5a5;">You have rejected this student's verification request.</p>
+          </div>
+        </body>
+      </html>
+    `)
+  } catch (err: any) {
+    return c.html(`<h3>Error: ${err.message}</h3>`, 500)
   }
 })
 
