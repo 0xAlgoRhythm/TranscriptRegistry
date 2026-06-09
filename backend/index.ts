@@ -1652,31 +1652,32 @@ app.post("/api/public/request-access", async (c) => {
       const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`
       const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`
 
+      const messageHtml = `
+        <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT ACCESS REQUEST</h2>
+        <p>Hello <strong>${studentDetails.fullName}</strong>,</p>
+        <p>An external verifier has requested permission to verify your official academic transcript on-chain.</p>
+        <div class="details-box">
+          <p><span class="label">Requester:</span> <strong>${requesterName}</strong></p>
+          <p><span class="label">Organization:</span> <strong>${requesterOrg}</strong></p>
+          <p><span class="label">Email:</span> <strong><a href="mailto:${requesterEmail}" style="color: #3b82f6; text-decoration: none;">${requesterEmail}</a></strong></p>
+          <p><span class="label">Record Hash:</span> <strong>${recordId}</strong></p>
+        </div>
+        <p>To protect your privacy, this verifier cannot see your GPA, major, or grades unless you approve.</p>
+        <div class="button-container" style="display: flex; justify-content: center; gap: 20px;">
+          <a href="${approveUrl}" class="button" style="background-color: #10b981; margin-right: 15px;">APPROVE ACCESS</a>
+          <a href="${rejectUrl}" class="button" style="background-color: #ef4444; color: #fff;">REJECT ACCESS</a>
+        </div>
+        <p style="font-size: 10px; color: #71717a; border-top: 1px solid #27272a; padding-top: 15px; margin-top: 20px;">
+          This access request token is unique. Approving gives access for 30 days. You can revoke it anytime.
+        </p>
+      `;
+
       await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
         to: studentDetails.email,
+        replyTo: requesterEmail,
         subject: "🔒 CredAxis — Access Request to Verify your Transcript",
-        html: `
-          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-            <h2 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 10px;">TRANSCRIPT ACCESS REQUEST</h2>
-            <p>Hello <strong>${studentDetails.fullName}</strong>,</p>
-            <p>An external verifier has requested permission to verify your official academic transcript on-chain.</p>
-            <div style="background: #111; padding: 15px; border-radius: 4px; margin: 20px 0; border: 1px dashed #444;">
-              <p style="margin: 5px 0;"><strong>Requester:</strong> ${requesterName}</p>
-              <p style="margin: 5px 0;"><strong>Organization:</strong> ${requesterOrg}</p>
-              <p style="margin: 5px 0;"><strong>Email:</strong> ${requesterEmail}</p>
-              <p style="margin: 5px 0; font-size: 11px;"><strong>Record Hash:</strong> ${recordId}</p>
-            </div>
-            <p>To protect your privacy, this verifier cannot see your GPA, major, or grades unless you approve.</p>
-            <div style="text-align: center; margin: 30px 0; display: flex; justify-content: center; gap: 20px;">
-              <a href="${approveUrl}" style="background-color: #10b981; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-right: 15px;">APPROVE ACCESS</a>
-              <a href="${rejectUrl}" style="background-color: #ef4444; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">REJECT ACCESS</a>
-            </div>
-            <p style="font-size: 10px; color: #666; border-top: 1px solid #222; padding-top: 15px; margin-top: 20px;">
-              This access request token is unique. Approving gives access for 30 days. You can revoke it anytime.
-            </p>
-          </div>
-        `
+        html: generateEmailTemplate("Transcript Access Request", messageHtml)
       })
     }
 
