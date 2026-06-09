@@ -44,6 +44,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
   const [fullName, setFullName] = useState("")
   const [studentId, setStudentId] = useState("")
   const [selectedUni, setSelectedUni] = useState("")
+  const [customEmail, setCustomEmail] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -110,7 +111,10 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
   const handleOnboardingSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address || !user) return
-    if (!fullName || !studentId || !selectedUni) {
+
+    const defaultEmail = getPrivyEmail(user) || ""
+
+    if (!fullName || !studentId || !selectedUni || (!defaultEmail && !customEmail)) {
       startTransition(() => {
         setError("Please fill in all fields.")
       })
@@ -122,7 +126,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       setError("")
     })
 
-    const privyEmail = user.email?.address || ""
+    const privyEmail = getPrivyEmail(user) || ""
     
     const uni = universities.find(u => u.universityId === parseInt(selectedUni))
     const uniName = uni ? uni.name.toLowerCase() : ""
@@ -136,7 +140,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       domain = `st.${acronym}.edu.gh`
     }
 
-    const calculatedEmail = privyEmail || `${studentId}@${domain}`
+    const calculatedEmail = privyEmail || customEmail || `${studentId}@${domain}`
 
     try {
       const res = await fetch(`${API_URL}/api/students`, {
@@ -179,6 +183,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       setFullName("")
       setStudentId("")
       setSelectedUni("")
+      setCustomEmail("")
     })
   }
 
@@ -253,12 +258,25 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
               </Select>
             </div>
 
-            {defaultEmail && (
+            {defaultEmail ? (
               <div className="space-y-1.5">
                 <Label className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">Verified Email Address</Label>
                 <div className="font-mono text-xs bg-muted/40 px-3 py-2 border border-border/40 rounded text-muted-foreground">
                   {defaultEmail}
                 </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-mono font-bold uppercase tracking-wider">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email address"
+                  value={customEmail}
+                  onChange={(e) => setCustomEmail(e.target.value)}
+                  className="bg-background border-border/60"
+                  required
+                />
               </div>
             )}
 
