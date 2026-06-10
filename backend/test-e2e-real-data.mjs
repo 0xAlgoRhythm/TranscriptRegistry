@@ -32,7 +32,10 @@ async function runE2ETests() {
     })
 
     const registerData = await registerRes.json()
-    if (registerData.status !== "pending") throw new Error("Student not pending.")
+    if (registerData.status !== "pending") {
+      console.log(`    ❌ Registration failed. Response:`, registerData)
+      throw new Error("Student not pending.")
+    }
     console.log(`    ✅ Student application registered (Pending)`)
 
     // --- Phase B: Registrar Email Approval ---
