@@ -493,6 +493,22 @@ app.post("/api/transcripts/request", async (c) => {
       )
     })
 
+    // Rate Limiting: Max 3 transcript generation requests per 6 months (Semester Quota)
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+
+    const requestCount = await db.select({ count: sql`count(*)` })
+      .from(transcriptRequests)
+      .where(and(
+        eq(transcriptRequests.studentWallet, cleanWallet),
+        sql`${transcriptRequests.createdAt} > ${sixMonthsAgo.toISOString()}`
+      ))
+    
+    const count = parseInt(requestCount[0].count as string) || 0
+    if (count >= 3 && !existingReq) {
+      return c.json({ error: "Semester quota exceeded: You have reached the maximum of 3 official transcript requests for this term. Please contact your registrar." }, 429)
+    }
+
     if (!existingReq) {
       await db.insert(transcriptRequests).values({
         studentWallet: cleanWallet,
@@ -1572,7 +1588,7 @@ app.get("/api/public/verify", async (c) => {
     const token = c.req.query("token")?.trim()
 
     if (!recordId && !studentId) {
-      return c.json({ error: "Provide recordId or studentId parameter" }, 400)
+      return c.json({ error: "Provide recordId or studentId parameter", code: "MISSING_PARAMS" }, 400)
     }
 
     let tx: any = null
@@ -1609,12 +1625,13 @@ app.get("/api/public/verify", async (c) => {
     }
 
     if (!tx) {
-      return c.json({ error: "Transcript record not found" }, 404)
+      return c.json({ error: "Transcript record not found in the registry.", code: "NOT_FOUND" }, 404)
     }
 
     // Check Token authorization
     let isAuthorized = false
     let authorizedBy = ""
+    let tokenErrorCode = ""
 
     // Rule: If anyone scans QR code / accesses by recordId, we show full results.
     // Otherwise (searched by student index/ID), it requires student-approved token access.
@@ -1635,11 +1652,11 @@ app.get("/api/public/verify", async (c) => {
         if (!pRequest.expiresAt || new Date(pRequest.expiresAt).getTime() > Date.now()) {
           isAuthorized = true
           authorizedBy = `Public Approval Request (${pRequest.requesterEmail})`
+        } else {
+          tokenErrorCode = "EXPIRED_TOKEN"
         }
-      }
-
-      // 2. Check if token is a valid, active institutional verifier token
-      if (!isAuthorized) {
+      } else {
+        // 2. Check if token is a valid, active institutional verifier token
         const iToken = await db.query.issuedTokens.findFirst({
           where: and(
             eq(issuedTokens.token, token),
@@ -1651,9 +1668,18 @@ app.get("/api/public/verify", async (c) => {
           if (!iToken.expiresAt || new Date(iToken.expiresAt).getTime() > Date.now()) {
             isAuthorized = true
             authorizedBy = `Institutional API Key (${iToken.institutionName})`
+          } else {
+            tokenErrorCode = "EXPIRED_TOKEN"
           }
+        } else {
+          tokenErrorCode = "INVALID_TOKEN"
         }
       }
+    }
+
+    // Explicitly reject if a token was provided but failed validation
+    if (!isAuthorized && token && tokenErrorCode) {
+      return c.json({ error: "The provided access token is invalid or expired.", code: tokenErrorCode }, 403)
     }
 
     // Resolve university details (always public)
