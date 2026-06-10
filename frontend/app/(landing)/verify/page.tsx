@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
   ShieldCheck, Search, FileText, Mail, Download, Key, 
-  User, Building2, HelpCircle, Lock, AlertCircle, CheckCircle, Send, Loader2
+  User, Building2, HelpCircle, Lock, AlertCircle, CheckCircle, Send, Loader2, Clock
 } from "lucide-react"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { formatTimestamp } from "@/lib/utils"
@@ -30,6 +30,7 @@ function VerifyPageContent() {
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [error, setError] = useState("")
+  const [errorCode, setErrorCode] = useState("")
   const [result, setResult] = useState<any>(null)
   const [metaDetails, setMetaDetails] = useState<any>(null)
   
@@ -67,6 +68,7 @@ function VerifyPageContent() {
     if (!query) return
     setLoading(true)
     setError("")
+    setErrorCode("")
     setResult(null)
     setMetaDetails(null)
     setRequestSuccess(false)
@@ -87,6 +89,7 @@ function VerifyPageContent() {
 
       if (!res.ok) {
         setError(data.error || "No matching transcript record found.")
+        setErrorCode(data.code || "UNKNOWN_ERROR")
       } else {
         setResult(data)
         
@@ -97,6 +100,7 @@ function VerifyPageContent() {
       }
     } catch (err) {
       setError("Failed to connect to the verification node.")
+      setErrorCode("NETWORK_ERROR")
     } finally {
       setLoading(false)
     }
@@ -289,12 +293,43 @@ function VerifyPageContent() {
 
         {/* Error State */}
         {searched && !loading && error && (
-          <GlowCard className="p-8 text-center space-y-3 border border-ca-danger/20 bg-ca-danger/5">
-            <AlertCircle className="h-8 w-8 text-ca-danger mx-auto" />
-            <h2 className="text-md font-mono font-bold uppercase text-ca-danger">Record Verification Failed</h2>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto font-mono">
+          <GlowCard className={`p-8 text-center space-y-3 border ${
+            errorCode === "EXPIRED_TOKEN" ? "border-ca-warning/20 bg-ca-warning/5" :
+            errorCode === "NOT_FOUND" ? "border-muted/20 bg-muted/5" :
+            "border-ca-danger/20 bg-ca-danger/5"
+          }`}>
+            {errorCode === "EXPIRED_TOKEN" ? (
+              <Clock className="h-8 w-8 text-ca-warning mx-auto animate-pulse" />
+            ) : errorCode === "NOT_FOUND" ? (
+              <Search className="h-8 w-8 text-muted-foreground mx-auto" />
+            ) : (
+              <AlertCircle className="h-8 w-8 text-ca-danger mx-auto" />
+            )}
+            
+            <h2 className={`text-md font-mono font-bold uppercase ${
+              errorCode === "EXPIRED_TOKEN" ? "text-ca-warning" :
+              errorCode === "NOT_FOUND" ? "text-foreground" :
+              "text-ca-danger"
+            }`}>
+              {errorCode === "EXPIRED_TOKEN" ? "Access Token Expired" :
+               errorCode === "NOT_FOUND" ? "Record Not Found" :
+               errorCode === "MISSING_PARAMS" ? "Invalid Search Query" :
+               errorCode === "NETWORK_ERROR" ? "Network Connection Failed" :
+               "Record Verification Failed"}
+            </h2>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto font-mono leading-relaxed">
               {error}
             </p>
+            {errorCode === "EXPIRED_TOKEN" && (
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Please ask the student to generate a new verification link, or use an active Institutional API key.
+              </p>
+            )}
+            {errorCode === "NETWORK_ERROR" && (
+              <Button onClick={() => triggerVerify(searchQuery, tokenInput)} variant="outline" size="sm" className="mt-4 font-mono text-xs">
+                Retry Connection
+              </Button>
+            )}
           </GlowCard>
         )}
 
