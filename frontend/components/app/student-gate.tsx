@@ -236,7 +236,6 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 className="bg-background border-border/60"
-                required
               />
             </div>
 
@@ -248,13 +247,12 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 className="bg-background border-border/60"
-                required
               />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="uni" className="text-xs font-mono font-bold uppercase tracking-wider">Select University</Label>
-              <Select value={selectedUni} onValueChange={setSelectedUni} required>
+              <Select value={selectedUni} onValueChange={setSelectedUni}>
                 <SelectTrigger id="uni" className="bg-background border-border/60 font-mono text-xs text-left">
                   <SelectValue placeholder="Select your institution" />
                 </SelectTrigger>
@@ -285,7 +283,6 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
                   value={customEmail}
                   onChange={(e) => setCustomEmail(e.target.value)}
                   className="bg-background border-border/60"
-                  required
                 />
               </div>
             )}
