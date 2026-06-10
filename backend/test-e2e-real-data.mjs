@@ -51,7 +51,8 @@ async function runE2ETests() {
     if (approveRes.ok && approveRes.url.includes("status=student_approved")) {
       console.log(`    ✅ Success! Student status updated via token. Redirected to: ${approveRes.url}`)
     } else {
-      throw new Error(`Approval failed. Expected redirect to student_approved, got: ${approveRes.url}`)
+      const errorText = await approveRes.text()
+      throw new Error(`Approval failed. Status: ${approveRes.status}. URL: ${approveRes.url}. Body: ${errorText}`)
     }
 
     // --- Phase C: Verifier Access Control & Verify ---
