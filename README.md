@@ -4,18 +4,20 @@
   <p><strong>A highly secure, decentralized Transcript Management platform built on Base Sepolia.</strong></p>
 </div>
 
-CredAxis brings a premium "Dark Fintech" aesthetic and zero-compromise security to academic credentialing. It allows universities to issue cryptographically verifiable transcripts, allows students to own their academic records via Web3 wallets, and allows third-party verifiers (employers) to independently audit credentials on-chain.
+CredAxis brings a premium **"Dark Fintech"** aesthetic and zero-compromise security to academic credentialing. It allows universities to issue cryptographically verifiable transcripts, allows students to own their academic records via Web3 wallets, and allows third-party verifiers (employers) to independently audit credentials on-chain.
 
 ---
 
-## 🌟 Platform Features
+## 🌟 Platform Features & Brand Identity
 
-- ✅ **Seamless Identity & Auth**: Powered by [Privy](https://privy.io/) for embedded wallets and secure email verification.
+- ✅ **Dark Fintech UI**: A sleek, premium Next.js interface inspired by ZenithPay, heavily utilizing Electric Indigo (`#8b5cf6`) and pure darks (`#0b0b0f`) for a world-class user experience.
+- ✅ **Seamless Identity & Auth**: Powered by [Privy](https://privy.io/) for embedded wallets and secure email verification. No native crypto extensions required for students.
 - ✅ **Decentralized Storage**: Transcripts are securely pinned to IPFS via Pinata, guaranteeing absolute permanence.
 - ✅ **Base Sepolia Integration**: Lightning-fast, ultra-cheap L2 rollups ensuring sub-second transcript verification.
-- ✅ **Beacon Proxy Architecture**: Smart contracts utilize the Upgradeable Beacon pattern for isolated university registries with 82% gas savings.
-- ✅ **Beautiful Dark Fintech UI**: A sleek, premium Next.js interface inspired by ZenithPay, heavily utilizing Electric Indigo (`#8b5cf6`) and pure darks (`#0b0b0f`).
+- ✅ **Beacon Proxy Architecture**: Smart contracts utilize the Upgradeable Beacon pattern for isolated university registries with **82% gas savings**.
 - ✅ **Automated Email Engine**: Node/Hono backend routing customized notification HTML emails to registrars and students dynamically.
+
+---
 
 ## 🏗️ System Architecture
 
@@ -25,18 +27,58 @@ CredAxis is a multi-layered ecosystem:
 2. **The Backend API (`/backend`)**: A Hono REST API powered by Drizzle ORM connecting to PostgreSQL and Viem for on-chain indexing.
 3. **The Frontend (`/frontend`)**: A Next.js App Router project leveraging React 19, Tailwind CSS, and Privy for the presentation layer.
 
-For deep technical specifications, please explore the `/docs` directory.
+### Overall Flow Architecture
 
-## 📚 Documentation
+```mermaid
+flowchart TD
+  subgraph Frontend["Frontend Layer (Next.js App Router)"]
+    UI["Web Application (Dark Fintech)"]
+    Wagmi["Wagmi / Viem hooks"]
+    Auth["Privy Auth"]
+    RBAC["Role-Based Access Control"]
+  end
 
-Detailed documentation and architectural blueprints are located in the `docs/` folder:
+  subgraph Backend["Backend Layer (Hono Node API)"]
+    API["REST API Endpoints"]
+    Indexer["Viem Event Indexer (Microservice)"]
+    Drizzle["Drizzle ORM"]
+  end
 
-- 📄 [System Overview](docs/system.md) - The complete student onboarding and transcript verification flow.
-- 📄 [Architecture Diagram](docs/ARCHITECTURE.md) - Deep dive into the Upgradeable Beacon Proxy structure.
-- 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Instructions for deploying the full stack.
-- 📄 [Blockchain Testing](docs/BLOCKCHAIN_TESTING.md) - Information on smart contract testing suites.
-- 📄 [Beacon Deployment Details](docs/BEACON_DEPLOYMENT.md) - The technical specifics of factory deployments.
-- 📄 [Full System Audit](docs/SYSTEM_REVIEW_AND_AUDIT.md) - Current state, completed phases, and outstanding issues.
+  subgraph DB["Database Layer (PostgreSQL)"]
+    Postgres[(Indexed Blockchain Data)]
+  end
+
+  subgraph Blockchain["Base Sepolia Blockchain (EVM)"]
+    Factory["UniversityFactoryBeacon (Registry Manager)"]
+    Beacon["UpgradeableBeacon"]
+    Proxies["Beacon Proxy Instances (Registries)"]
+  end
+
+  %% Relationships
+  UI <--> |API Calls| API
+  Wagmi <--> |RPC| Blockchain
+  Indexer <--> |Listen to Events| Blockchain
+  API <--> Drizzle
+  Indexer <--> Drizzle
+  Drizzle <--> Postgres
+  Factory --> |Creates| Proxies
+  Factory --> |Reads impl from| Beacon
+```
+
+---
+
+## 📊 Contract Addresses (Base Sepolia)
+
+| Contract | Address | Etherscan |
+|----------|---------|-----------|
+| **UniversityFactoryBeacon** | `0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e` | [View](https://sepolia.etherscan.io/address/0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e) |
+| **Implementation** | `0x39F6408AaF6f7Ff533982B4fc62e480004D39dAe` | [View](https://sepolia.etherscan.io/address/0x39F6408AaF6f7Ff533982B4fc62e480004D39dAe) |
+| **Beacon** | `0x1f442707955F41BFD180a23D88f84E616167A319` | [View](https://sepolia.etherscan.io/address/0x1f442707955F41BFD180a23D88f84E616167A319) |
+| **KNUST Proxy** | `0x9e0a1bd17c0f0190FB64dABe8cB54E871D3712D3` | [View](https://sepolia.etherscan.io/address/0x9e0a1bd17c0f0190FB64dABe8cB54E871D3712D3) |
+| **UG Proxy** | `0xD207B844f595AF7A6b43191633D8bF11C9bB8316` | [View](https://sepolia.etherscan.io/address/0xD207B844f595AF7A6b43191633D8bF11C9bB8316) |
+| **UCC Proxy** | `0x049e478B03eb3a2f8B83C0e58895488b51EE971C` | [View](https://sepolia.etherscan.io/address/0x049e478B03eb3a2f8B83C0e58895488b51EE971C) |
+
+---
 
 ## 🚀 Quick Start (Local Development)
 
@@ -69,6 +111,104 @@ From the Platform Manager, you can:
 - Start a Local Anvil Node
 - Run Smart Contract Tests
 - Deploy Contracts
+
+---
+
+## 📝 Testing & Deployment
+
+### Run Blockchain Tests
+The smart contracts are thoroughly tested via Foundry with >95% coverage:
+
+```bash
+# Run all tests
+forge test -vv
+
+# Run with gas reporting
+forge test --gas-report
+
+# Run coverage
+forge coverage
+```
+
+### Deploy to Testnet
+
+```bash
+# Deploy beacon factory
+forge script script/DeployBeacon.s.sol:DeployBeaconSystem \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --broadcast \
+  --verify
+
+# Deploy universities
+forge script script/DeployBeacon.s.sol:DeployTestUniversitiesBeacon \
+  --rpc-url $BASE_SEPOLIA_RPC_URL \
+  --broadcast
+```
+
+---
+
+## 📖 Smart Contract Documentation
+
+### `TranscriptRegistryUpgradeable`
+Main contract for managing university transcripts.
+
+**Key Functions:**
+- `registerTranscript(bytes32 studentHash, string metadataCID, bytes32 fileHash)` - Register new transcript
+- `grantAccess(bytes32 recordId, address verifier, uint256 duration)` - Grant verifier access
+- `verifyTranscript(bytes32 recordId, bytes32 fileHash)` - Verify transcript authenticity
+- `revokeAccess(bytes32 recordId, address verifier)` - Revoke verifier access
+
+### `UniversityFactoryBeacon`
+Factory for deploying university-specific registries using beacon proxy pattern.
+
+**Key Functions:**
+- `deployUniversityProxy(string name, address registrar)` - Deploy new university
+- `upgradeImplementation(address newImplementation)` - Upgrade all universities at once
+- `getUniversity(uint256 id)` - Get university information
+
+---
+
+## 💰 Gas Costs & Efficiency
+
+By utilizing the Upgradeable Beacon pattern over standard proxies or standard deployments, CredAxis drastically reduces costs for onboarding new universities.
+
+| Operation | Old System | Beacon Proxy | Savings |
+|-----------|-----------|--------------|---------|
+| Deploy University | ~2,800,000 gas | ~488,000 gas | **82%** |
+| Register Transcript | ~150,000 gas | ~150,000 gas | 0% |
+| Verify Transcript | ~50,000 gas | ~50,000 gas | 0% |
+
+---
+
+## 🔐 Security & Hardening
+
+CredAxis takes security extremely seriously, especially given the sensitivity of academic records:
+
+- ✅ **Strict Access Control**: OpenZeppelin RBAC modifiers (`onlyAdmin`, `onlyRegistrar`).
+- ✅ **Reentrancy Protection**: `nonReentrant` modifiers applied to all state-changing functions.
+- ✅ **Stateless Verification**: Verification happens exclusively via cryptographically signed hashes and IPFS CIDs—zero PII is stored on-chain.
+- ✅ **Rate Limiting**: Backend limits students to 3 official transcript requests per semester to prevent abuse.
+- ✅ **Graceful Degradation**: Frontend dynamically catches missing records, expired tokens, and RPC failures with beautiful, branded error states instead of raw 500 pages.
+
+---
+
+## 🔍 Full System Review & Audit
+
+This section acts as the source-of-truth for the system's current implementation status.
+
+### ✅ Completed Components
+- **Smart Contract Layer**: Deployed and fully tested with >95% coverage. 82% gas savings achieved.
+- **Backend Engine (Hono + Node.js)**: Email notification system, automated workflow redirections, and full REST APIs connected to PostgreSQL (Drizzle ORM).
+- **Frontend App**: Flawless integration of Privy Auth, Dark Fintech Brand guidelines, multi-role dashboards (Registrar, Student, Verifier), and graceful error handling boundaries.
+- **Transcript PDF Generator Quotas**: Built-in logic restricts students from endlessly requesting PDF generation from Registrars.
+- **Registrar API Dashboards**: Universities can generate JWT-style long-lived API keys for their internal SIS integrations seamlessly.
+
+### ⚠️ Known Issues & Technical Debt
+1. **RPC Rate Limiting**: The Viem client on the backend occasionally hits `fetch failed` if the public Base Sepolia node is overwhelmed. Recommend upgrading to Alchemy/Infura for production.
+2. **Privy Auth Edge Cases**: Email authentication automatically generates an embedded wallet, but students must actively click "Bind Wallet" on their dashboard to synchronize the database.
+3. **Smart Contract Admin Privileges**: The `UniversityFactoryBeacon` is currently owned by a single deployer EOA. Must transition to a Safe Multi-Sig before mainnet.
+
+---
 
 ## 🤝 Contributing
 
