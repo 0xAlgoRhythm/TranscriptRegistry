@@ -28,7 +28,10 @@ sequenceDiagram
     Note over Registrar, Ledger: 2. Whitelist & Issuance Flow
     Registrar->>BE: Onboard Student Whitelist (CSV or Form)
     BE->>BE: Create Pending Student profile mapped by StudentID/Email
-    Student->>BE: Login via Privy (links Wallet)
+    Student->>BE: Register via `/api/students` (Generates `approvalToken`)
+    BE->>Registrar: Send One-Click Approval Email (HTML Branded)
+    Registrar->>BE: Click `APPROVE APPLICATION` (`/api/students/approve-via-token`)
+    Student->>BE: Login via Privy (links Wallet automatically)
     BE->>BE: Set Student Wallet, change status to "Approved"
     Registrar->>BE: Calculate GPA & Generate PDF Transcript
     Note over Registrar, BE: Embeds a unique pre-mint tempRecordId in the QR Code URL
@@ -47,6 +50,7 @@ sequenceDiagram
 
     alt Flow A: Verifier scans Transcript QR Code (Direct Record ID lookup)
         Verifier->>BE: Query public verify by recordId / tempRecordId
+        Note over Verifier, BE: Backend uses case-insensitive LOWER() matching to fix QR scanners
         BE->>BE: If not found in transcripts, lookup tempRecordId in ipfs_uploads & map by fileHash
         BE-->>Verifier: Auto-authorize (Direct printout possession implies consent)
         Verifier->>Ledger: verifyTranscript(recordId, Uploaded_PDF_SHA256)

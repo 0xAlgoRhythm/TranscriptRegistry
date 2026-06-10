@@ -1166,17 +1166,30 @@ app.get("/api/students/approve-via-token", async (c) => {
       })
       .where(eq(students.id, studentRecord.id))
 
-    return c.html(`
-      <html>
-        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
-          <div style="border: 1px solid #10b981; padding: 40px; display: inline-block; background: #0d1f14; border-radius: 8px;">
-            <h1 style="color: #10b981; margin: 0 0 15px 0;">STUDENT APPROVED</h1>
-            <p style="margin: 0; color: #a3e635;">You have successfully approved this student's profile.</p>
-            <p style="font-size: 12px; color: #888; margin-top: 10px;">The student can now bind their wallet and request transcripts.</p>
-          </div>
-        </body>
-      </html>
-    `)
+    // Send approval email to student
+    if (transporter) {
+      const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+      const loginUrl = `${frontendBase}/dashboard`
+
+      const messageHtml = `
+        <h2 style="color: #10b981; margin-top: 0;">APPLICATION APPROVED</h2>
+        <p>Dear <strong>${studentRecord.fullName}</strong>,</p>
+        <p>Your student registration has been successfully approved by the university registrar.</p>
+        <p>You may now log into your dashboard to manage your digital identity and request official transcripts.</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${loginUrl}" class="button" style="background-color: #10b981; color: #fff;">ACCESS DASHBOARD</a>
+        </div>
+      `
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: studentRecord.email,
+        subject: "✓ Student Profile Approved — CredAxis",
+        html: generateEmailTemplate("Application Approved", messageHtml)
+      })
+    }
+
+    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+    return c.redirect(`${frontendBase}/admin?status=student_approved`)
   } catch (err: any) {
     return c.html(`<h3>Error: ${err.message}</h3>`, 500)
   }
@@ -1204,16 +1217,29 @@ app.get("/api/students/reject-via-token", async (c) => {
       })
       .where(eq(students.id, studentRecord.id))
 
-    return c.html(`
-      <html>
-        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
-          <div style="border: 1px solid #ef4444; padding: 40px; display: inline-block; background: #270e0f; border-radius: 8px;">
-            <h1 style="color: #ef4444; margin: 0 0 15px 0;">STUDENT REJECTED</h1>
-            <p style="margin: 0; color: #fca5a5;">You have rejected this student's verification request.</p>
-          </div>
-        </body>
-      </html>
-    `)
+    // Send rejection email to student
+    if (transporter) {
+      const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+      const messageHtml = `
+        <h2 style="color: #ef4444; margin-top: 0;">APPLICATION REJECTED</h2>
+        <p>Dear <strong>${studentRecord.fullName}</strong>,</p>
+        <p>Your student registration request has been <strong>rejected</strong> by the university registrar.</p>
+        <p>This typically occurs if your provided details (Name, Student ID, or Email) do not match the official institutional records.</p>
+        <p>Please review your details and contact your university's administration office if you believe this is an error.</p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${frontendBase}/dashboard" class="button" style="background-color: #ef4444; color: #fff;">RETURN TO DASHBOARD</a>
+        </div>
+      `
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: studentRecord.email,
+        subject: "✕ Student Profile Rejected — CredAxis",
+        html: generateEmailTemplate("Application Rejected", messageHtml)
+      })
+    }
+
+    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+    return c.redirect(`${frontendBase}/admin?status=student_rejected`)
   } catch (err: any) {
     return c.html(`<h3>Error: ${err.message}</h3>`, 500)
   }
@@ -1807,32 +1833,23 @@ app.get("/api/public/access-requests/approve", async (c) => {
         from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
         to: request.requesterEmail,
         subject: "✓ Access Granted — CredAxis Transcript Verification",
-        html: `
-          <div style="font-family: monospace; background: #0b0b0f; color: #fff; padding: 25px; border: 1px solid #333; max-width: 600px;">
-            <h2 style="color: #10b981; border-bottom: 1px solid #222; padding-bottom: 10px;">ACCESS GRANTED</h2>
-            <p>Dear <strong>${request.requesterName}</strong>,</p>
-            <p>Your request to verify the academic transcript record on-chain has been <strong>approved</strong> by the student.</p>
-            <p>You can access the full verified transcript details using the unique link below. This link will be active for 30 days.</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${accessUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">VIEW VERIFIED TRANSCRIPT</a>
-            </div>
-            <p style="font-size: 11px; color: #888;">Record ID: ${request.recordId}</p>
+        html: generateEmailTemplate("Access Granted", `
+          <h2 style="color: #10b981; margin-top: 0;">ACCESS GRANTED</h2>
+          <p>Dear <strong>${request.requesterName}</strong>,</p>
+          <p>Your request to verify the academic transcript record on-chain has been <strong>approved</strong> by the student.</p>
+          <p>You can access the full verified transcript details using the unique link below. This link will be active for 30 days.</p>
+          <div class="button-container">
+            <a href="${accessUrl}" class="button">VIEW VERIFIED TRANSCRIPT</a>
           </div>
-        `
+          <div class="details-box" style="margin-top: 30px;">
+            <p><span class="label">Record ID:</span> <strong>${request.recordId}</strong></p>
+          </div>
+        `)
       })
     }
 
-    return c.html(`
-      <html>
-        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
-          <div style="border: 1px solid #10b981; padding: 40px; display: inline-block; background: #0d1f14; border-radius: 8px;">
-            <h1 style="color: #10b981; margin: 0 0 15px 0;">ACCESS GRANTED</h1>
-            <p style="margin: 0; color: #a3e635;">You have successfully approved this verification request.</p>
-            <p style="font-size: 12px; color: #888; margin-top: 10px;">The verifier has been notified via email with their access token.</p>
-          </div>
-        </body>
-      </html>
-    `)
+    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+    return c.redirect(`${frontendBase}/dashboard?status=access_granted`)
   } catch (err: any) {
     return c.html(`<h3>Error: ${err.message}</h3>`, 500)
   }
@@ -1851,17 +1868,8 @@ app.get("/api/public/access-requests/reject", async (c) => {
       })
       .where(eq(publicAccessRequests.token, token))
 
-    return c.html(`
-      <html>
-        <body style="font-family: monospace; background: #0b0b0f; color: #fff; text-align: center; padding: 100px 20px;">
-          <div style="border: 1px solid #ef4444; padding: 40px; display: inline-block; background: #270e0f; border-radius: 8px;">
-            <h1 style="color: #ef4444; margin: 0 0 15px 0;">ACCESS DENIED</h1>
-            <p style="margin: 0; color: #fca5a5;">You have rejected this verification request.</p>
-            <p style="font-size: 12px; color: #888; margin-top: 10px;">The verifier's access token remains blocked.</p>
-          </div>
-        </body>
-      </html>
-    `)
+    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz"
+    return c.redirect(`${frontendBase}/dashboard?status=access_denied`)
   } catch (err: any) {
     return c.html(`<h3>Error: ${err.message}</h3>`, 500)
   }

@@ -98,9 +98,25 @@ sequenceDiagram
   Registrar->>UI: Input Student Data & Document
   UI->>UI: Calculate SHA-256 File Hash
   UI->>API: Upload Metadata (Simulated IPFS)
-  API-->>UI: Return CID & Metadata Hash
-  UI->>Chain: Send transaction: registerTranscript(studentHash, metadataCID, fileHash)
-  Chain-->>UI: Confirm Tx & Emit TranscriptRegistered
-  Note over API,Chain: The Indexer catches this event in the background and saves it to Postgres.
+  API-->>UI: Return tempRecordId
+  UI->>Chain: registerTranscript(hash, metaCID, fileHash)
+  Chain-->>UI: Transaction Confirmed
 ```
 
+## 5) Student Registration & Email Approval Flow
+
+```mermaid
+sequenceDiagram
+  participant Student as Student (Frontend)
+  participant API as Hono Backend
+  participant DB as PostgreSQL
+  participant Registrar as Registrar (Email)
+
+  Student->>API: POST /api/students (Name, ID, Email, Wallet)
+  API->>DB: Insert Student (status: "pending", generates approvalToken)
+  API->>Registrar: Send SMTP Email with tokenized HTML buttons
+  Registrar->>API: Click "APPROVE APPLICATION" in Email
+  API->>DB: Query by approvalToken, update status to "approved"
+  API-->>Registrar: Return Success HTML Page
+  Student->>Student: Can now bind wallet and request transcripts
+```
