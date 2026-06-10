@@ -6,7 +6,8 @@ import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
 import { 
   ShieldCheck, FileText, Mail, Download, Key, Lock,
-  ArrowLeft, Building2, HelpCircle, AlertCircle, CheckCircle, Send, Loader2
+  ArrowLeft, Building2, HelpCircle, AlertCircle, CheckCircle, Send, Loader2,
+  Clock, Search
 } from "lucide-react"
 import { generateTranscriptPDF } from "@/lib/pdf-generator"
 import { formatTimestamp } from "@/lib/utils"
@@ -28,6 +29,7 @@ function VerifyDetailPageContent() {
   
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [errorCode, setErrorCode] = useState("")
   const [result, setResult] = useState<any>(null)
   const [metaDetails, setMetaDetails] = useState<any>(null)
   
@@ -49,6 +51,7 @@ function VerifyDetailPageContent() {
     if (!recordId) return
     setLoading(true)
     setError("")
+    setErrorCode("")
     setResult(null)
     setMetaDetails(null)
     setRequestSuccess(false)
@@ -65,6 +68,7 @@ function VerifyDetailPageContent() {
 
       if (!res.ok) {
         setError(data.error || "Verification failed. Record not found.")
+        setErrorCode(data.code || "UNKNOWN_ERROR")
       } else {
         setResult(data)
         
@@ -75,6 +79,7 @@ function VerifyDetailPageContent() {
       }
     } catch (err) {
       setError("Failed to connect to the verification node.")
+      setErrorCode("NETWORK_ERROR")
     } finally {
       setLoading(false)
     }
@@ -225,12 +230,41 @@ function VerifyDetailPageContent() {
 
         {/* Error State */}
         {!loading && error && (
-          <GlowCard className="p-8 text-center space-y-4 border border-ca-danger/25 bg-ca-danger/5">
-            <AlertCircle className="h-10 w-10 text-ca-danger mx-auto animate-pulse" />
-            <h2 className="text-lg font-mono font-bold uppercase tracking-wider text-ca-danger">RECORD NOT FOUND</h2>
+          <GlowCard className={`p-8 text-center space-y-4 border ${
+            errorCode === "EXPIRED_TOKEN" ? "border-ca-warning/25 bg-ca-warning/5" :
+            errorCode === "NOT_FOUND" ? "border-muted/25 bg-muted/5" :
+            "border-ca-danger/25 bg-ca-danger/5"
+          }`}>
+            {errorCode === "EXPIRED_TOKEN" ? (
+              <Clock className="h-10 w-10 text-ca-warning mx-auto animate-pulse" />
+            ) : errorCode === "NOT_FOUND" ? (
+              <Search className="h-10 w-10 text-muted-foreground mx-auto" />
+            ) : (
+              <AlertCircle className="h-10 w-10 text-ca-danger mx-auto animate-pulse" />
+            )}
+            <h2 className={`text-lg font-mono font-bold uppercase tracking-wider ${
+              errorCode === "EXPIRED_TOKEN" ? "text-ca-warning" :
+              errorCode === "NOT_FOUND" ? "text-foreground" :
+              "text-ca-danger"
+            }`}>
+              {errorCode === "EXPIRED_TOKEN" ? "ACCESS TOKEN EXPIRED" :
+               errorCode === "NOT_FOUND" ? "RECORD NOT FOUND" :
+               errorCode === "NETWORK_ERROR" ? "NETWORK CONNECTION FAILED" :
+               "VERIFICATION FAILED"}
+            </h2>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
               {error}
             </p>
+            {errorCode === "EXPIRED_TOKEN" && (
+              <p className="text-[10px] text-muted-foreground mt-2">
+                Please ask the student to generate a new verification link, or use an active Institutional API key.
+              </p>
+            )}
+            {errorCode === "NETWORK_ERROR" && (
+              <Button onClick={() => verifyRecord()} variant="outline" size="sm" className="mt-4 font-mono text-xs">
+                Retry Connection
+              </Button>
+            )}
           </GlowCard>
         )}
 
