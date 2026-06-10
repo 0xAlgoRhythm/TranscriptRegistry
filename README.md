@@ -1,43 +1,44 @@
-# TranscriptChain - Decentralized Transcript Management System
+<div align="center">
+  <img src="https://i.imgur.com/G5XU265.png" alt="CredAxis Logo" width="200" />
+  <h1>CredAxis — Official Transcripts Registry</h1>
+  <p><strong>A highly secure, decentralized Transcript Management platform built on Base Sepolia.</strong></p>
+</div>
 
+CredAxis brings a premium "Dark Fintech" aesthetic and zero-compromise security to academic credentialing. It allows universities to issue cryptographically verifiable transcripts, allows students to own their academic records via Web3 wallets, and allows third-party verifiers (employers) to independently audit credentials on-chain.
 
+---
 
-A blockchain-based platform for issuing, managing, and verifying academic transcripts using Beacon Proxy pattern for gas-efficient, upgradeable smart contracts.
+## 🌟 Platform Features
 
-## 🌟 Features
+- ✅ **Seamless Identity & Auth**: Powered by [Privy](https://privy.io/) for embedded wallets and secure email verification.
+- ✅ **Decentralized Storage**: Transcripts are securely pinned to IPFS via Pinata, guaranteeing absolute permanence.
+- ✅ **Base Sepolia Integration**: Lightning-fast, ultra-cheap L2 rollups ensuring sub-second transcript verification.
+- ✅ **Beacon Proxy Architecture**: Smart contracts utilize the Upgradeable Beacon pattern for isolated university registries with 82% gas savings.
+- ✅ **Beautiful Dark Fintech UI**: A sleek, premium Next.js interface inspired by ZenithPay, heavily utilizing Electric Indigo (`#8b5cf6`) and pure darks (`#0b0b0f`).
+- ✅ **Automated Email Engine**: Node/Hono backend routing customized notification HTML emails to registrars and students dynamically.
 
-- ✅ **Beacon Proxy Architecture** - 82% gas savings per deployment
-- ✅ **Upgradeable Contracts** - Fix bugs without redeployment
-- ✅ **IPFS Storage** - Decentralized file storage via Pinata
-- ✅ **Access Control** - Student-controlled transcript sharing
-- ✅ **Instant Verification** - <5 second verification time
-- ✅ **Multi-University Support** - Each university has isolated data
-- ✅ **Comprehensive Tests** - 137 tests with >95% coverage
+## 🏗️ System Architecture
 
-## 📊 Contract Addresses (Ethereum Sepolia)
+CredAxis is a multi-layered ecosystem:
 
-| Contract | Address | Etherscan |
-|----------|---------|-----------|
-| **UniversityFactoryBeacon** | `0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e` | [View](https://sepolia.etherscan.io/address/0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e) |
-| **Implementation** | `0x39F6408AaF6f7Ff533982B4fc62e480004D39dAe` | [View](https://sepolia.etherscan.io/address/0x39F6408AaF6f7Ff533982B4fc62e480004D39dAe) |
-| **Beacon** | `0x1f442707955F41BFD180a23D88f84E616167A319` | [View](https://sepolia.etherscan.io/address/0x1f442707955F41BFD180a23D88f84E616167A319) |
-| **KNUST Proxy** | `0x9e0a1bd17c0f0190FB64dABe8cB54E871D3712D3` | [View](https://sepolia.etherscan.io/address/0x9e0a1bd17c0f0190FB64dABe8cB54E871D3712D3) |
-| **UG Proxy** | `0xD207B844f595AF7A6b43191633D8bF11C9bB8316` | [View](https://sepolia.etherscan.io/address/0xD207B844f595AF7A6b43191633D8bF11C9bB8316) |
-| **UCC Proxy** | `0x049e478B03eb3a2f8B83C0e58895488b51EE971C` | [View](https://sepolia.etherscan.io/address/0x049e478B03eb3a2f8B83C0e58895488b51EE971C) |
+1. **The Smart Contracts (`/src`, `/script`)**: Solidity contracts defining the `UniversityFactoryBeacon` and individual `TranscriptRegistryUpgradeable` proxies.
+2. **The Backend API (`/backend`)**: A Hono REST API powered by Drizzle ORM connecting to PostgreSQL and Viem for on-chain indexing.
+3. **The Frontend (`/frontend`)**: A Next.js App Router project leveraging React 19, Tailwind CSS, and Privy for the presentation layer.
 
-## 🏗️ Architecture
+For deep technical specifications, please explore the `/docs` directory.
 
-```
-UniversityFactory (Beacon Pattern)
-├── TranscriptRegistryUpgradeable (Implementation)
-├── UpgradeableBeacon
-└── BeaconProxy instances (one per university)
-    ├── KNUST Proxy
-    ├── UG Proxy
-    └── UCC Proxy
-```
+## 📚 Documentation
 
-## 🚀 Quick Start
+Detailed documentation and architectural blueprints are located in the `docs/` folder:
+
+- 📄 [System Overview](docs/system.md) - The complete student onboarding and transcript verification flow.
+- 📄 [Architecture Diagram](docs/ARCHITECTURE.md) - Deep dive into the Upgradeable Beacon Proxy structure.
+- 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Instructions for deploying the full stack.
+- 📄 [Blockchain Testing](docs/BLOCKCHAIN_TESTING.md) - Information on smart contract testing suites.
+- 📄 [Beacon Deployment Details](docs/BEACON_DEPLOYMENT.md) - The technical specifics of factory deployments.
+- 📄 [Full System Audit](docs/SYSTEM_REVIEW_AND_AUDIT.md) - Current state, completed phases, and outstanding issues.
+
+## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
 
@@ -45,132 +46,33 @@ UniversityFactory (Beacon Pattern)
 - [Node.js](https://nodejs.org/) v18+
 - [Git](https://git-scm.com/)
 
-### Installation
+### Installation & Execution
+
+We provide an automated manager script to control the entire mono-repo stack.
 
 ```bash
 # Clone the repository
 git clone https://github.com/mhiskall282/TranscriptRegistryPlatform.git
 cd TranscriptRegistryPlatform
 
-# Install dependencies
-forge install
-
-# Copy environment variables
+# Copy environment variables and populate with your keys
 cp .env.example .env
-
-# Edit .env with your private keys and API keys
 nano .env
+
+# Run the Platform Manager UI
+./platform-manager.sh
 ```
 
-### Build
-
-```bash
-# Compile contracts
-forge build
-
-# Run tests
-forge test -vv
-
-# Check coverage
-forge coverage --report summary
-
-# Generate gas report
-forge test --gas-report
-```
-
-## 📝 Testing
-
-```bash
-# Run all tests
-forge test -vv
-
-# Run specific test file
-forge test --match-path test/TranscriptRegistryUpgradeable.t.sol -vv
-
-# Run with gas reporting
-forge test --gas-report
-
-# Run coverage
-forge coverage
-```
-
-### Test Results
-```
-Ran 5 test suites: 137 tests passed, 0 failed
-Coverage: >95%
-```
-
-## 🔧 Deployment
-
-### Deploy to Testnet
-
-```bash
-# Deploy beacon factory
-forge script script/DeployBeacon.s.sol:DeployBeaconSystem \
-  --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --broadcast \
-  --verify
-
-# Deploy universities
-forge script script/DeployBeacon.s.sol:DeployTestUniversitiesBeacon \
-  --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --broadcast
-```
-
-### Verify Contracts
-
-```bash
-forge verify-contract \
-  <CONTRACT_ADDRESS> \
-  src/UniversityFactoryBeacon.sol:UniversityFactoryBeacon \
-  --chain sepolia
-```
-
-## 📖 Smart Contract Documentation
-
-### TranscriptRegistryUpgradeable
-
-Main contract for managing university transcripts.
-
-**Key Functions:**
-- `registerTranscript(bytes32 studentHash, string metadataCID, bytes32 fileHash)` - Register new transcript
-- `grantAccess(bytes32 recordId, address verifier, uint256 duration)` - Grant verifier access
-- `verifyTranscript(bytes32 recordId, bytes32 fileHash)` - Verify transcript authenticity
-- `revokeAccess(bytes32 recordId, address verifier)` - Revoke verifier access
-
-### UniversityFactoryBeacon
-
-Factory for deploying university-specific registries using beacon proxy pattern.
-
-**Key Functions:**
-- `deployUniversityProxy(string name, address registrar)` - Deploy new university
-- `upgradeImplementation(address newImplementation)` - Upgrade all universities at once
-- `getUniversity(uint256 id)` - Get university information
-
-## 💰 Gas Costs
-
-| Operation | Old System | Beacon Proxy | Savings |
-|-----------|-----------|--------------|---------|
-| Deploy University | 2,800,000 gas | ~488,000 gas | 82% |
-| Register Transcript | 150,000 gas | 150,000 gas | 0% |
-| Verify Transcript | 50,000 gas | 50,000 gas | 0% |
-
-## 🔐 Security
-
-- ✅ Access control modifiers (`onlyAdmin`, `onlyRegistrar`)
-- ✅ Reentrancy protection
-- ✅ Input validation on all functions
-- ✅ Event emissions for tracking
-- ✅ Comprehensive test coverage (>95%)
-- ✅ OpenZeppelin battle-tested contracts
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+From the Platform Manager, you can:
+- Start the Frontend
+- Start the Backend
+- Start a Local Anvil Node
+- Run Smart Contract Tests
+- Deploy Contracts
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow these steps:
+Contributions are heavily encouraged to push the boundaries of decentralized education! 
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
@@ -178,20 +80,14 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 👥 Authors
-
-- **Your Name** - *Initial work* - [@mhiskall282](https://github.com/mhiskall282)
-
-## 🙏 Acknowledgments
-
-- OpenZeppelin for upgradeable contract patterns
-- Foundry for development framework
-- Base network for L2 infrastructure
+**Note on Contributions**: All new UI components must strictly adhere to the established Dark Fintech design language defined in `frontend/app/globals.css`.
 
 ## 📞 Support
 
-For support, email johnokyere@lovify.tech or open an issue on GitHub.
+For enterprise support or integration queries, contact [johnokyere@lovify.tech](mailto:johnokyere@lovify.tech) or open an issue on GitHub.
 
 ---
 
-**Built with ❤️ using Foundry and OpenZeppelin**
+<div align="center">
+  <strong>Built with ❤️ using Next.js, Hono, Foundry, and OpenZeppelin</strong>
+</div>
