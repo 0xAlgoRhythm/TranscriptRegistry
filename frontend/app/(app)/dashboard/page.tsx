@@ -62,6 +62,13 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [pendingInsts, setPendingInsts] = useState<any[]>([])
   const [instsLoading, setInstsLoading] = useState(false)
 
+  // API Tokens states
+  const [apiTokens, setApiTokens] = useState<any[]>([])
+  const [tokensLoading, setTokensLoading] = useState(false)
+  const [issueTokenName, setIssueTokenName] = useState("")
+  const [issueTokenDays, setIssueTokenDays] = useState("365")
+  const [tokenIssueLoading, setTokenIssueLoading] = useState(false)
+
   // Issued transcripts states
   const [issuedTranscripts, setIssuedTranscripts] = useState<any[]>([])
   const [issuedLoading, setIssuedLoading] = useState(false)
@@ -144,6 +151,71 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     }
   }
 
+  const fetchApiTokens = async () => {
+    try {
+      setTokensLoading(true)
+      const jwt = localStorage.getItem("auth_token") || ""
+      const res = await fetch(`${API_URL}/api/tokens?issuerAddress=${registrarAddress.toLowerCase()}`, {
+        headers: { "Authorization": `Bearer ${jwt}` }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setApiTokens(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch API tokens:", e)
+    } finally {
+      setTokensLoading(false)
+    }
+  }
+
+  const handleIssueToken = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!issueTokenName) return
+    try {
+      setTokenIssueLoading(true)
+      const jwt = localStorage.getItem("auth_token") || ""
+      const res = await fetch(`${API_URL}/api/tokens/issue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwt}` },
+        body: JSON.stringify({
+          institutionName: issueTokenName,
+          expiresDays: parseInt(issueTokenDays),
+          issuerAddress: registrarAddress,
+          role: "registrar"
+        })
+      })
+      if (res.ok) {
+        setIssueTokenName("")
+        fetchApiTokens()
+      } else {
+        alert("Failed to issue API token")
+      }
+    } catch (err) {
+      alert("Network error issuing token")
+    } finally {
+      setTokenIssueLoading(false)
+    }
+  }
+
+  const handleRevokeToken = async (id: number) => {
+    if (!confirm("Are you sure you want to revoke this API Key?")) return
+    try {
+      const jwt = localStorage.getItem("auth_token") || ""
+      const res = await fetch(`${API_URL}/api/tokens/${id}?operator=${registrarAddress.toLowerCase()}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${jwt}` }
+      })
+      if (res.ok) {
+        fetchApiTokens()
+      } else {
+        alert("Failed to revoke token")
+      }
+    } catch (err) {
+      alert("Error revoking token")
+    }
+  }
+
   const handleApproveInst = async (id: number) => {
     try {
       const res = await fetch(`${API_URL}/api/institutions/${id}/approve`, {
@@ -184,6 +256,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       fetchTranscriptRequests()
       fetchPendingInsts()
       fetchIssuedTranscripts()
+      fetchApiTokens()
     }
   }, [registrarAddress])
 
@@ -445,6 +518,16 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           }`}
         >
           CSV Bulk Whitelist
+        </button>
+        <button
+          onClick={() => setActiveTab("apikeys")}
+          className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
+            activeTab === "apikeys"
+              ? "border-ca-accent text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          API Keys ({apiTokens.filter(t => t.isActive).length})
         </button>
       </div>
 
@@ -908,6 +991,135 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
             </div>
           )}
         </GlowCard>
+      )}
+
+      {activeTab === "apikeys" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-6">
+            <GlowCard className="p-6 relative overflow-hidden" glow>
+              <div className="space-y-1 mb-6 border-b border-border/40 pb-3">
+                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                  Generate SIS API Key
+                </h3>
+                <p className="text-[10px] text-muted-foreground leading-normal">
+                  Issue a dedicated API token for your university's internal Student Information System to automate verification queries.
+                </p>
+              </div>
+
+              <form onSubmit={handleIssueToken} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-mono font-bold uppercase tracking-wider">System / App Name</Label>
+                  <input
+                    type="text"
+                    required
+                    value={issueTokenName}
+                    onChange={(e) => setIssueTokenName(e.target.value)}
+                    placeholder="e.g. Banner SIS Integration"
+                    className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[10px] font-mono font-bold uppercase tracking-wider">Expiration</Label>
+                  <select
+                    value={issueTokenDays}
+                    onChange={(e) => setIssueTokenDays(e.target.value)}
+                    className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  >
+                    <option value="30">30 Days</option>
+                    <option value="90">90 Days</option>
+                    <option value="365">1 Year</option>
+                    <option value="3650">10 Years (Never)</option>
+                  </select>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={tokenIssueLoading}
+                  className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-3 flex items-center justify-center gap-1.5 uppercase"
+                >
+                  {tokenIssueLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlusCircle className="h-4 w-4" />}
+                  Issue API Key
+                </Button>
+              </form>
+            </GlowCard>
+          </div>
+
+          <div className="lg:col-span-2">
+            <GlowCard className="p-6 relative overflow-hidden" glow>
+              <div className="flex justify-between items-center border-b border-border/40 pb-3 mb-4">
+                <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                  Active Integrations
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={fetchApiTokens}
+                  className="font-mono text-[10px] tracking-wider uppercase border-border/60"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+
+              {tokensLoading ? (
+                <div className="text-center py-8 font-mono text-xs text-muted-foreground animate-pulse">
+                  LOADING API KEYS...
+                </div>
+              ) : apiTokens.length === 0 ? (
+                <div className="text-center py-8 font-mono text-[10px] text-muted-foreground uppercase">
+                  NO API KEYS ISSUED YET
+                </div>
+              ) : (
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left border-collapse font-mono text-xs">
+                    <thead>
+                      <tr className="border-b border-border/60 text-[9px] uppercase text-muted-foreground tracking-wider bg-muted/10">
+                        <th className="p-3 font-bold">System Name</th>
+                        <th className="p-3 font-bold">API Key (Token)</th>
+                        <th className="p-3 font-bold">Status</th>
+                        <th className="p-3 font-bold">Expires</th>
+                        <th className="p-3 font-bold text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {apiTokens.map((t) => (
+                        <tr key={t.id} className={`border-b border-border/20 transition-colors ${!t.isActive ? 'opacity-50' : 'hover:bg-muted/10'}`}>
+                          <td className="p-3 text-foreground font-semibold">{t.institutionName}</td>
+                          <td className="p-3">
+                            <span className="bg-muted/30 px-2 py-1 rounded text-[10px] border border-border/40 font-mono blur-[3px] hover:blur-none transition-all cursor-pointer">
+                              {t.token}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            {t.isActive ? (
+                              <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-green-500/10 text-green-400">Active</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400">Revoked</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-muted-foreground">
+                            {t.expiresAt ? new Date(t.expiresAt).toLocaleDateString() : "Never"}
+                          </td>
+                          <td className="p-3 text-right">
+                            {t.isActive && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleRevokeToken(t.id)}
+                                className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6"
+                              >
+                                REVOKE
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </GlowCard>
+          </div>
+        </div>
       )}
 
       {/* Wallet Bind Modal */}
