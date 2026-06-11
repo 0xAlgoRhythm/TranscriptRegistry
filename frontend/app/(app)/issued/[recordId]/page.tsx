@@ -12,7 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge"
 import { HashDisplay } from "@/components/ui/hash-display"
 import { TxPanel } from "@/components/ui/tx-panel"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit3, ShieldAlert, Sparkles, UserX, UserCheck, Download, Loader2, FileText } from "lucide-react"
+import { ArrowLeft, Edit3, ShieldAlert, Sparkles, UserX, UserCheck, Download, Loader2, FileText, Search, Printer, Eye, X } from "lucide-react"
 
 export default function IssuedDetailPage() {
   const params = useParams()
@@ -38,6 +38,7 @@ export default function IssuedDetailPage() {
   const [metadata, setMetadata] = useState<any>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (!transcript && recordId) {
@@ -147,7 +148,7 @@ export default function IssuedDetailPage() {
     )
   }
 
-  const handlePrintTranscript = async () => {
+  const handleGeneratePreview = async () => {
     if (!metadata) return
     setIsGeneratingPdf(true)
     try {
@@ -169,16 +170,20 @@ export default function IssuedDetailPage() {
       })
 
       const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `${metadata.studentId || 'transcript'}_verified.pdf`
-      a.click()
-      URL.revokeObjectURL(url)
+      setPdfPreviewUrl(url)
     } catch (err) {
       console.error("PDF generation failed", err)
     } finally {
       setIsGeneratingPdf(false)
     }
+  }
+
+  const handlePrintTranscript = () => {
+    if (!pdfPreviewUrl) return;
+    const a = document.createElement("a")
+    a.href = pdfPreviewUrl
+    a.download = `${metadata?.studentId || 'transcript'}_verified.pdf`
+    a.click()
   }
 
   return (
@@ -211,14 +216,20 @@ export default function IssuedDetailPage() {
             </div>
           </div>
 
-          <Button 
-            className="font-mono text-[10px] h-8 bg-ca-accent text-white hover:bg-ca-accent-hover flex items-center gap-2 transition-all"
-            onClick={handlePrintTranscript}
-            disabled={isGeneratingPdf || !metadata}
-          >
-            {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-            DOWNLOAD AS PDF
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => router.push("/verify")} variant="outline" className="font-mono text-[10px] tracking-wider uppercase h-8 border-border/60">
+              <Search className="h-3.5 w-3.5 mr-1.5" /> VERIFIER PORTAL
+            </Button>
+            
+            <Button 
+              className="font-mono text-[10px] h-8 bg-ca-accent text-white hover:bg-ca-accent-hover flex items-center gap-2 transition-all"
+              onClick={handleGeneratePreview}
+              disabled={isGeneratingPdf || !metadata}
+            >
+              {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+              PREVIEW PDF
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -381,6 +392,33 @@ export default function IssuedDetailPage() {
           </GlowCard>
         </div>
       </div>
+
+      {/* PDF Preview Modal Overlay */}
+      {pdfPreviewUrl && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-8 animate-fade-in">
+          <div className="w-full max-w-4xl h-full flex flex-col bg-card border border-border/40 rounded-xl overflow-hidden shadow-2xl relative animate-slide-up">
+            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/20">
+              <h2 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">
+                Final Transcript Preview
+              </h2>
+              <div className="flex items-center gap-3">
+                <Button onClick={handlePrintTranscript} size="sm" className="font-mono text-[10px] tracking-wider uppercase h-8 bg-ca-accent text-white hover:bg-ca-accent-hover">
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> DOWNLOAD PDF
+                </Button>
+                <button onClick={() => setPdfPreviewUrl(null)} className="p-1 hover:bg-muted/50 rounded transition-colors text-muted-foreground hover:text-foreground">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 bg-muted/10 relative p-4 overflow-hidden">
+              <iframe 
+                src={`${pdfPreviewUrl}#toolbar=0&navpanes=0`} 
+                className="w-full h-full rounded border border-border/30 bg-white" 
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
