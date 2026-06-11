@@ -1049,7 +1049,7 @@ app.get("/api/ipfs/metadata/:cid", async (c) => {
 // Student applies for onboarding or matches with whitelist
 app.post("/api/students", async (c) => {
   try {
-    const { walletAddress, fullName, studentId, universityId, email } = await c.req.json()
+    const { walletAddress, fullName, studentId, universityId, email, department, faculty } = await c.req.json()
     if (!walletAddress || !fullName || !studentId || (universityId === undefined || universityId === null || universityId === "") || !email) {
       return c.json({ error: "Missing required fields" }, 400)
     }
@@ -1081,6 +1081,8 @@ app.post("/api/students", async (c) => {
           walletAddress: cleanWallet,
           fullName, // update with real name
           studentId, // update with real student ID
+          department,
+          faculty,
           status: "approved",
           updatedAt: new Date(),
           actionAt: new Date(),
@@ -1099,6 +1101,8 @@ app.post("/api/students", async (c) => {
       studentId,
       universityId,
       email: cleanEmail,
+      department,
+      faculty,
       status: "pending",
       approvalToken,
       createdAt: new Date(),
@@ -1561,7 +1565,7 @@ app.post("/api/students/bulk", async (c) => {
 
     const results = []
     for (const s of studentsList) {
-      const { fullName, studentId, email } = s
+      const { fullName, studentId, email, department, faculty } = s
       if (!fullName || !studentId || !email) continue
 
       const cleanEmail = email.toLowerCase()
@@ -1581,6 +1585,8 @@ app.post("/api/students/bulk", async (c) => {
             .set({
               fullName,
               studentId,
+              department,
+              faculty,
               status: "approved",
               updatedAt: new Date(),
             })
@@ -1595,6 +1601,8 @@ app.post("/api/students/bulk", async (c) => {
           fullName,
           studentId,
           email: cleanEmail,
+          department,
+          faculty,
           universityId: uni.universityId,
           status: "approved",
           createdAt: new Date(),

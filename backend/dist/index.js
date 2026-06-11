@@ -463,6 +463,16 @@ app.post("/api/transcripts/request", async (c) => {
         const existingReq = await db.query.transcriptRequests.findFirst({
             where: and(eq(transcriptRequests.studentWallet, cleanWallet), eq(transcriptRequests.status, "pending"))
         });
+        // Rate Limiting: Max 3 transcript generation requests per 6 months (Semester Quota)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+        const requestCount = await db.select({ count: sql `count(*)` })
+            .from(transcriptRequests)
+            .where(and(eq(transcriptRequests.studentWallet, cleanWallet), sql `${transcriptRequests.createdAt} > ${sixMonthsAgo.toISOString()}`));
+        const count = parseInt(requestCount[0].count) || 0;
+        if (count >= 3 && !existingReq) {
+            return c.json({ error: "Semester quota exceeded: You have reached the maximum of 3 official transcript requests for this term. Please contact your registrar." }, 429);
+        }
         if (!existingReq) {
             await db.insert(transcriptRequests).values({
                 studentWallet: cleanWallet,
@@ -970,7 +980,7 @@ app.get("/api/ipfs/metadata/:cid", async (c) => {
 // Student applies for onboarding or matches with whitelist
 app.post("/api/students", async (c) => {
     try {
-        const { walletAddress, fullName, studentId, universityId, email } = await c.req.json();
+        const { walletAddress, fullName, studentId, universityId, email, department, faculty } = await c.req.json();
         if (!walletAddress || !fullName || !studentId || (universityId === undefined || universityId === null || universityId === "") || !email) {
             return c.json({ error: "Missing required fields" }, 400);
         }
@@ -994,6 +1004,8 @@ app.post("/api/students", async (c) => {
                 walletAddress: cleanWallet,
                 fullName, // update with real name
                 studentId, // update with real student ID
+                department,
+                faculty,
                 status: "approved",
                 updatedAt: new Date(),
                 actionAt: new Date(),
@@ -1009,6 +1021,8 @@ app.post("/api/students", async (c) => {
             studentId,
             universityId,
             email: cleanEmail,
+            department,
+            faculty,
             status: "pending",
             approvalToken,
             createdAt: new Date(),
@@ -1168,6 +1182,69 @@ app.get("/api/students/profile/:walletAddress", async (c) => {
             return c.json({ error: "Profile not found" }, 404);
         }
         return c.json(profile);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Get student profile by email (used for Privy email-auth embedded wallet auto-bind flow)
+app.get("/api/students/profile/by-email/:email", async (c) => {
+    try {
+        const email = c.req.param("email").toLowerCase();
+        const profile = await db.query.students.findFirst({
+            where: eq(students.email, email),
+            orderBy: (students, { asc }) => [
+                // Prefer records without a wallet (unbound whitelist entries)
+                sql `CASE WHEN ${students.walletAddress} IS NULL THEN 0 ELSE 1 END`,
+                asc(students.id)
+            ]
+        });
+        if (!profile) {
+            return c.json({ error: "Profile not found" }, 404);
+        }
+        return c.json(profile);
+    }
+    catch (err) {
+        return c.json({ error: err.message }, 500);
+    }
+});
+// Self-bind wallet — student binds their own embedded wallet to a whitelisted record that has no wallet yet.
+// Only allowed when the current walletAddress on the record is NULL (prevents overwriting existing bindings).
+app.put("/api/students/:id/self-bind-wallet", async (c) => {
+    try {
+        const id = parseInt(c.req.param("id"));
+        const { walletAddress, email } = await c.req.json();
+        if (!walletAddress || !email) {
+            return c.json({ error: "Missing required fields: walletAddress and email" }, 400);
+        }
+        const cleanWallet = walletAddress.toLowerCase();
+        const cleanEmail = email.toLowerCase();
+        // Verify the record exists and belongs to this email
+        const record = await db.query.students.findFirst({
+            where: and(eq(students.id, id), eq(students.email, cleanEmail))
+        });
+        if (!record) {
+            return c.json({ error: "Student record not found or email mismatch" }, 404);
+        }
+        // Guard: only bind if walletAddress is currently null
+        if (record.walletAddress !== null) {
+            return c.json({ error: "A wallet is already bound to this student profile" }, 409);
+        }
+        // Ensure the wallet isn't already used by another student
+        const existingWallet = await db.query.students.findFirst({
+            where: eq(students.walletAddress, cleanWallet)
+        });
+        if (existingWallet) {
+            return c.json({ error: "Wallet address is already registered to another profile" }, 400);
+        }
+        await db.update(students)
+            .set({
+            walletAddress: cleanWallet,
+            updatedAt: new Date(),
+        })
+            .where(eq(students.id, id));
+        await logAudit("student", cleanWallet, "AUTO_WALLET_BOUND", `Privy embedded wallet auto-bound to student ID ${id} (email: ${cleanEmail})`);
+        return c.json({ success: true, message: "Wallet successfully auto-bound to your student profile." });
     }
     catch (err) {
         return c.json({ error: err.message }, 500);
@@ -1355,7 +1432,7 @@ app.post("/api/students/bulk", async (c) => {
         }
         const results = [];
         for (const s of studentsList) {
-            const { fullName, studentId, email } = s;
+            const { fullName, studentId, email, department, faculty } = s;
             if (!fullName || !studentId || !email)
                 continue;
             const cleanEmail = email.toLowerCase();
@@ -1370,6 +1447,8 @@ app.post("/api/students/bulk", async (c) => {
                         .set({
                         fullName,
                         studentId,
+                        department,
+                        faculty,
                         status: "approved",
                         updatedAt: new Date(),
                     })
@@ -1386,6 +1465,8 @@ app.post("/api/students/bulk", async (c) => {
                     fullName,
                     studentId,
                     email: cleanEmail,
+                    department,
+                    faculty,
                     universityId: uni.universityId,
                     status: "approved",
                     createdAt: new Date(),
@@ -1444,7 +1525,7 @@ app.get("/api/public/verify", async (c) => {
         const studentId = c.req.query("studentId")?.trim();
         const token = c.req.query("token")?.trim();
         if (!recordId && !studentId) {
-            return c.json({ error: "Provide recordId or studentId parameter" }, 400);
+            return c.json({ error: "Provide recordId or studentId parameter", code: "MISSING_PARAMS" }, 400);
         }
         let tx = null;
         let queryByRecordId = false;
@@ -1478,11 +1559,12 @@ app.get("/api/public/verify", async (c) => {
             }
         }
         if (!tx) {
-            return c.json({ error: "Transcript record not found" }, 404);
+            return c.json({ error: "Transcript record not found in the registry.", code: "NOT_FOUND" }, 404);
         }
         // Check Token authorization
         let isAuthorized = false;
         let authorizedBy = "";
+        let tokenErrorCode = "";
         // Rule: If anyone scans QR code / accesses by recordId, we show full results.
         // Otherwise (searched by student index/ID), it requires student-approved token access.
         if (queryByRecordId) {
@@ -1499,9 +1581,12 @@ app.get("/api/public/verify", async (c) => {
                     isAuthorized = true;
                     authorizedBy = `Public Approval Request (${pRequest.requesterEmail})`;
                 }
+                else {
+                    tokenErrorCode = "EXPIRED_TOKEN";
+                }
             }
-            // 2. Check if token is a valid, active institutional verifier token
-            if (!isAuthorized) {
+            else {
+                // 2. Check if token is a valid, active institutional verifier token
                 const iToken = await db.query.issuedTokens.findFirst({
                     where: and(eq(issuedTokens.token, token), eq(issuedTokens.isActive, true))
                 });
@@ -1510,8 +1595,18 @@ app.get("/api/public/verify", async (c) => {
                         isAuthorized = true;
                         authorizedBy = `Institutional API Key (${iToken.institutionName})`;
                     }
+                    else {
+                        tokenErrorCode = "EXPIRED_TOKEN";
+                    }
+                }
+                else {
+                    tokenErrorCode = "INVALID_TOKEN";
                 }
             }
+        }
+        // Explicitly reject if a token was provided but failed validation
+        if (!isAuthorized && token && tokenErrorCode) {
+            return c.json({ error: "The provided access token is invalid or expired.", code: tokenErrorCode }, 403);
         }
         // Resolve university details (always public)
         const uni = await db.query.universities.findFirst({
@@ -1802,7 +1897,7 @@ app.post("/api/public/email-transcript", async (c) => {
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student Name:</td><td style="padding: 8px; color: #fff;">${studentName}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student ID:</td><td style="padding: 8px; color: #fff;">${studentId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Degree Program:</td><td style="padding: 8px; color: #fff;">${major}</td></tr>
-            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Cumulative GPA:</td><td style="padding: 8px; font-weight: bold; color: #10b981;">${parseFloat(gpa).toFixed(2)} / 4.00</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Cumulative GPA:</td><td style="padding: 8px; font-weight: bold; color: #10b981;">${gpa ? parseFloat(gpa).toFixed(2) : '0.00'} / 4.00</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Graduation Year:</td><td style="padding: 8px; color: #fff;">${gradYear}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Transcript Record Hash:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #6c5bf0;">${recordId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">PDF SHA-256 Checksum:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #a3e635;">${fileHash}</td></tr>
