@@ -970,7 +970,7 @@ app.post("/api/ipfs/upload", verifyAuth, async (c) => {
           { trait_type: "Graduation Year", value: parseInt(body.gradYear) || 2026 },
           { trait_type: "Issued Date", value: new Date().toLocaleDateString() }
         ],
-        issuedAt: new Date().toISOString(),
+        issuedAt: new Date().toISOString().split('T')[0],
         platform: "CredAxis",
       },
       pinataMetadata: metadataPayload,
