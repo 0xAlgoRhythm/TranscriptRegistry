@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter, useParams } from "next/navigation"
 import { GlowCard } from "@/components/ui/glow-card"
 import { Button } from "@/components/ui/button"
+import { HashDisplay } from "@/components/ui/hash-display"
 import { 
   ShieldCheck, FileText, Mail, Download, Key, Lock,
   ArrowLeft, Building2, HelpCircle, AlertCircle, CheckCircle, Send, Loader2,
@@ -432,23 +433,22 @@ function VerifyDetailPageContent() {
                     </h4>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs text-muted-foreground">
-                      <div className="space-y-1">
+                      <div className="space-y-1.5 overflow-hidden">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">Registry Smart Contract</span>
-                        <span className="text-foreground select-all font-mono break-all leading-normal bg-muted/20 px-2 py-1 rounded border border-border/30 block">
-                          {result.transcript?.registryAddr}
-                        </span>
+                        <HashDisplay hash={result.transcript?.registryAddr} chars={8} className="w-full" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5 overflow-hidden">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">SHA-256 PDF Checksum</span>
-                        <span className="text-foreground select-all font-mono break-all leading-normal bg-muted/20 px-2 py-1 rounded border border-border/30 block">
-                          {result.transcript?.fileHash}
-                        </span>
+                        <HashDisplay hash={result.transcript?.fileHash} chars={8} className="w-full" />
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5 overflow-hidden">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">IPFS Metadata CID (v1)</span>
-                        <span className="text-foreground select-all font-mono break-all leading-normal bg-muted/20 px-2 py-1 rounded border border-border/30 block">
-                          {result.transcript?.metadataCid}
-                        </span>
+                        <HashDisplay 
+                          hash={result.transcript?.metadataCid} 
+                          explorerUrl={`https://gateway.pinata.cloud/ipfs/${result.transcript?.metadataCid}`} 
+                          chars={8} 
+                          className="w-full" 
+                        />
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">On-Chain Issuance Date</span>

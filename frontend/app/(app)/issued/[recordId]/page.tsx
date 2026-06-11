@@ -300,11 +300,9 @@ export default function IssuedDetailPage() {
                 <HashDisplay hash={registryAddress} />
               </div>
 
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 overflow-hidden">
                 <span className="text-[10px] uppercase text-muted-foreground tracking-wider block">IPFS Metadata Address</span>
-                <span className="text-foreground bg-muted/20 px-2 py-1 rounded border border-border/30 inline-block w-full truncate">
-                  {metadataCID}
-                </span>
+                <HashDisplay hash={metadataCID} explorerUrl={`https://gateway.pinata.cloud/ipfs/${metadataCID}`} chars={8} className="w-full" />
               </div>
 
               <div className="space-y-1.5">
