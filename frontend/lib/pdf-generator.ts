@@ -22,6 +22,7 @@ interface TranscriptData {
   stampUrl?: string
   recordId: string
   verifierUrl: string
+  level?: string
 }
 
 const fetchImageAsBase64 = async (url: string): Promise<string | null> => {
@@ -100,11 +101,12 @@ export const generateTranscriptPDF = async (data: TranscriptData): Promise<Blob>
   doc.setFont("helvetica", "normal")
   doc.setFontSize(8.5)
   doc.setTextColor(60, 60, 60)
-  doc.text(`Student Name:  ${data.studentName}`, 20, cardY + 12)
-  doc.text(`Student ID:    ${data.studentId}`, 20, cardY + 18)
+  doc.text(`Student Name:  ${data.studentName}`, 20, cardY + 11)
+  doc.text(`Student ID:    ${data.studentId}`, 20, cardY + 16)
+  doc.text(`Date Issued:    ${new Date().toLocaleDateString()}`, 20, cardY + 21)
 
-  doc.text(`Degree Program: ${data.degree}`, 110, cardY + 12)
-  doc.text(`Date Issued:    ${new Date().toLocaleDateString()}`, 110, cardY + 18)
+  doc.text(`Degree Program: ${data.degree}`, 110, cardY + 11)
+  doc.text(`Academic Level: ${data.level || "Undergraduate"}`, 110, cardY + 16)
 
   // 6. Layout: Table of Courses
   const tableStartY = cardY + cardHeight + 8

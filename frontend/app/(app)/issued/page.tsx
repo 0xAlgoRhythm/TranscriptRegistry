@@ -173,7 +173,9 @@ export default function IssuedPage() {
 
           {showUniSuggestions && (
             <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
-              {universities.map(u => {
+              {universities
+                .filter(u => address && u.registrar.toLowerCase() === address.toLowerCase())
+                .map(u => {
                 const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase()
                 return (
                   <button
@@ -211,17 +213,19 @@ export default function IssuedPage() {
                   </button>
                 )
               })}
-              <div className="p-2 border-t border-border/20 mt-1 bg-card">
-                <label className="text-[9px] text-muted-foreground uppercase block mb-1">Or enter custom contract address</label>
-                <input
-                  type="text"
-                  value={registryAddress}
-                  onChange={(e) => setRegistryAddress(e.target.value)}
-                  placeholder="0x..."
-                  className="w-full rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
-                  onMouseDown={(e) => e.stopPropagation()}
-                />
-              </div>
+              {(!address || universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).length === 0) && (
+                <div className="p-2 border-t border-border/20 mt-1 bg-card">
+                  <label className="text-[9px] text-muted-foreground uppercase block mb-1">Or enter custom contract address</label>
+                  <input
+                    type="text"
+                    value={registryAddress}
+                    onChange={(e) => setRegistryAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="w-full rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>

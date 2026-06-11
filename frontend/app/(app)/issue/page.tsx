@@ -58,6 +58,7 @@ export default function IssuePage() {
 
   const [gpa, setGpa] = useState("")
   const [major, setMajor] = useState("")
+  const [level, setLevel] = useState("Undergraduate")
   const [gradYear, setGradYear] = useState("")
   const [tempRecordId, setTempRecordId] = useState("")
   
@@ -358,7 +359,8 @@ export default function IssuePage() {
         logoUrl: fetchedLogoUrl,
         stampUrl,
         recordId: tempId,
-        verifierUrl
+        verifierUrl,
+        level
       })
 
       setPdfBlob(blob)
@@ -392,7 +394,7 @@ export default function IssuePage() {
 
   // ─── IPFS Metadata Upload ──────────────────────────────────────────────────
   const uploadToIPFS = useCallback(async () => {
-    if (!gpa || !major || !gradYear || !calculatedFileHash) return
+    if (!gpa || !major || !level || !gradYear || !calculatedFileHash) return
     setIpfsStatus("uploading")
     setIpfsError("")
     setMetadataCID("")
@@ -412,6 +414,7 @@ export default function IssuePage() {
           registryAddress,
           gpa,
           major,
+          level,
           gradYear,
           fileHash: calculatedFileHash,
           logoUrl,
@@ -427,7 +430,7 @@ export default function IssuePage() {
       setIpfsError(err.message || "Failed to upload to IPFS")
       setIpfsStatus("error")
     }
-  }, [gpa, major, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, logoUrl, API_URL, tempRecordId])
+  }, [gpa, major, level, gradYear, calculatedFileHash, studentAddress, studentName, studentId, registryAddress, uniName, logoUrl, API_URL, tempRecordId])
 
   // ─── Wizard config ─────────────────────────────────────────────────────────
   const steps = [
@@ -441,7 +444,7 @@ export default function IssuePage() {
     if (currentStep === 1) return registryAddress.startsWith("0x") && registryAddress.length === 42
     if (currentStep === 2) return studentStatus === "approved" && !!studentName && !!studentId
     if (currentStep === 3) return !!calculatedFileHash && !isCalculating && !!pdfBlob
-    if (currentStep === 4) return !!gpa && !!major && !!gradYear && ipfsStatus === "success" && !!metadataCID
+    if (currentStep === 4) return !!gpa && !!major && !!level && !!gradYear && ipfsStatus === "success" && !!metadataCID
     return false
   }
 
@@ -522,7 +525,7 @@ export default function IssuePage() {
                   {showUniSuggestions && (
                     <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
                       {universities
-                        .filter(u => !address || u.registrar.toLowerCase() === address.toLowerCase())
+                        .filter(u => address && u.registrar.toLowerCase() === address.toLowerCase())
                         .map(u => {
                           const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase()
                           return (
@@ -561,7 +564,7 @@ export default function IssuePage() {
                             </button>
                           )
                         })}
-                      {(!address || universities.filter(u => u.registrar.toLowerCase() === address.toLowerCase()).length === 0) && (
+                      {(!address || universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).length === 0) && (
                         <div className="p-2 border-t border-border/20 mt-1 bg-card">
                           <label className="text-[9px] text-muted-foreground uppercase block mb-1">Or enter custom contract address</label>
                           <input
@@ -724,7 +727,7 @@ export default function IssuePage() {
             )}
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-1.5 md:col-span-2">
+              <div className="space-y-1.5 md:col-span-1">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Degree Major</label>
                 <input
                   type="text"
@@ -735,7 +738,29 @@ export default function IssuePage() {
                   className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed disabled:bg-muted/10"
                 />
               </div>
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 md:col-span-1">
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Academic Level</label>
+                <div className="relative">
+                  <select
+                    value={level}
+                    disabled={editLocked}
+                    onChange={(e) => { setLevel(e.target.value); setIpfsStatus("idle"); setMetadataCID("") }}
+                    className="w-full appearance-none rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm focus:border-ca-accent focus:outline-none disabled:opacity-75 disabled:cursor-not-allowed disabled:bg-muted/10 pr-10"
+                  >
+                    <option value="Undergraduate">Undergraduate</option>
+                    <option value="Masters">Masters</option>
+                    <option value="MPhil">MPhil</option>
+                    <option value="System Design Level">System Design Level</option>
+                    <option value="PhD">PhD</option>
+                    <option value="Diploma">Diploma</option>
+                    <option value="Certificate">Certificate</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-1.5 md:col-span-1">
                 <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Graduation Year</label>
                 <input
                   type="text"
@@ -835,7 +860,7 @@ export default function IssuePage() {
 
             <Button 
               onClick={handleGeneratePDF} 
-              disabled={!gpa || !major || !gradYear || isGeneratingPdf}
+              disabled={!gpa || !major || !level || !gradYear || isGeneratingPdf}
               className="w-full font-mono text-xs"
             >
               {isGeneratingPdf ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileSignature className="h-4 w-4 mr-2" />}

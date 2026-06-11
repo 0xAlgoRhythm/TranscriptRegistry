@@ -1,6 +1,8 @@
 import { db } from './dist/db/connection.js'
 import { universities, systemAuditLogs } from './dist/db/schema.js'
 
+BigInt.prototype.toJSON = function () { return this.toString() }
+
 async function main() {
   try {
     console.log('=== UNIVERSITIES IN DATABASE ===')
