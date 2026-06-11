@@ -14,6 +14,9 @@ export function Footer() {
           <Link href="/verify" className="transition-colors hover:text-foreground">
             Verify
           </Link>
+          <Link href="/docs" className="transition-colors hover:text-foreground">
+            Docs
+          </Link>
           <Link href="#features" className="transition-colors hover:text-foreground">
             Features
           </Link>

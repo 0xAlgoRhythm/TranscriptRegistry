@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { Cormorant_Garamond, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Web3Provider } from "@/components/providers/web3-provider"
+import { SplashScreen } from "@/components/ui/splash-screen"
 import "./globals.css"
 
 const displayFont = Cormorant_Garamond({
@@ -54,9 +55,12 @@ export default function RootLayout({
 			<body
 				className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} font-sans antialiased`}
 			>
-				<Web3Provider>{children}</Web3Provider>
+				<Web3Provider>
+					<SplashScreen>{children}</SplashScreen>
+				</Web3Provider>
 				<Analytics />
 			</body>
 		</html>
 	)
 }
+

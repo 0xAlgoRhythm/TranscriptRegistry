@@ -74,7 +74,7 @@ export function ContactSection() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email Us</p>
-                  <p className="text-sm font-medium">partnerships@credaxis.com</p>
+                  <p className="text-sm font-medium">info@credaxis.app</p>
                 </div>
               </div>
             </div>
