@@ -50,6 +50,15 @@ This document serves as a comprehensive technical audit of the CredAxis platform
 - **Status**: Completed
 - **Description**: The `/api/public/verify` endpoint returns specific JSON error codes (`EXPIRED_TOKEN`, `NOT_FOUND`, `NETWORK_ERROR`). The frontend dynamic verification pages render branded, animated alert cards instead of generic stack traces.
 
+### 7. Privy Embedded Wallet Auto-Bind
+- **Status**: Completed
+- **Description**: Resolved a critical auth edge case where email-authenticated students were required to manually click "Bind Wallet" after login. The `StudentGate` component now performs a two-stage profile lookup on mount:
+  1. First queries by the Privy-provisioned wallet address (existing flow).
+  2. On a 404, falls back to `GET /api/students/profile/by-email/:email` using the verified Privy email.
+  3. If a whitelisted record is found with `walletAddress = NULL`, it automatically calls `PUT /api/students/:id/self-bind-wallet`, writing the embedded wallet to the database in a single atomic request — no user interaction needed.
+- **Backend Guards**: The `self-bind-wallet` endpoint enforces email ownership verification, rejects records that already have a wallet (HTTP 409), checks wallet uniqueness across all profiles, and writes an `AUTO_WALLET_BOUND` audit log entry.
+- **UX**: A "Linking Your Identity..." spinner is displayed during the auto-bind phase to communicate the background operation clearly.
+
 ---
 
 ## 🚧 Pending Components (What's Not Done)
@@ -62,11 +71,7 @@ This document serves as a comprehensive technical audit of the CredAxis platform
 - The current backend indexer and Viem client rely on a Tenderly Base Sepolia RPC gateway. During heavy E2E tests, the backend occasionally hits `fetch failed` due to `getaddrinfo ENOTFOUND` or rate limiting. 
 - **Recommendation**: Implement robust retry logic via Viem and consider upgrading to a dedicated Alchemy/Infura RPC URL for production.
 
-### 2. Privy Auth Edge Cases
-- When a user logs in via email, Privy automatically creates an embedded wallet. However, the system requires the student to actively click "Bind Wallet" on the dashboard.
-- **Recommendation**: Automate the binding process utilizing Privy's hooks so the database is updated immediately upon the first successful email authentication.
-
-### 3. Smart Contract Admin Privileges
+### 2. Smart Contract Admin Privileges
 - The `UniversityFactoryBeacon` is currently owned by the deployer address. 
 - **Recommendation**: Before mainnet launch, ownership of the factory and beacon must be transferred to a Multi-Sig (e.g., Safe) to prevent a single point of failure.
 

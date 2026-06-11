@@ -31,8 +31,10 @@ sequenceDiagram
     Student->>BE: Register via `/api/students` (Generates `approvalToken`)
     BE->>Registrar: Send One-Click Approval Email (HTML Branded)
     Registrar->>BE: Click `APPROVE APPLICATION` (`/api/students/approve-via-token`)
-    Student->>BE: Login via Privy (links Wallet automatically)
-    BE->>BE: Set Student Wallet, change status to "Approved"
+    Student->>BE: Login via Privy (Privy provisions embedded wallet)
+    BE->>BE: Lookup profile by wallet → 404 → fallback lookup by email
+    BE->>BE: POST self-bind-wallet: write embedded wallet address to student record
+    BE->>BE: Set Student Wallet, status already "Approved" (whitelisted)
     Registrar->>BE: Calculate GPA & Generate PDF Transcript
     Note over Registrar, BE: Embeds a unique pre-mint tempRecordId in the QR Code URL
     Registrar->>BE: Upload Student PDF (SHA-256 calculation & IPFS Pinata Pinning)
@@ -115,6 +117,9 @@ The backend server handles IPFS uploads (using Pinata API), student profile regi
 * **Database Hashing Robustness:** Validates wallet addresses via `isAddress` before performing `keccak256(encodePacked(...))` hashing in student lookups. This prevents 500 server crashes if a profile in the database contains an invalid Ethereum address format.
 * **Student Privacy Consent Rules:** Auto-authorizes verification access when queried directly by `recordId` (physical QR code scans). When queried by `studentId` (index number), it enforces consent rules, blocking the view and requesting student approval.
 * **Case-Insensitive Student Search:** Searches index IDs case-insensitively using Drizzle SQL: `LOWER(studentId) = query.toLowerCase()`.
+* **Auto-Bind Wallet Endpoints (NEW):**
+  * `GET /api/students/profile/by-email/:email` — resolves a student profile by verified Privy email, preferring unbound records (`walletAddress IS NULL`) to serve the auto-bind flow correctly.
+  * `PUT /api/students/:id/self-bind-wallet` — atomically binds a Privy embedded wallet to a whitelisted student record. Guards: email ownership check, null-wallet guard (HTTP 409 if already bound), global wallet uniqueness check, and `AUTO_WALLET_BOUND` audit log entry.
 
 ---
 

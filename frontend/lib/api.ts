@@ -1,4 +1,10 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+// In production, NEXT_PUBLIC_API_URL is intentionally empty ("").
+// All /api/* requests are relative and get proxied by Vercel → Render backend.
+// In local dev, falls back to localhost:3001.
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL !== undefined
+    ? process.env.NEXT_PUBLIC_API_URL
+    : "http://localhost:3001"
 
 export async function fetchPlatformStats() {
   const res = await fetch(`${API_URL}/api/stats/platform`)

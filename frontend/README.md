@@ -90,7 +90,7 @@ Open [http://localhost:3000](http://localhost:3000) to access the platform.
 
 ### 1. Accessing and Authentication
 1. Click **Connect Wallet** on the landing page or auth gate.
-2. Sign in using your Web3 wallet (MetaMask, Coinbase), Email, or Google. Privy will automatically provision an embedded wallet.
+2. Sign in using your Web3 wallet (MetaMask, Coinbase), Email, or Google. Privy will automatically provision an embedded wallet. **For email/social logins**, the platform automatically binds the Privy-provisioned embedded wallet to the student's whitelisted record on first login — no manual "Bind Wallet" step is required.
 3. Switch your MetaMask network to **Sepolia Testnet**.
 
 ### 2. Simulating User Roles

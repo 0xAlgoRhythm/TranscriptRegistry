@@ -11,7 +11,7 @@ CredAxis brings a premium **"Dark Fintech"** aesthetic and zero-compromise secur
 ## 🌟 Platform Features & Brand Identity
 
 - ✅ **Dark Fintech UI**: A sleek, premium Next.js interface inspired by ZenithPay, heavily utilizing Electric Indigo (`#8b5cf6`) and pure darks (`#0b0b0f`) for a world-class user experience.
-- ✅ **Seamless Identity & Auth**: Powered by [Privy](https://privy.io/) for embedded wallets and secure email verification. No native crypto extensions required for students.
+- ✅ **Seamless Identity & Auth**: Powered by [Privy](https://privy.io/) for embedded wallets and secure email verification. On first email login, the Privy-generated embedded wallet is **automatically bound** to the student's whitelisted record — no manual steps required.
 - ✅ **Decentralized Storage**: Transcripts are securely pinned to IPFS via Pinata, guaranteeing absolute permanence.
 - ✅ **Base Sepolia Integration**: Lightning-fast, ultra-cheap L2 rollups ensuring sub-second transcript verification.
 - ✅ **Beacon Proxy Architecture**: Smart contracts utilize the Upgradeable Beacon pattern for isolated university registries with **82% gas savings**.
@@ -201,6 +201,7 @@ CredAxis takes security extremely seriously, especially given the sensitivity of
 - ✅ **Reentrancy Protection**: `nonReentrant` modifiers applied to all state-changing functions.
 - ✅ **Stateless Verification**: Verification happens exclusively via cryptographically signed hashes and IPFS CIDs—zero PII is stored on-chain.
 - ✅ **Rate Limiting**: Backend limits students to 3 official transcript requests per semester to prevent abuse.
+- ✅ **Privy Embedded Wallet Auto-Bind**: On first email login, `StudentGate` falls back to an email-based profile lookup and automatically calls `PUT /api/students/:id/self-bind-wallet`, eliminating the manual "Bind Wallet" requirement.
 - ✅ **Graceful Degradation**: Frontend dynamically catches missing records, expired tokens, and RPC failures with beautiful, branded error states instead of raw 500 pages.
 
 ---
@@ -212,14 +213,13 @@ This section acts as the source-of-truth for the system's current implementation
 ### ✅ Completed Components
 - **Smart Contract Layer**: Deployed and fully tested with >95% coverage. 82% gas savings achieved.
 - **Backend Engine (Hono + Node.js)**: Email notification system, automated workflow redirections, and full REST APIs connected to PostgreSQL (Drizzle ORM).
-- **Frontend App**: Flawless integration of Privy Auth, Dark Fintech Brand guidelines, multi-role dashboards (Registrar, Student, Verifier), and graceful error handling boundaries.
+- **Frontend App**: Flawless integration of Privy Auth with automatic embedded wallet binding, Dark Fintech Brand guidelines, multi-role dashboards (Registrar, Student, Verifier), and graceful error handling boundaries.
 - **Transcript PDF Generator Quotas**: Built-in logic restricts students from endlessly requesting PDF generation from Registrars.
 - **Registrar API Dashboards**: Universities can generate JWT-style long-lived API keys for their internal SIS integrations seamlessly.
 
 ### ⚠️ Known Issues & Technical Debt
 1. **RPC Rate Limiting**: The Viem client on the backend occasionally hits `fetch failed` if the public Base Sepolia node is overwhelmed. Recommend upgrading to Alchemy/Infura for production.
-2. **Privy Auth Edge Cases**: Email authentication automatically generates an embedded wallet, but students must actively click "Bind Wallet" on their dashboard to synchronize the database.
-3. **Smart Contract Admin Privileges**: The `UniversityFactoryBeacon` is currently owned by a single deployer EOA. Must transition to a Safe Multi-Sig before mainnet.
+2. **Smart Contract Admin Privileges**: The `UniversityFactoryBeacon` is currently owned by a single deployer EOA. Must transition to a Safe Multi-Sig before mainnet.
 
 ---
 
