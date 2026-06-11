@@ -45,6 +45,7 @@ export function DocsPlayground() {
           studentId: "UG/CS/2021/001",
           gpa: "3.85",
           major: "BSc Computer Science",
+          level: "Undergraduate",
           gradYear: "2025",
           universityName: "KNUST"
         }, null, 2))

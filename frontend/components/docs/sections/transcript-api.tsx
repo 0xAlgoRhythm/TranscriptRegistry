@@ -114,6 +114,7 @@ const studentHash = keccak256(
           { name: "registryAddress", type: "string", required: true, desc: "Registry contract address." },
           { name: "gpa", type: "string", required: false, desc: "Cumulative GPA (e.g. '3.85')." },
           { name: "major", type: "string", required: false, desc: "Degree program / major." },
+          { name: "level", type: "string", required: false, desc: "Academic level (e.g. 'MPhil', 'System Design Level')." },
           { name: "gradYear", type: "string", required: false, desc: "Year of graduation." },
           { name: "fileHash", type: "string", required: false, desc: "SHA-256 hash of the PDF document." },
         ]} />
