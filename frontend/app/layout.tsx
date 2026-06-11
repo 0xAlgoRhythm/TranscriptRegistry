@@ -3,6 +3,7 @@ import { Cormorant_Garamond, JetBrains_Mono, Plus_Jakarta_Sans } from "next/font
 import { Analytics } from "@vercel/analytics/next"
 import { Web3Provider } from "@/components/providers/web3-provider"
 import { SplashScreen } from "@/components/ui/splash-screen"
+import { CookieBanner } from "@/components/app/cookie-banner"
 import "./globals.css"
 
 const displayFont = Cormorant_Garamond({
@@ -58,6 +59,7 @@ export default function RootLayout({
 				<Web3Provider>
 					<SplashScreen>{children}</SplashScreen>
 				</Web3Provider>
+				<CookieBanner />
 				<Analytics />
 			</body>
 		</html>
