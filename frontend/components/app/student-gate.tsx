@@ -36,6 +36,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
   
   const [profile, setProfile] = useState<StudentProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [autoBinding, setAutoBinding] = useState(false)
   const [universities, setUniversities] = useState<University[]>([])
   const [checking, setChecking] = useState(false)
   const [isPending, startTransition] = React.useTransition()
@@ -58,11 +59,52 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
         startTransition(() => {
           setProfile(data)
         })
-      } else {
-        startTransition(() => {
-          setProfile(null)
-        })
+        return
       }
+
+      // Wallet-based lookup failed — attempt email-based fallback for Privy email-auth users
+      const userEmail = getPrivyEmail(user)
+      if (res.status === 404 && userEmail) {
+        const emailRes = await fetch(`${API_URL}/api/students/profile/by-email/${encodeURIComponent(userEmail)}`)
+        if (emailRes.ok) {
+          const emailProfile: StudentProfile = await emailRes.json()
+
+          // If a whitelisted record exists with no wallet yet, auto-bind the embedded wallet
+          if (!emailProfile.walletAddress) {
+            startTransition(() => setAutoBinding(true))
+            try {
+              const bindRes = await fetch(`${API_URL}/api/students/${emailProfile.id}/self-bind-wallet`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ walletAddress: walletAddr, email: userEmail }),
+              })
+              if (bindRes.ok) {
+                // Re-fetch the freshly-bound profile by wallet so downstream components see the wallet address
+                const freshRes = await fetch(`${API_URL}/api/students/profile/${walletAddr.toLowerCase()}`)
+                if (freshRes.ok) {
+                  const freshProfile = await freshRes.json()
+                  startTransition(() => setProfile(freshProfile))
+                  return
+                }
+              }
+              // If self-bind failed, still surface the email profile so the student sees a meaningful state
+            } catch (bindErr) {
+              console.error("Auto wallet bind failed:", bindErr)
+            } finally {
+              startTransition(() => setAutoBinding(false))
+            }
+          }
+
+          // Email profile found but already has a wallet (or bind failed) — surface it as-is
+          startTransition(() => setProfile(emailProfile))
+          return
+        }
+      }
+
+      // Genuinely not found
+      startTransition(() => {
+        setProfile(null)
+      })
     } catch (e) {
       console.error("Error fetching student profile:", e)
       startTransition(() => {
@@ -95,7 +137,7 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false)
     }
-  }, [address, role])
+  }, [address, role, user])
 
   const handleRefresh = async () => {
     if (!address) return
@@ -206,7 +248,14 @@ export function StudentGate({ children }: { children: React.ReactNode }) {
       <div className="flex h-[60vh] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest animate-pulse">Resolving Profile...</p>
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest animate-pulse">
+            {autoBinding ? "Linking Your Identity..." : "Resolving Profile..."}
+          </p>
+          {autoBinding && (
+            <p className="text-[10px] font-mono text-ca-accent/70 max-w-xs text-center">
+              Auto-binding your Privy embedded wallet to your student record.
+            </p>
+          )}
         </div>
       </div>
     )

@@ -1277,6 +1277,78 @@ app.get("/api/students/profile/:walletAddress", async (c) => {
   }
 })
 
+// Get student profile by email (used for Privy email-auth embedded wallet auto-bind flow)
+app.get("/api/students/profile/by-email/:email", async (c) => {
+  try {
+    const email = c.req.param("email").toLowerCase()
+    const profile = await db.query.students.findFirst({
+      where: eq(students.email, email),
+      orderBy: (students, { asc }) => [
+        // Prefer records without a wallet (unbound whitelist entries)
+        sql`CASE WHEN ${students.walletAddress} IS NULL THEN 0 ELSE 1 END`,
+        asc(students.id)
+      ]
+    })
+    if (!profile) {
+      return c.json({ error: "Profile not found" }, 404)
+    }
+    return c.json(profile)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Self-bind wallet — student binds their own embedded wallet to a whitelisted record that has no wallet yet.
+// Only allowed when the current walletAddress on the record is NULL (prevents overwriting existing bindings).
+app.put("/api/students/:id/self-bind-wallet", async (c) => {
+  try {
+    const id = parseInt(c.req.param("id"))
+    const { walletAddress, email } = await c.req.json()
+
+    if (!walletAddress || !email) {
+      return c.json({ error: "Missing required fields: walletAddress and email" }, 400)
+    }
+
+    const cleanWallet = walletAddress.toLowerCase()
+    const cleanEmail = email.toLowerCase()
+
+    // Verify the record exists and belongs to this email
+    const record = await db.query.students.findFirst({
+      where: and(eq(students.id, id), eq(students.email, cleanEmail))
+    })
+
+    if (!record) {
+      return c.json({ error: "Student record not found or email mismatch" }, 404)
+    }
+
+    // Guard: only bind if walletAddress is currently null
+    if (record.walletAddress !== null) {
+      return c.json({ error: "A wallet is already bound to this student profile" }, 409)
+    }
+
+    // Ensure the wallet isn't already used by another student
+    const existingWallet = await db.query.students.findFirst({
+      where: eq(students.walletAddress, cleanWallet)
+    })
+    if (existingWallet) {
+      return c.json({ error: "Wallet address is already registered to another profile" }, 400)
+    }
+
+    await db.update(students)
+      .set({
+        walletAddress: cleanWallet,
+        updatedAt: new Date(),
+      })
+      .where(eq(students.id, id))
+
+    await logAudit("student", cleanWallet, "AUTO_WALLET_BOUND", `Privy embedded wallet auto-bound to student ID ${id} (email: ${cleanEmail})`)
+
+    return c.json({ success: true, message: "Wallet successfully auto-bound to your student profile." })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 
 // Get student profile by ID, Name, Email, or Wallet Address (Case-insensitive)
 app.get("/api/students/profile-by-id/:studentId", async (c) => {
