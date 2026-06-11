@@ -52,7 +52,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [bulkStatus, setBulkStatus] = useState("")
   const [bulkError, setBulkError] = useState("")
   const [bulkLoading, setBulkLoading] = useState(false)
-  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests" | "winstitutions" | "issued">("requests")
+  const [activeTab, setActiveTab] = useState<"requests" | "bulk" | "trequests" | "winstitutions" | "issued" | "apikeys">("requests")
 
   // Transcript request states
   const [tRequests, setTRequests] = useState<any[]>([])
