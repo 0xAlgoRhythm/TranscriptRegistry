@@ -26,6 +26,10 @@ export default function IssuedDetailPage() {
   const { data: contractUniName } = useUniversityName(registryAddress)
   const { updateStatus, hash: txHash, isPending, isConfirming, isSuccess, error } = useUpdateTranscriptStatus()
 
+  // Fallback to DB API transcript lookup if contract isn't populated/fails (e.g. dev mock testing)
+  const [dbTranscript, setDbTranscript] = useState<any>(null)
+  const [dbLoading, setDbLoading] = useState(false)
+
   // Custom status reason form
   const [selectedStatus, setSelectedStatus] = useState<string>("0")
   const [updateReason, setUpdateReason] = useState<string>("")
@@ -33,14 +37,40 @@ export default function IssuedDetailPage() {
   // IPFS metadata state
   const [metadata, setMetadata] = useState<any>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
-  const [, metadataCID = "", fileHash = "", issuer = "", timestamp = BigInt(0), status = 0] = (transcript as any) || []
-  const statusStr = transcript ? TRANSCRIPT_STATUS[status as TranscriptStatus] : "Unknown"
 
   useEffect(() => {
-    if (transcript) {
+    if (!transcript && recordId) {
+      setDbLoading(true)
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || ""
+      fetch(`${API_URL}/api/public/verify?recordId=${recordId}`)
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json()
+            setDbTranscript(data)
+          }
+        })
+        .catch((e) => console.error("DB fallback verify error:", e))
+        .finally(() => setDbLoading(false))
+    }
+  }, [transcript, recordId])
+
+  const resolvedTranscript = transcript || (dbTranscript ? [
+    dbTranscript.transcript.recordId,
+    dbTranscript.transcript.metadataCid,
+    dbTranscript.transcript.fileHash,
+    dbTranscript.transcript.issuer || dbTranscript.transcript.registryAddr,
+    BigInt(Math.floor(new Date(dbTranscript.transcript.issuedAt || Date.now()).getTime() / 1000)),
+    dbTranscript.transcript.status === "Active" ? 0 : dbTranscript.transcript.status === "Revoked" ? 1 : 2
+  ] : null)
+
+  const [, metadataCID = "", fileHash = "", issuer = "", timestamp = BigInt(0), status = 0] = (resolvedTranscript as any) || []
+  const statusStr = resolvedTranscript ? TRANSCRIPT_STATUS[status as TranscriptStatus] : "Unknown"
+
+  useEffect(() => {
+    if (resolvedTranscript) {
       setSelectedStatus(status.toString())
     }
-  }, [transcript, status])
+  }, [resolvedTranscript, status])
 
   useEffect(() => {
     if (metadataCID) {
@@ -74,7 +104,7 @@ export default function IssuedDetailPage() {
     }
   }, [metadataCID])
 
-  if (isLoading) {
+  if (isLoading || dbLoading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
@@ -82,7 +112,7 @@ export default function IssuedDetailPage() {
     )
   }
 
-  if (!transcript) {
+  if (!resolvedTranscript) {
     return (
       <div className="mx-auto max-w-2xl text-center space-y-4 py-12 animate-fade-in">
         <ShieldAlert className="h-12 w-12 text-ca-danger mx-auto" />
