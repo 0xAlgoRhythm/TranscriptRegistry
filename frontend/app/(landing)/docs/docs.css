@@ -977,3 +977,194 @@
   .docs-main h2 { font-size: 1.25rem; }
   .step { flex-direction: column; gap: 0.75rem; }
 }
+
+/* ── Playground Styles ── */
+.playground-container {
+  margin-top: 1rem;
+}
+
+.playground-card {
+  background: oklch(0.04 0.003 264);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 10px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.playground-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: flex-end;
+}
+
+.playground-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.playground-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(0.45 0.006 264);
+  margin-bottom: 0.5rem;
+}
+
+.playground-select {
+  background: oklch(0.08 0.005 264);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: 6px;
+  color: oklch(0.95 0.005 264);
+  padding: 0.625rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.playground-select:focus {
+  border-color: oklch(0.68 0.22 275);
+}
+
+.playground-button {
+  background: oklch(0.68 0.22 275);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.playground-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.playground-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.playground-params-box {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid oklch(1 0 0 / 0.05);
+  background: oklch(1 0 0 / 0.01);
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+}
+
+.playground-sub {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(0.55 0.006 264);
+  margin: 0 0 0.75rem 0;
+}
+
+.playground-inputs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.playground-input-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.playground-input-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: oklch(0.68 0.22 275);
+  min-width: 80px;
+}
+
+.playground-input {
+  flex: 1;
+  background: oklch(0.08 0.005 264);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 6px;
+  color: oklch(0.95 0.005 264);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  outline: none;
+}
+
+.playground-input:focus {
+  border-color: oklch(0.68 0.22 275 / 0.5);
+}
+
+.playground-textarea {
+  width: 100%;
+  background: oklch(0.08 0.005 264);
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 6px;
+  color: oklch(0.92 0.005 264);
+  padding: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  outline: none;
+  resize: vertical;
+}
+
+.playground-textarea:focus {
+  border-color: oklch(0.68 0.22 275 / 0.5);
+}
+
+.playground-response-box {
+  margin-top: 1rem;
+  border: 1px solid oklch(1 0 0 / 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.playground-response-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: oklch(1 0 0 / 0.04);
+  padding: 0.5rem 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: oklch(0.45 0.006 264);
+}
+
+.playground-response-pre {
+  margin: 0;
+  padding: 1rem;
+  background: oklch(0.02 0.002 264);
+  overflow-x: auto;
+}
+
+.playground-response-pre code {
+  color: oklch(0.78 0.005 264);
+  font-size: 0.8125rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.playground-status-badge {
+  font-size: 0.625rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.playground-status-badge.status-2xx {
+  background: oklch(0.72 0.18 155 / 0.15);
+  color: oklch(0.72 0.18 155);
+}
+
+.playground-status-badge.status-4xx {
+  background: oklch(0.62 0.22 27 / 0.15);
+  color: oklch(0.62 0.22 27);
+}
+

@@ -4,7 +4,7 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL !== undefined
     ? process.env.NEXT_PUBLIC_API_URL
-    : "http://localhost:3001"
+    : ""
 
 export async function fetchPlatformStats() {
   const res = await fetch(`${API_URL}/api/stats/platform`)

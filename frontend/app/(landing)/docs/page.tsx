@@ -16,6 +16,7 @@ import { DocsWebhooks } from "@/components/docs/sections/webhooks"
 import { DocsOnChain } from "@/components/docs/sections/on-chain"
 import { DocsErrorCodes } from "@/components/docs/sections/error-codes"
 import { DocsSDK } from "@/components/docs/sections/sdk"
+import { DocsPlayground } from "@/components/docs/sections/playground"
 
 export const sections = [
   { id: "introduction",     label: "Introduction",           icon: "📖" },
@@ -29,6 +30,7 @@ export const sections = [
   { id: "sdk",              label: "SDK & Integration",      icon: "🛠️" },
   { id: "webhooks",         label: "Webhooks & Emails",      icon: "📡" },
   { id: "error-codes",      label: "Error Codes",            icon: "🚨" },
+  { id: "playground",       label: "API Playground",         icon: "⚡" },
 ]
 
 export default function DocsPage() {
@@ -135,6 +137,9 @@ export default function DocsPage() {
           </DocsSection>
           <DocsSection id="error-codes">
             <DocsErrorCodes />
+          </DocsSection>
+          <DocsSection id="playground">
+            <DocsPlayground />
           </DocsSection>
 
           {/* Footer */}
