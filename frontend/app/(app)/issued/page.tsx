@@ -50,9 +50,9 @@ function IssuedRow({ t, registryAddress }: { t: any; registryAddress: string }) 
         )}
         <Link
           href={`/issued/${t.recordId}?registry=${registryAddress}`}
-          className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline"
+          className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline bg-ca-accent/10 px-2 py-1 rounded"
         >
-          DETAILS <ChevronRight className="h-3.5 w-3.5" />
+          PREVIEW / DETAILS <ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>

@@ -46,7 +46,7 @@ function VerifyPageContent() {
   const [sharing, setSharing] = useState(false)
   const [shareSuccess, setShareSuccess] = useState(false)
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
   // Load from URL query parameters if present
   useEffect(() => {
@@ -519,7 +519,17 @@ function VerifyPageContent() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">On-Chain Issuance Date</span>
                         <span className="text-foreground bg-muted/20 px-2 py-1 rounded border border-border/30 block">
-                          {formatTimestamp(result.transcript?.issuedAt)}
+                          {result.transcript?.issuedAt ? (
+                            isNaN(Number(result.transcript.issuedAt)) ? (
+                              new Date(result.transcript.issuedAt).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric"
+                              })
+                            ) : (
+                              formatTimestamp(result.transcript.issuedAt)
+                            )
+                          ) : "N/A"}
                         </span>
                       </div>
                     </div>
