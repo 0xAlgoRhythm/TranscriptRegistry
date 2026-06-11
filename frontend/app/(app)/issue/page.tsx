@@ -696,17 +696,19 @@ export default function IssuePage() {
                         <tr 
                           key={s.id}
                           onClick={() => {
-                            setStudentId(s.studentId)
-                            if (s.status === "approved" && s.walletAddress) {
-                              setStudentStatus("approved")
-                              setStudentStatusMsg("✓ Approved student profile verified.")
-                              setStudentName(s.fullName)
-                              setStudentAddress(s.walletAddress)
-                              checkExistingTranscript(s.walletAddress)
-                            } else {
-                              setStudentStatus(s.status)
-                              setStudentStatusMsg(s.status === "pending" ? "⏳ Verification pending — approve this student first." : "✗ Student profile is rejected or has no wallet.")
-                            }
+                            startTransition(() => {
+                              setStudentId(s.studentId)
+                              if (s.status === "approved" && s.walletAddress) {
+                                setStudentStatus("approved")
+                                setStudentStatusMsg("✓ Approved student profile verified.")
+                                setStudentName(s.fullName)
+                                setStudentAddress(s.walletAddress)
+                                checkExistingTranscript(s.walletAddress)
+                              } else {
+                                setStudentStatus(s.status)
+                                setStudentStatusMsg(s.status === "pending" ? "⏳ Verification pending — approve this student first." : "✗ Student profile is rejected or has no wallet.")
+                              }
+                            })
                           }}
                           className={`cursor-pointer hover:bg-muted/30 transition-colors ${studentId === s.studentId ? "bg-ca-accent/10" : ""}`}
                         >

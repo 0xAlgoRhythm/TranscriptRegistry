@@ -145,7 +145,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     } else {
       setRole(null)
     }
-  }, [address, adminAddress, adminLoading, adminFetching, adminError, setRole, user])
+  }, [address, adminAddress, adminLoading, adminError, setRole, user])
 
   const isLoading = (address && adminLoading) || resolving
 

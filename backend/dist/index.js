@@ -16,6 +16,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const app = new Hono();
+app.get("/", (c) => c.json({ status: "active", service: "CredAxis Transcript Registry API", version: "1.0.0" }));
+app.get("/api", (c) => c.json({ status: "active", service: "CredAxis Transcript Registry API", version: "1.0.0" }));
 // Set up Nodemailer transport
 let transporter = null;
 const smtpHost = process.env.SMTP_HOST;
@@ -425,7 +427,7 @@ app.post("/api/transcripts/request", async (c) => {
             const metadataJson = (upload?.metadataJson || {});
             if (transporter) {
                 try {
-                    const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+                    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
                     const verifyUrl = `${frontendBase}/verify/${activeTx.recordId}?registry=${activeTx.registryAddr}`;
                     const messageHtml = `
             <h2 style="color: #6c5bf0; padding-bottom: 10px;">TRANSCRIPT SECURED</h2>
@@ -485,7 +487,7 @@ app.post("/api/transcripts/request", async (c) => {
             // Notify the registrar
             if (transporter && uni && uni.registrarEmail) {
                 try {
-                    const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+                    const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
                     const issueUrl = `${frontendBase}/issue?studentId=${encodeURIComponent(student.studentId)}`;
                     await transporter.sendMail({
                         from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
@@ -671,7 +673,7 @@ app.post("/api/institutions/requests", async (c) => {
         // Send email to student
         if (transporter) {
             try {
-                const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+                const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
                 const consentUrl = `${frontendBase}/transcripts`;
                 await transporter.sendMail({
                     from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
@@ -889,7 +891,7 @@ app.post("/api/ipfs/upload", verifyAuth, async (c) => {
             },
         };
         const logoUrl = body.logoUrl || "https://credaxis.vercel.app/icon.svg";
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        const frontendUrl = process.env.FRONTEND_URL || "https://credaxis.app";
         const verifyUrl = `${frontendUrl}/verify/${body.fileHash || ""}`;
         const pinataBody = {
             pinataContent: {
@@ -1100,7 +1102,7 @@ app.get("/api/students/approve-via-token", async (c) => {
             .where(eq(students.id, studentRecord.id));
         // Send approval email to student
         if (transporter) {
-            const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+            const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
             const loginUrl = `${frontendBase}/dashboard`;
             const messageHtml = `
         <h2 style="color: #10b981; margin-top: 0;">APPLICATION APPROVED</h2>
@@ -1118,7 +1120,7 @@ app.get("/api/students/approve-via-token", async (c) => {
                 html: generateEmailTemplate("Application Approved", messageHtml)
             });
         }
-        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
         return c.redirect(`${frontendBase}/admin?status=student_approved`);
     }
     catch (err) {
@@ -1146,7 +1148,7 @@ app.get("/api/students/reject-via-token", async (c) => {
             .where(eq(students.id, studentRecord.id));
         // Send rejection email to student
         if (transporter) {
-            const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+            const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
             const messageHtml = `
         <h2 style="color: #ef4444; margin-top: 0;">APPLICATION REJECTED</h2>
         <p>Dear <strong>${studentRecord.fullName}</strong>,</p>
@@ -1164,7 +1166,7 @@ app.get("/api/students/reject-via-token", async (c) => {
                 html: generateEmailTemplate("Application Rejected", messageHtml)
             });
         }
-        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
         return c.redirect(`${frontendBase}/admin?status=student_rejected`);
     }
     catch (err) {
@@ -1759,7 +1761,7 @@ app.get("/api/public/access-requests/approve", async (c) => {
         });
         // Email verifier
         if (transporter && tx) {
-            const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+            const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
             const accessUrl = `${frontendBase}/verify/${request.recordId}?token=${token}&registry=${tx.registryAddr}`;
             await transporter.sendMail({
                 from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
@@ -1779,7 +1781,7 @@ app.get("/api/public/access-requests/approve", async (c) => {
         `)
             });
         }
-        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
         return c.redirect(`${frontendBase}/dashboard?status=access_granted`);
     }
     catch (err) {
@@ -1797,7 +1799,7 @@ app.get("/api/public/access-requests/reject", async (c) => {
             status: "rejected"
         })
             .where(eq(publicAccessRequests.token, token));
-        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.johnokyere.xyz";
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
         return c.redirect(`${frontendBase}/dashboard?status=access_denied`);
     }
     catch (err) {
@@ -1882,7 +1884,7 @@ app.post("/api/public/email-transcript", async (c) => {
         if (!transporter) {
             return c.json({ error: "Email transporter is not configured on the server." }, 500);
         }
-        const frontendBase = process.env.FRONTEND_URL || "http://localhost:3000";
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
         const verifyUrl = `${frontendBase}/verify/${recordId}?registry=${registryAddress || ''}`;
         await transporter.sendMail({
             from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
