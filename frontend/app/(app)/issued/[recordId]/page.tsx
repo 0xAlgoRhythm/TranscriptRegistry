@@ -71,7 +71,7 @@ export default function IssuedDetailPage() {
     if (resolvedTranscript) {
       setSelectedStatus(status.toString())
     }
-  }, [resolvedTranscript, status])
+  }, [status])
 
   useEffect(() => {
     if (metadataCID) {
