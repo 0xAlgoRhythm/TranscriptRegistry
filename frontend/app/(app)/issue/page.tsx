@@ -440,6 +440,7 @@ export default function IssuePage() {
           fileHash: calculatedFileHash,
           logoUrl,
           tempRecordId,
+          courses,
         }),
       })
       const data = await res.json()

@@ -44,11 +44,11 @@ export default function IssuedDetailPage() {
     if (!transcript && recordId) {
       setDbLoading(true)
       const API_URL = process.env.NEXT_PUBLIC_API_URL || ""
-      fetch(`${API_URL}/api/public/verify?recordId=${recordId}`)
+      fetch(`${API_URL}/api/transcripts/${recordId}`)
         .then(async (res) => {
           if (res.ok) {
             const data = await res.json()
-            setDbTranscript(data)
+            setDbTranscript({ transcript: data })
           }
         })
         .catch((e) => console.error("DB fallback verify error:", e))
