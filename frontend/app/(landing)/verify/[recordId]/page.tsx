@@ -452,7 +452,9 @@ function VerifyDetailPageContent() {
                       <div className="space-y-1">
                         <span className="text-[10px] uppercase text-muted-foreground/60 block">On-Chain Issuance Date</span>
                         <span className="text-foreground bg-muted/20 px-2 py-1 rounded border border-border/30 block">
-                          {formatTimestamp(result.transcript?.issuedAt)}
+                          {typeof result.transcript?.issuedAt === 'string' 
+                            ? new Date(result.transcript.issuedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) 
+                            : formatTimestamp(result.transcript?.issuedAt || BigInt(0))}
                         </span>
                       </div>
                     </div>
