@@ -482,7 +482,7 @@ export default function IssuePage() {
       </GlowCard>
 
       {/* Wizard Body */}
-      <GlowCard className="p-6 md:p-8 space-y-6 relative overflow-hidden" glow>
+      <GlowCard className="p-6 md:p-8 space-y-6 relative" glow>
         {/* ── Step 1: Institution ────────────────────────────────────── */}
         {currentStep === 1 && (
           <div className="space-y-5 animate-fade-in">
@@ -754,6 +754,15 @@ export default function IssuePage() {
                     <option value="PhD">PhD</option>
                     <option value="Diploma">Diploma</option>
                     <option value="Certificate">Certificate</option>
+                    <option value="L100">L100</option>
+                    <option value="L200">L200</option>
+                    <option value="L300">L300</option>
+                    <option value="L400">L400</option>
+                    <option value="L500">L500</option>
+                    <option value="L600">L600</option>
+                    <option value="L700">L700</option>
+                    <option value="L800">L800</option>
+                    <option value="L900">L900</option>
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
