@@ -147,6 +147,19 @@ forge script script/DeployBeacon.s.sol:DeployTestUniversitiesBeacon \
 
 ---
 
+## 📚 Documentation
+
+Detailed documentation and architectural blueprints are located in the `docs/` folder:
+
+- 📄 [System Overview](docs/system.md) - The complete student onboarding and transcript verification flow.
+- 📄 [Architecture Diagram](docs/ARCHITECTURE.md) - Deep dive into the Upgradeable Beacon Proxy structure.
+- 📄 [Deployment Guide](docs/DEPLOYMENT.md) - Instructions for deploying the full stack.
+- 📄 [Blockchain Testing](docs/BLOCKCHAIN_TESTING.md) - Information on smart contract testing suites.
+- 📄 [Beacon Deployment Details](docs/BEACON_DEPLOYMENT.md) - The technical specifics of factory deployments.
+- 📄 [Full System Audit](docs/SYSTEM_REVIEW_AND_AUDIT.md) - Current state, completed phases, and outstanding issues.
+
+---
+
 ## 📖 Smart Contract Documentation
 
 ### `TranscriptRegistryUpgradeable`
