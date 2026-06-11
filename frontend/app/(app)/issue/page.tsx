@@ -488,7 +488,7 @@ export default function IssuePage() {
     if (!registryAddress || !studentAddress || !calculatedFileHash || !metadataCID) return
     const studentHashVal = keccak256(encodePacked(["address"], [studentAddress as Address]))
     // The NFT will be minted to the student automatically!
-    register(registryAddress as Address, studentHashVal, metadataCID, calculatedFileHash)
+    register(registryAddress as Address, studentHashVal, metadataCID, calculatedFileHash, studentAddress as Address)
   }
 
   // ─── Render ────────────────────────────────────────────────────────────────

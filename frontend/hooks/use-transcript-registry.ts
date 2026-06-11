@@ -98,12 +98,13 @@ export function useRegisterTranscript() {
     studentHashVal: `0x${string}`,
     metadataCID: string,
     fileHash: `0x${string}`,
+    studentWallet: Address,
   ) {
     writeContract({
       address: registryAddress,
       abi: transcriptRegistryAbi,
       functionName: "registerTranscript",
-      args: [studentHashVal, metadataCID, fileHash],
+      args: [studentHashVal, metadataCID, fileHash, studentWallet],
       chainId: CHAIN.id,
     })
   }
