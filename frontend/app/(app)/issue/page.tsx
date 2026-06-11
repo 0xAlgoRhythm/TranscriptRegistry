@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useTransition } from "react"
 import { type Address, keccak256, encodePacked } from "viem"
 import { useAccount } from "wagmi"
 import { useRegisterTranscript, useUniversityName, useUpdateTranscriptStatus } from "@/hooks/use-transcript-registry"
@@ -18,7 +18,7 @@ import { useSearchParams } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   ArrowLeft, ArrowRight, ShieldCheck, CloudUpload,
-  Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download, Eye
+  Loader2, ExternalLink, CheckCircle2, AlertTriangle, FileSignature, Download, Eye, X
 } from "lucide-react"
 
 export default function IssuePage() {
@@ -27,7 +27,9 @@ export default function IssuePage() {
   const activeWallet = wallets.find(w => w.address.toLowerCase() === address?.toLowerCase())
   const isEmbeddedWallet = activeWallet?.walletClientType === "privy"
 
+  const [isPendingTransition, startTransition] = useTransition()
   const [currentStep, setCurrentStep] = useState(1)
+  const [showPdfModal, setShowPdfModal] = useState(false)
 
   // Step 1: University Info
   const [registryAddress, setRegistryAddress] = useState("")
@@ -406,8 +408,7 @@ export default function IssuePage() {
 
   const previewPdf = () => {
     if (!pdfBlob) return
-    const url = URL.createObjectURL(pdfBlob)
-    window.open(url, "_blank")
+    setShowPdfModal(true)
   }
 
   // ─── IPFS Metadata Upload ──────────────────────────────────────────────────
@@ -467,10 +468,18 @@ export default function IssuePage() {
   }
 
   const handleNext = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1)
+    if (currentStep < 4) {
+      startTransition(() => {
+        setCurrentStep(currentStep + 1)
+      })
+    }
   }
   const handlePrev = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1)
+    if (currentStep > 1) {
+      startTransition(() => {
+        setCurrentStep(currentStep - 1)
+      })
+    }
   }
 
   const handleIssue = () => {
@@ -1226,6 +1235,35 @@ export default function IssuePage() {
           </Button>
         </div>
       </GlowCard>
+
+      {/* PDF Preview Modal */}
+      {showPdfModal && pdfBlob && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="bg-card w-full max-w-4xl h-[90vh] rounded-xl border border-border/50 shadow-2xl flex flex-col overflow-hidden relative">
+            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/20">
+              <h3 className="font-mono font-bold text-sm uppercase tracking-wider">Document Preview</h3>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={downloadPdf}>
+                  <Download className="h-3 w-3 mr-1" /> Download
+                </Button>
+                <button 
+                  onClick={() => setShowPdfModal(false)}
+                  className="p-1.5 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 w-full bg-muted/10 relative">
+              <iframe 
+                src={URL.createObjectURL(pdfBlob)} 
+                className="w-full h-full border-none"
+                title="PDF Preview"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

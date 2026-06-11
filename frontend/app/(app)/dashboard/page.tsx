@@ -1362,37 +1362,39 @@ export default function DashboardPage() {
         <RegistrarDashboardView registrarAddress={address || ""} />
       ) : (
         <>
-          {/* Main Metric Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              label="Registered Universities"
-              value={String(totalUniversities)}
-              icon={<Building2 className="h-5 w-5" />}
-              accent="default"
-              trend="All instances"
-            />
-            <StatCard
-              label="Active Networks"
-              value={String(activeCount)}
-              icon={<ShieldCheck className="h-5 w-5" />}
-              accent="success"
-              trend={`${totalUniversities - activeCount} suspended`}
-            />
-            <StatCard
-              label="Transcripts Issued"
-              value={dbStats ? String(dbStats.totalTranscripts) : "..."}
-              icon={<FileText className="h-5 w-5" />}
-              accent="teal"
-              trend="From live database"
-            />
-            <StatCard
-              label="Verifications Done"
-              value={dbStats ? String(dbStats.totalVerifications) : "..."}
-              icon={<CheckCircle2 className="h-5 w-5" />}
-              accent="success"
-              trend="Verified on-chain"
-            />
-          </div>
+          {/* Main Metric Cards - Hidden for students */}
+          {role !== "student" && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              <StatCard
+                label="Registered Universities"
+                value={String(totalUniversities)}
+                icon={<Building2 className="h-5 w-5" />}
+                accent="default"
+                trend="All instances"
+              />
+              <StatCard
+                label="Active Networks"
+                value={String(activeCount)}
+                icon={<ShieldCheck className="h-5 w-5" />}
+                accent="success"
+                trend={`${totalUniversities - activeCount} suspended`}
+              />
+              <StatCard
+                label="Transcripts Issued"
+                value={dbStats ? String(dbStats.totalTranscripts) : "..."}
+                icon={<FileText className="h-5 w-5" />}
+                accent="teal"
+                trend="From live database"
+              />
+              <StatCard
+                label="Verifications Done"
+                value={dbStats ? String(dbStats.totalVerifications) : "..."}
+                icon={<CheckCircle2 className="h-5 w-5" />}
+                accent="success"
+                trend="Verified on-chain"
+              />
+            </div>
+          )}
 
           {/* Dynamic Content Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1523,77 +1525,79 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Dynamic Activity/News Section */}
-            <div className="md:col-span-2 space-y-6">
-              <SectionLabel index={3} label="REALTIME NETWORK METRICS" />
-              
-              <GlowCard className="p-6 relative overflow-hidden" glow>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-border/40 pb-3">
-                    <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
-                      Recent Activities
-                    </h3>
-                    <span className="text-[10px] font-mono text-muted-foreground">LIVE STREAMING</span>
-                  </div>
+            {/* Dynamic Activity/News Section - Hidden for students */}
+            {role !== "student" && (
+              <div className="md:col-span-2 space-y-6">
+                <SectionLabel index={3} label="REALTIME NETWORK METRICS" />
+                
+                <GlowCard className="p-6 relative overflow-hidden" glow>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between border-b border-border/40 pb-3">
+                      <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">
+                        Recent Activities
+                      </h3>
+                      <span className="text-[10px] font-mono text-muted-foreground">LIVE STREAMING</span>
+                    </div>
 
-                  <div className="space-y-4 font-mono">
-                    {logsLoading && logs.length === 0 ? (
-                      <div className="text-center py-8 text-xs text-muted-foreground animate-pulse">
-                        LOADING NETWORK STREAM...
-                      </div>
-                    ) : logs.length === 0 ? (
-                      <div className="text-center py-8 text-xs text-muted-foreground">
-                        NO RECENT ACTIVITIES DETECTED
-                      </div>
-                    ) : (
-                      logs.slice(0, 5).map((log, index) => {
-                        const timeAgo = (dateStr: string) => {
-                          const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000)
-                          if (seconds < 60) return `${seconds}s ago`
-                          const minutes = Math.floor(seconds / 60)
-                          if (minutes < 60) return `${minutes}m ago`
-                          const hours = Math.floor(minutes / 60)
-                          if (hours < 24) return `${hours}h ago`
-                          return new Date(dateStr).toLocaleDateString()
-                        }
-
-                        const getBulletColor = () => {
-                          switch (log.type) {
-                            case "university_registered": return "bg-ca-accent"
-                            case "transcript_issued": return "bg-ca-success"
-                            case "status_changed": return "bg-ca-danger"
-                            default: return "bg-muted"
+                    <div className="space-y-4 font-mono">
+                      {logsLoading && logs.length === 0 ? (
+                        <div className="text-center py-8 text-xs text-muted-foreground animate-pulse">
+                          LOADING NETWORK STREAM...
+                        </div>
+                      ) : logs.length === 0 ? (
+                        <div className="text-center py-8 text-xs text-muted-foreground">
+                          NO RECENT ACTIVITIES DETECTED
+                        </div>
+                      ) : (
+                        logs.slice(0, 5).map((log, index) => {
+                          const timeAgo = (dateStr: string) => {
+                            const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000)
+                            if (seconds < 60) return `${seconds}s ago`
+                            const minutes = Math.floor(seconds / 60)
+                            if (minutes < 60) return `${minutes}m ago`
+                            const hours = Math.floor(minutes / 60)
+                            if (hours < 24) return `${hours}h ago`
+                            return new Date(dateStr).toLocaleDateString()
                           }
-                        }
 
-                        return (
-                          <div key={index} className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
-                            <div className="space-y-1">
-                              <p className="text-foreground font-semibold flex items-center gap-1.5 uppercase text-[9px] tracking-wider">
-                                <span className={cn("h-1.5 w-1.5 rounded-full", getBulletColor())} />
-                                {log.type.replace(/_/g, " ")}
-                              </p>
-                              <p className="text-[10px] text-muted-foreground leading-normal">{log.description}</p>
-                              {log.txHash && (
-                                <a
-                                  href={`https://sepolia.etherscan.io/tx/${log.txHash}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[9px] text-ca-accent hover:underline block pt-0.5"
-                                >
-                                  TX: {log.txHash.slice(0, 10)}...{log.txHash.slice(-6)}
-                                </a>
-                              )}
+                          const getBulletColor = () => {
+                            switch (log.type) {
+                              case "university_registered": return "bg-ca-accent"
+                              case "transcript_issued": return "bg-ca-success"
+                              case "status_changed": return "bg-ca-danger"
+                              default: return "bg-muted"
+                            }
+                          }
+
+                          return (
+                            <div key={index} className="flex items-start justify-between text-xs border-b border-border/20 pb-3">
+                              <div className="space-y-1">
+                                <p className="text-foreground font-semibold flex items-center gap-1.5 uppercase text-[9px] tracking-wider">
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", getBulletColor())} />
+                                  {log.type.replace(/_/g, " ")}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground leading-normal">{log.description}</p>
+                                {log.txHash && (
+                                  <a
+                                    href={`https://sepolia.etherscan.io/tx/${log.txHash}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[9px] text-ca-accent hover:underline block pt-0.5"
+                                  >
+                                    TX: {log.txHash.slice(0, 10)}...{log.txHash.slice(-6)}
+                                  </a>
+                                )}
+                              </div>
+                              <span className="text-[9px] text-muted-foreground shrink-0 pl-4">{timeAgo(log.timestamp)}</span>
                             </div>
-                            <span className="text-[9px] text-muted-foreground shrink-0 pl-4">{timeAgo(log.timestamp)}</span>
-                          </div>
-                        )
-                      })
-                    )}
+                          )
+                        })
+                      )}
+                    </div>
                   </div>
-                </div>
-              </GlowCard>
-            </div>
+                </GlowCard>
+              </div>
+            )}
           </div>
         </>
       )}

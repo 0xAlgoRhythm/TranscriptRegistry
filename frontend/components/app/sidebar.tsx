@@ -19,9 +19,11 @@ import {
 } from "lucide-react"
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, role: null },
+  // Registrar & Admin & Institution specific dashboard
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, role: "registrar" },
   
   // Student specific
+  { label: "Student Profile", href: "/dashboard", icon: LayoutDashboard, role: "student" },
   { label: "My Transcripts", href: "/transcripts", icon: FileCheck2, role: "student" },
   { label: "Access Hub", href: "/access", icon: Lock, role: "student" },
   { label: "Account Settings", href: "/settings", icon: Settings2, role: "student" },
