@@ -174,6 +174,7 @@ export const transcriptRegistryAbi = [
       { name: "studentHash", type: "bytes32" },
       { name: "metadataCID", type: "string" },
       { name: "fileHash", type: "bytes32" },
+      { name: "studentWallet", type: "address" },
     ],
     outputs: [{ name: "recordId", type: "bytes32" }],
     stateMutability: "nonpayable",
