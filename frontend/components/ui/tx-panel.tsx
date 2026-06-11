@@ -54,7 +54,7 @@ export function TxPanel({
           )}
         </div>
 
-        <div className="flex-grow space-y-2">
+        <div className="flex-grow space-y-2 min-w-0">
           {title && (
             <h4 className="text-sm font-mono font-bold tracking-wide uppercase text-foreground">
               {title}
