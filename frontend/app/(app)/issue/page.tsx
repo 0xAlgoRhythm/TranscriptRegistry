@@ -1196,15 +1196,20 @@ export default function IssuePage() {
                 <div className="space-y-4">
                   <Button
                     size="lg"
-                    className="w-full font-mono text-sm tracking-wider uppercase h-14 bg-ca-accent hover:bg-ca-accent/90 text-white shadow-lg"
-                    disabled={!isStepValid() || isPending || isConfirming || isEmbeddedWallet}
-                    onClick={handleIssue}
+                    className={cn(
+                      "w-full font-mono text-sm tracking-wider uppercase h-14 shadow-lg text-white transition-all",
+                      isSuccess ? "bg-green-500 hover:bg-green-600 cursor-default" : "bg-ca-accent hover:bg-ca-accent/90"
+                    )}
+                    disabled={!isStepValid() || isPending || isConfirming || isEmbeddedWallet || isSuccess}
+                    onClick={isSuccess ? undefined : handleIssue}
                   >
                     {(isPending || isConfirming) ? (
                       <>
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                         Waiting for Confirmations...
                       </>
+                    ) : isSuccess ? (
+                      "Transcript Successfully Issued ✓"
                     ) : (
                       "Issue Official Transcript"
                     )}
@@ -1230,13 +1235,22 @@ export default function IssuePage() {
           >
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button
-            onClick={handleNext}
-            disabled={currentStep === 4 || !isStepValid()}
-            className="font-mono text-xs tracking-wider"
-          >
-            Next <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          {currentStep === 4 && isSuccess ? (
+            <Button
+              onClick={() => window.location.href = "/issued"}
+              className="font-mono text-xs tracking-wider bg-green-500 hover:bg-green-600 text-white"
+            >
+              Continue to Records <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={handleNext}
+              disabled={currentStep === 4 || !isStepValid()}
+              className="font-mono text-xs tracking-wider"
+            >
+              Next <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          )}
         </div>
       </GlowCard>
 
