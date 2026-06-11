@@ -37,6 +37,7 @@ export default function IssuedDetailPage() {
   // IPFS metadata state
   const [metadata, setMetadata] = useState<any>(null)
   const [metadataLoading, setMetadataLoading] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
 
   useEffect(() => {
     if (!transcript && recordId) {
@@ -146,211 +147,38 @@ export default function IssuedDetailPage() {
     )
   }
 
-  const handlePrintTranscript = () => {
-    const printWindow = window.open("", "_blank")
-    if (!printWindow) return
+  const handlePrintTranscript = async () => {
+    if (!metadata) return
+    setIsGeneratingPdf(true)
+    try {
+      const { generateTranscriptPDF } = await import("@/lib/pdf-generator")
+      
+      const blob = await generateTranscriptPDF({
+        studentName: metadata.studentName || "Unknown",
+        studentId: metadata.studentId || "Unknown",
+        degree: metadata.major || "Unknown Degree",
+        graduationDate: metadata.gradYear || "Unknown Year",
+        courses: metadata.courses || [],
+        gpa: parseFloat(metadata.gpa || "0"),
+        universityName: universityDisplayName,
+        logoUrl: logoPath ? `${window.location.origin}${logoPath}` : "",
+        stampUrl: "",
+        recordId: recordId,
+        verifierUrl: `${window.location.origin}/verify/${recordId}?registry=${registryAddress}`,
+        level: metadata.level || "Undergraduate"
+      })
 
-    const studentName = metadata?.studentName || ""
-    const studentId = metadata?.studentId || ""
-    const major = metadata?.major || ""
-    const gpa = metadata?.gpa || ""
-    const gradYear = metadata?.gradYear || ""
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Academic Transcript - ${studentName || 'Student'}</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              color: #333;
-              line-height: 1.5;
-              padding: 40px;
-            }
-            .header {
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              border-bottom: 2px solid #333;
-              padding-bottom: 20px;
-              margin-bottom: 30px;
-            }
-            .logo {
-              height: 80px;
-              object-fit: contain;
-            }
-            .title {
-              text-align: right;
-            }
-            .title h1 {
-              margin: 0;
-              font-size: 24px;
-              text-transform: uppercase;
-            }
-            .title p {
-              margin: 5px 0 0 0;
-              font-size: 14px;
-              color: #666;
-            }
-            .meta-grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 40px;
-              background: #f9f9f9;
-              padding: 20px;
-              border: 1px solid #ddd;
-              border-radius: 8px;
-            }
-            .meta-item span {
-              font-size: 10px;
-              text-transform: uppercase;
-              color: #666;
-              display: block;
-            }
-            .meta-item font {
-              font-weight: bold;
-              font-size: 14px;
-            }
-            .transcript-body {
-              margin-bottom: 40px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 10px;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 12px;
-              text-align: left;
-              font-size: 13px;
-            }
-            th {
-              background-color: #f2f2f2;
-              text-transform: uppercase;
-              font-size: 11px;
-              color: #444;
-            }
-            .footer {
-              margin-top: 60px;
-              border-top: 1px dashed #ccc;
-              padding-top: 20px;
-              font-size: 10px;
-              color: #666;
-              font-family: monospace;
-            }
-            .signature-box {
-              display: flex;
-              justify-content: space-between;
-              margin-top: 40px;
-            }
-            .sig {
-              width: 200px;
-              border-top: 1px solid #333;
-              text-align: center;
-              padding-top: 5px;
-              font-size: 12px;
-            }
-            @media print {
-              body { padding: 0; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            ${logoPath ? `<img src="${window.location.origin}${logoPath}" class="logo" alt="Logo" />` : `<div style="font-size: 20px; font-weight: bold;">🏢 SEAL</div>`}
-            <div class="title">
-              <h1>${universityDisplayName}</h1>
-              <p>Official Academic Credential</p>
-            </div>
-          </div>
-
-          <div class="meta-grid">
-            <div class="meta-item">
-              <span>Student Name</span>
-              <font>${studentName || 'Obfuscated Student Hash'}</font>
-            </div>
-            <div class="meta-item">
-              <span>Student ID / Email</span>
-              <font>${studentId || 'N/A'}</font>
-            </div>
-            <div class="meta-item">
-              <span>Degree Program</span>
-              <font>${major || 'B.S. Academic Program'}</font>
-            </div>
-            <div class="meta-item">
-              <span>Graduation Year</span>
-              <font>${gradYear || '2026'}</font>
-            </div>
-            <div class="meta-item">
-              <span>Cumulative GPA</span>
-              <font>${gpa || 'N/A'}</font>
-            </div>
-            <div class="meta-item">
-              <span>Credential Status</span>
-              <font style="color: ${statusStr === 'Active' ? 'green' : 'red'}">${statusStr}</font>
-            </div>
-          </div>
-
-          <div class="transcript-body">
-            <h3>Academic Record Summary</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Requirement Area</th>
-                  <th>Standard Major Credits</th>
-                  <th>Obtained Grade</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Core Department Requirements</td>
-                  <td>60 Credits</td>
-                  <td>A</td>
-                  <td>Satisfied</td>
-                </tr>
-                <tr>
-                  <td>Electives & Seminars</td>
-                  <td>30 Credits</td>
-                  <td>A-</td>
-                  <td>Satisfied</td>
-                </tr>
-                <tr>
-                  <td>Capstone Project / Thesis</td>
-                  <td>10 Credits</td>
-                  <td>Pass</td>
-                  <td>Satisfied</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="signature-box">
-            <div class="sig">University Registrar Signature</div>
-            <div class="sig">CredAxis Verification Seal</div>
-          </div>
-
-          <div class="footer">
-            <p>This academic transcript was cryptographically signed and issued on the blockchain network.</p>
-            <p>Registry Address: ${registryAddress}</p>
-            <p>Record ID Hash: ${recordId}</p>
-            <p>Document SHA-256 Fingerprint: ${fileHash}</p>
-            <p>IPFS CID: ${metadataCID}</p>
-          </div>
-
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `)
-    printWindow.document.close()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `${metadata.studentId || 'transcript'}_verified.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error("PDF generation failed", err)
+    } finally {
+      setIsGeneratingPdf(false)
+    }
   }
 
   return (
@@ -383,11 +211,13 @@ export default function IssuedDetailPage() {
             </div>
           </div>
 
-          <Button
+          <Button 
+            className="font-mono text-[10px] h-8 bg-ca-accent text-white hover:bg-ca-accent-hover flex items-center gap-2 transition-all"
             onClick={handlePrintTranscript}
-            className="font-mono text-xs bg-ca-accent text-white hover:bg-ca-accent-hover flex items-center gap-2"
+            disabled={isGeneratingPdf || !metadata}
           >
-            <Download className="h-4 w-4" /> DOWNLOAD OFFICIAL TRANSCRIPT
+            {isGeneratingPdf ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+            DOWNLOAD AS PDF
           </Button>
         </div>
       </div>
