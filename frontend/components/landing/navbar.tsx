@@ -11,6 +11,7 @@ import { useState, useEffect } from "react"
 const NAV_LINKS = [
   { label: "How it Works", href: "#how-it-works" },
   { label: "Features", href: "#features" },
+  { label: "Docs", href: "/docs" },
   { label: "Verify", href: "/verify" },
 ]
 

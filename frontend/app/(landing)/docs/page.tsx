@@ -1,5 +1,6 @@
 "use client"
 
+import "./docs.css"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { DocsNav } from "@/components/docs/docs-nav"
