@@ -2079,7 +2079,7 @@ app.post("/api/public/email-transcript", async (c) => {
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student Name:</td><td style="padding: 8px; color: #fff;">${studentName}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Student ID:</td><td style="padding: 8px; color: #fff;">${studentId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Degree Program:</td><td style="padding: 8px; color: #fff;">${major}</td></tr>
-            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Cumulative GPA:</td><td style="padding: 8px; font-weight: bold; color: #10b981;">${parseFloat(gpa).toFixed(2)} / 4.00</td></tr>
+            <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Cumulative GPA:</td><td style="padding: 8px; font-weight: bold; color: #10b981;">${gpa ? parseFloat(gpa).toFixed(2) : '0.00'} / 4.00</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Graduation Year:</td><td style="padding: 8px; color: #fff;">${gradYear}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Transcript Record Hash:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #6c5bf0;">${recordId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">PDF SHA-256 Checksum:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #a3e635;">${fileHash}</td></tr>
