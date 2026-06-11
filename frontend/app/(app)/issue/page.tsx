@@ -408,7 +408,9 @@ export default function IssuePage() {
 
   const previewPdf = () => {
     if (!pdfBlob) return
-    setShowPdfModal(true)
+    startTransition(() => {
+      setShowPdfModal(true)
+    })
   }
 
   // ─── IPFS Metadata Upload ──────────────────────────────────────────────────
