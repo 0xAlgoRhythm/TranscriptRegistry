@@ -154,12 +154,21 @@ export default function IssuedPage() {
             onClick={() => setShowUniSuggestions(!showUniSuggestions)}
             className="w-full rounded-lg border border-border/60 bg-card py-3 px-4 text-xs font-mono text-left flex justify-between items-center hover:border-ca-accent transition-colors focus:outline-none"
           >
-            <span className="truncate">
-              {registryAddress
-                ? universities.find(u => u.contractAddr.toLowerCase() === registryAddress.toLowerCase())?.name || registryAddress
-                : "Select from registered universities..."}
-            </span>
-            <span className="text-muted-foreground text-[10px]">▼</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 truncate">
+              {registryAddress ? (
+                <>
+                  <span className="font-bold text-foreground">
+                    {universities.find(u => u.contractAddr.toLowerCase() === registryAddress.toLowerCase())?.name || "Custom Registry"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded sm:ml-2">
+                    {registryAddress.slice(0, 10)}...{registryAddress.slice(-8)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-muted-foreground">Select from registered universities...</span>
+              )}
+            </div>
+            <span className="text-muted-foreground text-[10px] ml-2">▼</span>
           </button>
 
           {showUniSuggestions && (
