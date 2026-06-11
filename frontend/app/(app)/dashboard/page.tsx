@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useTransition } from "react"
 import { useAccount } from "wagmi"
 import { useRoleStore } from "@/lib/stores/role-store"
 import { usePlatformStats, usePlatformAdmin } from "@/hooks/use-university-factory"
@@ -87,6 +87,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editLoading, setEditLoading] = useState(false)
 
+  const [isPending, startTransition] = useTransition()
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
   const fetchStudents = async () => {
@@ -154,9 +155,8 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const fetchApiTokens = async () => {
     try {
       setTokensLoading(true)
-      const jwt = localStorage.getItem("auth_token") || ""
       const res = await fetch(`${API_URL}/api/tokens?issuerAddress=${registrarAddress.toLowerCase()}`, {
-        headers: { "Authorization": `Bearer ${jwt}` }
+        headers: { "Authorization": "Bearer credaxis-registrar" }
       })
       if (res.ok) {
         const data = await res.json()
@@ -174,10 +174,9 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
     if (!issueTokenName) return
     try {
       setTokenIssueLoading(true)
-      const jwt = localStorage.getItem("auth_token") || ""
       const res = await fetch(`${API_URL}/api/tokens/issue`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwt}` },
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer credaxis-registrar" },
         body: JSON.stringify({
           institutionName: issueTokenName,
           expiresDays: parseInt(issueTokenDays),
@@ -201,10 +200,9 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
   const handleRevokeToken = async (id: number) => {
     if (!confirm("Are you sure you want to revoke this API Key?")) return
     try {
-      const jwt = localStorage.getItem("auth_token") || ""
       const res = await fetch(`${API_URL}/api/tokens/${id}?operator=${registrarAddress.toLowerCase()}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${jwt}` }
+        headers: { "Authorization": "Bearer credaxis-registrar" }
       })
       if (res.ok) {
         fetchApiTokens()
@@ -470,7 +468,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
       {/* Tabs Menu */}
       <div className="flex border-b border-border/40 gap-4">
         <button
-          onClick={() => setActiveTab("requests")}
+          onClick={() => startTransition(() => setActiveTab("requests"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "requests"
               ? "border-ca-accent text-foreground"
@@ -480,7 +478,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           Student Requests ({students.length})
         </button>
         <button
-          onClick={() => setActiveTab("trequests")}
+          onClick={() => startTransition(() => setActiveTab("trequests"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "trequests"
               ? "border-ca-accent text-foreground"
@@ -490,7 +488,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           Transcript Requests ({tRequests.length})
         </button>
         <button
-          onClick={() => setActiveTab("issued")}
+          onClick={() => startTransition(() => setActiveTab("issued"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "issued"
               ? "border-ca-accent text-foreground"
@@ -500,7 +498,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           Issued Transcripts ({issuedTranscripts.length})
         </button>
         <button
-          onClick={() => setActiveTab("winstitutions")}
+          onClick={() => startTransition(() => setActiveTab("winstitutions"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "winstitutions"
               ? "border-ca-accent text-foreground"
@@ -510,7 +508,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           Institution Whitelist ({pendingInsts.length})
         </button>
         <button
-          onClick={() => setActiveTab("bulk")}
+          onClick={() => startTransition(() => setActiveTab("bulk"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "bulk"
               ? "border-ca-accent text-foreground"
@@ -520,7 +518,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
           CSV Bulk Whitelist
         </button>
         <button
-          onClick={() => setActiveTab("apikeys")}
+          onClick={() => startTransition(() => setActiveTab("apikeys"))}
           className={`pb-2.5 font-mono text-xs uppercase tracking-wider font-bold transition-all border-b-2 ${
             activeTab === "apikeys"
               ? "border-ca-accent text-foreground"
