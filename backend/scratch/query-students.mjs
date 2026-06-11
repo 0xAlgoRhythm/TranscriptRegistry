@@ -1,25 +1,28 @@
-import { db } from './dist/db/connection.js'
-import { students, transcripts } from './dist/db/schema.js'
+import { db } from '../dist/db/connection.js'
+import { transcripts } from '../dist/db/schema.js'
+import { keccak256, encodePacked } from 'viem'
 
-// BigInt patch
 BigInt.prototype.toJSON = function () {
   return this.toString()
 }
 
 async function main() {
   try {
-    console.log('=== STUDENTS ===')
-    const stds = await db.select().from(students)
-    console.log(JSON.stringify(stds, null, 2))
+    const studentWallet = "0x4523761eac98ebd9a5ce5127163c6649b5852997"
+    const studentHashVal = keccak256(encodePacked(["address"], [studentWallet]))
+    console.log('EXPECTED STUDENT HASH:', studentHashVal)
 
-    console.log('=== TRANSCRIPTS ===')
     const txs = await db.select().from(transcripts)
+    console.log('ALL TRANSCRIPTS IN DB:')
     console.log(JSON.stringify(txs, null, 2))
+
+    const matches = txs.filter(t => t.studentHash.toLowerCase() === studentHashVal.toLowerCase())
+    console.log('MATCHING TRANSCRIPTS:', matches.length)
+
   } catch (err) {
-    console.error('Error querying DB:', err)
+    console.error('Error:', err)
   } finally {
     process.exit(0)
   }
 }
-
 main()
