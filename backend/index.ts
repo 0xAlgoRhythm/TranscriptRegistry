@@ -2064,7 +2064,7 @@ app.delete("/api/tokens/:id", verifyAuth, async (c) => {
 // Email verified transcript directly
 app.post("/api/public/email-transcript", async (c) => {
   try {
-    const { to, recordId, registryAddress, studentName, studentId, gpa, major, gradYear, fileHash, universityName } = await c.req.json()
+    const { to, recordId, registryAddress, studentName, studentId, gpa, major, gradYear, fileHash, universityName, courses } = await c.req.json()
 
     if (!to || !recordId || !studentName) {
       return c.json({ error: "Missing required email recipient details" }, 400)
@@ -2095,6 +2095,25 @@ app.post("/api/public/email-transcript", async (c) => {
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Transcript Record Hash:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #6c5bf0;">${recordId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">PDF SHA-256 Checksum:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #a3e635;">${fileHash}</td></tr>
           </table>
+          ${courses && courses.length > 0 ? `
+          <h3 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 8px; margin-top: 30px; font-size: 14px;">ACADEMIC RECORD</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; text-align: left;">
+            <tr style="background-color: #1a1a24; border-bottom: 1px solid #333;">
+              <th style="padding: 8px; color: #888;">Code</th>
+              <th style="padding: 8px; color: #888;">Course Name</th>
+              <th style="padding: 8px; color: #888;">Credits</th>
+              <th style="padding: 8px; color: #888;">Grade</th>
+            </tr>
+            ${courses.map((c: any) => `
+            <tr style="border-bottom: 1px solid #222;">
+              <td style="padding: 8px; color: #fff;">${c.code}</td>
+              <td style="padding: 8px; color: #ccc;">${c.name}</td>
+              <td style="padding: 8px; color: #888;">${c.credits}</td>
+              <td style="padding: 8px; font-weight: bold; color: #10b981;">${c.grade}</td>
+            </tr>
+            `).join('')}
+          </table>
+          ` : ''}
           <div style="text-align: center; margin-top: 30px;">
             <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Verify Authenticity On-Chain</a>
           </div>

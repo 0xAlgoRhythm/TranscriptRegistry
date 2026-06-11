@@ -153,7 +153,8 @@ function VerifyDetailPageContent() {
           major: metaDetails.major,
           gradYear: metaDetails.gradYear,
           fileHash: result.transcript.fileHash,
-          universityName: result.university?.name || metaDetails.university
+          universityName: result.university?.name || metaDetails.university,
+          courses: metaDetails.courses || []
         })
       })
       if (res.ok) {
