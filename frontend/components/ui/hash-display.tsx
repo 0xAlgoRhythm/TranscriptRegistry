@@ -26,13 +26,13 @@ export function HashDisplay({ hash, label, explorerUrl, className, chars = 6 }: 
   }
 
   return (
-    <div className={cn("inline-flex items-center gap-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {label && (
         <span className="text-xs font-mono text-muted-foreground mr-1">
           {label}:
         </span>
       )}
-      <span className="font-mono text-sm font-medium tracking-tight text-foreground/90 bg-muted/40 px-2 py-0.5 rounded border border-border/30">
+      <span className="font-mono text-sm font-medium tracking-tight text-foreground/90 bg-muted/40 px-2 py-0.5 rounded border border-border/30 break-all">
         {truncateAddress(hash, chars)}
       </span>
       
