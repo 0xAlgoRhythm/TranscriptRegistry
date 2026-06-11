@@ -172,6 +172,24 @@ export default function IssuePage() {
   const [showUniSuggestions, setShowUniSuggestions] = useState(false)
   const [studentSuggestions, setStudentSuggestions] = useState<any[]>([])
   const [showStudentSuggestions, setShowStudentSuggestions] = useState(false)
+  
+  const [allStudents, setAllStudents] = useState<any[]>([])
+  const [facultyFilter, setFacultyFilter] = useState("All")
+  const [departmentFilter, setDepartmentFilter] = useState("All")
+  const [studentSearchQuery, setStudentSearchQuery] = useState("")
+
+  useEffect(() => {
+    if (address) {
+      fetch(`${API_URL}/api/registrar/students/${address.toLowerCase()}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAllStudents(data)
+          }
+        })
+        .catch(err => console.error(err))
+    }
+  }, [address, API_URL])
 
   // Fetch universities for registry address suggestions
   useEffect(() => {
@@ -607,35 +625,104 @@ export default function IssuePage() {
               </p>
             </div>
             <div className="grid grid-cols-1 gap-4 relative">
-              <div className="space-y-1.5 relative">
-                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase">Student Lookup (ID, Name, Email, or Wallet)</label>
-                <input
-                  type="text"
-                  value={studentId}
-                  onChange={(e) => {
-                    setStudentId(e.target.value)
-                    setShowStudentSuggestions(true)
-                  }}
-                  onFocus={() => setShowStudentSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowStudentSuggestions(false), 200)}
-                  placeholder="Search by ID, legal name, email, or wallet address..."
-                  className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-sm font-mono focus:border-ca-accent focus:outline-none"
-                />
-                {showStudentSuggestions && studentSuggestions.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 max-h-48 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
-                    {studentSuggestions.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onMouseDown={() => handleSelectStudent(s)}
-                        className="w-full text-left rounded px-3 py-2 hover:bg-muted/40 transition-colors flex flex-col gap-0.5"
-                      >
-                        <span className="font-bold text-foreground">{s.fullName}</span>
-                        <span className="text-[10px] text-muted-foreground">ID: {s.studentId} | {s.email}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={studentSearchQuery}
+                    onChange={(e) => setStudentSearchQuery(e.target.value)}
+                    placeholder="Search Name, ID, Email..."
+                    className="flex-1 rounded-lg border border-border/60 bg-card py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  />
+                  <select
+                    value={facultyFilter}
+                    onChange={(e) => setFacultyFilter(e.target.value)}
+                    className="w-full sm:w-40 rounded-lg border border-border/60 bg-card py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  >
+                    <option value="All">All Faculties</option>
+                    <option value="Engineering">Engineering</option>
+                    <option value="Science">Science</option>
+                    <option value="Arts">Arts</option>
+                    <option value="Business">Business</option>
+                  </select>
+                  <select
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="w-full sm:w-40 rounded-lg border border-border/60 bg-card py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none"
+                  >
+                    <option value="All">All Departments</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Mechanical">Mechanical</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Economics">Economics</option>
+                  </select>
+                </div>
+                
+                <div className="rounded-lg border border-border/60 overflow-hidden bg-card font-mono text-xs max-h-64 overflow-y-auto">
+                  <table className="w-full text-left">
+                    <thead className="bg-muted/40 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 font-semibold">Student</th>
+                        <th className="px-3 py-2 font-semibold">ID</th>
+                        <th className="px-3 py-2 font-semibold">Faculty / Dept</th>
+                        <th className="px-3 py-2 font-semibold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/40">
+                      {allStudents
+                        .filter(s => {
+                          if (facultyFilter !== "All" && s.faculty !== facultyFilter) return false
+                          if (departmentFilter !== "All" && s.department !== departmentFilter) return false
+                          if (studentSearchQuery) {
+                            const q = studentSearchQuery.toLowerCase()
+                            return (
+                              (s.fullName || "").toLowerCase().includes(q) ||
+                              (s.studentId || "").toLowerCase().includes(q) ||
+                              (s.email || "").toLowerCase().includes(q)
+                            )
+                          }
+                          return true
+                        })
+                        .map(s => (
+                        <tr 
+                          key={s.id}
+                          onClick={() => {
+                            setStudentId(s.studentId)
+                            if (s.status === "approved" && s.walletAddress) {
+                              setStudentStatus("approved")
+                              setStudentStatusMsg("✓ Approved student profile verified.")
+                              setStudentName(s.fullName)
+                              setStudentAddress(s.walletAddress)
+                              checkExistingTranscript(s.walletAddress)
+                            } else {
+                              setStudentStatus(s.status)
+                              setStudentStatusMsg(s.status === "pending" ? "⏳ Verification pending — approve this student first." : "✗ Student profile is rejected or has no wallet.")
+                            }
+                          }}
+                          className={`cursor-pointer hover:bg-muted/30 transition-colors ${studentId === s.studentId ? "bg-ca-accent/10" : ""}`}
+                        >
+                          <td className="px-3 py-2.5 font-bold">{s.fullName}</td>
+                          <td className="px-3 py-2.5 text-muted-foreground">{s.studentId}</td>
+                          <td className="px-3 py-2.5 text-muted-foreground">
+                            {s.faculty || "N/A"} - {s.department || "N/A"}
+                          </td>
+                          <td className="px-3 py-2.5 text-right">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase ${s.status === 'approved' ? 'bg-ca-success/10 text-ca-success' : 'bg-ca-warning/10 text-ca-warning'}`}>
+                              {s.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {allStudents.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="px-3 py-6 text-center text-muted-foreground">
+                            No students found.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
               {studentStatus !== "idle" && (
