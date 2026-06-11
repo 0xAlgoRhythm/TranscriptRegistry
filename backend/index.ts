@@ -1868,7 +1868,7 @@ app.post("/api/public/request-access", async (c) => {
     })
 
     if (transporter) {
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+      const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.FRONTEND_URL || "https://credaxis.app"
       const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`
       const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`
 
