@@ -214,12 +214,33 @@ This section acts as the source-of-truth for the system's current implementation
 - **Smart Contract Layer**: Deployed and fully tested with >95% coverage. 82% gas savings achieved.
 - **Backend Engine (Hono + Node.js)**: Email notification system, automated workflow redirections, and full REST APIs connected to PostgreSQL (Drizzle ORM).
 - **Frontend App**: Flawless integration of Privy Auth with automatic embedded wallet binding, Dark Fintech Brand guidelines, multi-role dashboards (Registrar, Student, Verifier), and graceful error handling boundaries.
-- **Transcript PDF Generator Quotas**: Built-in logic restricts students from endlessly requesting PDF generation from Registrars.
+- **Performance Optimizations (v2.0)**: Eradicated React `Interaction to Next Paint (INP)` bottlenecks using concurrent React `startTransition` hooks for massive state updates. Resolved Flash of Unstyled Content (FOUC) by properly synchronizing Wagmi wallet hydration with Privy context.
 - **Registrar API Dashboards**: Universities can generate JWT-style long-lived API keys for their internal SIS integrations seamlessly.
 
 ### ⚠️ Known Issues & Technical Debt
 1. **RPC Rate Limiting**: The Viem client on the backend occasionally hits `fetch failed` if the public Base Sepolia node is overwhelmed. Recommend upgrading to Alchemy/Infura for production.
 2. **Smart Contract Admin Privileges**: The `UniversityFactoryBeacon` is currently owned by a single deployer EOA. Must transition to a Safe Multi-Sig before mainnet.
+
+---
+
+## 🤖 Model Context Protocol (MCP) Server
+
+CredAxis provides a built-in **MCP Server** out-of-the-box. This allows AI Agents (like Claude Desktop or any MCP-compatible client) to interact with the CredAxis database securely using predefined tools.
+
+For maximum compliance and research safety, the MCP server is **strictly Read-Only**. AI agents cannot unilaterally modify on-chain state or approve student applications. 
+
+### Starting the MCP Server
+```bash
+cd mcp
+npm install
+npm run build
+npm start
+```
+
+### Available AI Tools
+- `get_platform_stats`: View active platform metrics (total universities, verified transcripts).
+- `lookup_student`: Query a student's verification status via their wallet address.
+- `check_transcript`: Validate a transcript's on-chain status (Active/Suspended/Revoked) using its Record ID.
 
 ---
 

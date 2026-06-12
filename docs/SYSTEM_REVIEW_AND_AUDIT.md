@@ -59,6 +59,15 @@ This document serves as a comprehensive technical audit of the CredAxis platform
 - **Backend Guards**: The `self-bind-wallet` endpoint enforces email ownership verification, rejects records that already have a wallet (HTTP 409), checks wallet uniqueness across all profiles, and writes an `AUTO_WALLET_BOUND` audit log entry.
 - **UX**: A "Linking Your Identity..." spinner is displayed during the auto-bind phase to communicate the background operation clearly.
 
+### 8. V2 Performance & Stability Upgrades
+- **Status**: Completed
+- **Description**: Resolved critical React rendering bottlenecks and `Interaction to Next Paint (INP)` lags. Replaced monolithic state updates on the dashboard with concurrent `startTransition` hooks, eliminating 208ms UI freezes during modal popups. 
+- **Wagmi/Privy Sync**: Solved the infinite skeleton loader and FOUC issues where users disconnecting their wallets or logging in via email without provisioned wallets would get trapped in an unresolvable loading state. The dashboard gracefully falls back to the Guest Terminal layout immediately.
+
+### 9. Registrar Email Dispatch (UI parity)
+- **Status**: Completed
+- **Description**: Migrated the one-click email approval dispatch sequence into the core `/api/students/:walletAddress/status` route. Registrars approving applications manually via the web UI now trigger the exact same Nodemailer HTML sequence to the student as they would by clicking the email link.
+
 ---
 
 ## 🚧 Pending Components (What's Not Done)

@@ -43,10 +43,15 @@ NEXT_PUBLIC_PRIVY_APP_ID=cmptfuzpa014r0cl587n80doz
 NEXT_PUBLIC_SEPOLIA_RPC_URL=https://sepolia.drpc.org
 
 # Hono API Endpoint
-NEXT_PUBLIC_API_URL=http://localhost:3001
+# Hono API Endpoint
+NEXT_PUBLIC_API_URL=https://your-production-backend.com
 
 # Registry Factory Contract
 NEXT_PUBLIC_REGISTRY_FACTORY_ADDRESS=0x3828Ddf3dC3bdB4f9F838e498e4B5536bb74230e
+
+# Pinata IPFS Keys
+NEXT_PUBLIC_PINATA_JWT=eyJhbGciOiJIUzI1NiIsIn...
+NEXT_PUBLIC_GATEWAY_URL=https://gateway.pinata.cloud
 ```
 
 ---
@@ -90,8 +95,9 @@ Open [http://localhost:3000](http://localhost:3000) to access the platform.
 
 ### 1. Accessing and Authentication
 1. Click **Connect Wallet** on the landing page or auth gate.
-2. Sign in using your Web3 wallet (MetaMask, Coinbase), Email, or Google. Privy will automatically provision an embedded wallet. **For email/social logins**, the platform automatically binds the Privy-provisioned embedded wallet to the student's whitelisted record on first login — no manual "Bind Wallet" step is required.
-3. Switch your MetaMask network to **Sepolia Testnet**.
+2. Sign in using your Web3 wallet (MetaMask, Coinbase), Email, or Google. Privy will automatically provision an embedded wallet. 
+3. **Automated Binding & Verification**: For email/social logins, the platform automatically submits your details to the university registrar. Once the Registrar approves your application (either via the UI or directly from their notification email), you will receive a "Profile Approved" email granting you full access to your Student Dashboard. No manual "Bind Wallet" step is required.
+4. Switch your MetaMask network to **Sepolia Testnet**.
 
 ### 2. Simulating User Roles
 For demonstration purposes, a **Simulator Control** panel is embedded on the bottom of the sidebar. You can toggle roles to inspect different interfaces:
