@@ -4,35 +4,33 @@ import { motion } from "framer-motion"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { Shield, Key, Zap, Flame } from "lucide-react"
-
-const FEATURES = [
-  {
-    title: "Immutable Records",
-    description:
-      "Every transcript is cryptographically fingerprinted. Once issued on Ethereum, it cannot be altered or forged.",
-    icon: Shield,
-  },
-  {
-    title: "Student Access Control",
-    description:
-      "Students decide who sees their credentials. Grant time-limited access — revoke instantly, no intermediary needed.",
-    icon: Key,
-  },
-  {
-    title: "Instant Verification",
-    description:
-      "Employers and institutions get on-chain confirmation in under 5 seconds. No phone calls, no paperwork.",
-    icon: Zap,
-  },
-  {
-    title: "Gas-Efficient by Design",
-    description:
-      "Beacon Proxy architecture reduces per-university deployment cost by 82%. Fully upgradeable without redeployment.",
-    icon: Flame,
-  },
-]
+import { useTranslations } from "next-intl"
 
 export function Features() {
+  const t = useTranslations("Features")
+
+  const FEATURES = [
+    {
+      title: t("feature1Title"),
+      description: t("feature1Desc"),
+      icon: Shield,
+    },
+    {
+      title: t("feature2Title"),
+      description: t("feature2Desc"),
+      icon: Key,
+    },
+    {
+      title: t("feature3Title"),
+      description: t("feature3Desc"),
+      icon: Zap,
+    },
+    {
+      title: t("feature4Title"),
+      description: t("feature4Desc"),
+      icon: Flame,
+    },
+  ]
   return (
     <section id="features" className="bg-background py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
@@ -43,11 +41,11 @@ export function Features() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 space-y-1.5"
         >
-          <SectionLabel index={2} label="PRODUCT FEATURES" />
+          <SectionLabel index={2} label={t("sectionLabel")} />
           <h2 className="text-3xl font-mono font-bold uppercase tracking-tight text-foreground md:text-5xl">
-            Engineered for trust
+            {t("titleLine1")}
             <br />
-            at every layer.
+            {t("titleLine2")}
           </h2>
         </motion.div>
 

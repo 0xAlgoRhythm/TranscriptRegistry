@@ -23,5 +23,46 @@
     "launchApp": "INICIAR APLICACIÓN",
     "verifyRecord": "VERIFICAR UN REGISTRO",
     "secured": "ASEGURADO"
+  },
+  "TrustedUniversities": {
+    "title": "Confiado por las Principales Instituciones en Ghana"
+  },
+  "StatsBar": {
+    "gasSaved": "Gas Ahorrado / Despliegue",
+    "tamperProof": "Registro Inmutable",
+    "verificationDelay": "Retraso en Verificación",
+    "costCut": "Reducción de Costos"
+  },
+  "HowItWorks": {
+    "sectionLabel": "ARQUITECTURA DESCENTRALIZADA",
+    "title": "Tres roles. Una capa de confianza.",
+    "role1": "Universidades",
+    "role1Step1": "Despliegue el registro aislado de su institución",
+    "role1Step2": "Sube archivos de expedientes a IPFS",
+    "role1Step3": "Emite registros en la cadena con hash de privacidad estudiantil",
+    "role2": "Estudiantes",
+    "role2Step1": "Recibe tu expediente en la cadena",
+    "role2Step2": "Concede acceso temporal a los verificadores",
+    "role2Step3": "Revoca el acceso en cualquier momento",
+    "role3": "Verificadores",
+    "role3Step1": "Solicita acceso al estudiante",
+    "role3Step2": "Consulta el contrato inteligente en la cadena",
+    "role3Step3": "Obtén confirmación criptográfica instantánea"
+  },
+  "Features": {
+    "sectionLabel": "CARACTERÍSTICAS DEL PRODUCTO",
+    "titleLine1": "Diseñado para la confianza",
+    "titleLine2": "en cada capa.",
+    "feature1Title": "Registros Inmutables",
+    "feature1Desc": "Cada expediente tiene una huella criptográfica. Una vez emitido en Ethereum, no puede ser alterado ni falsificado.",
+    "feature2Title": "Control de Acceso Estudiantil",
+    "feature2Desc": "Los estudiantes deciden quién ve sus credenciales. Concede acceso temporal — revoca al instante, sin intermediarios.",
+    "feature3Title": "Verificación Instantánea",
+    "feature3Desc": "Empleadores e instituciones obtienen confirmación en cadena en menos de 5 segundos. Sin llamadas, sin papeleo.",
+    "feature4Title": "Eficiencia de Gas",
+    "feature4Desc": "La arquitectura Beacon Proxy reduce el costo de despliegue por universidad en un 82%. Totalmente actualizable sin redespliegue."
+  },
+  "Footer": {
+    "builtOn": "© 2026 CredAxis. Construido en Ethereum."
   }
 }

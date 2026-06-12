@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 
 const UNIVERSITIES = [
   {
@@ -21,6 +22,8 @@ const UNIVERSITIES = [
 ]
 
 export function TrustedUniversities() {
+  const t = useTranslations("TrustedUniversities")
+
   return (
     <section className="relative overflow-hidden border-t border-border/40 bg-background/50 py-16 backdrop-blur-sm">
       <div className="mx-auto max-w-6xl px-6">
@@ -31,7 +34,7 @@ export function TrustedUniversities() {
             viewport={{ once: true }}
             className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground"
           >
-            Trusted by Top Institutions in Ghana
+            {t("title")}
           </motion.h2>
         </div>
 

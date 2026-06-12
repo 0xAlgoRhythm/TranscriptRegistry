@@ -3,38 +3,40 @@
 import { motion } from "framer-motion"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
-
-const HOW_IT_WORKS = [
-  {
-    role: "Universities",
-    accent: "var(--ca-accent)",
-    steps: [
-      "Deploy your institution's isolated registry",
-      "Upload transcript files to IPFS",
-      "Issue records on-chain with student privacy hash",
-    ],
-  },
-  {
-    role: "Students",
-    accent: "var(--ca-teal)",
-    steps: [
-      "Receive your on-chain transcript",
-      "Grant time-limited access to verifiers",
-      "Revoke access at any time",
-    ],
-  },
-  {
-    role: "Verifiers",
-    accent: "var(--ca-success)",
-    steps: [
-      "Request access from the student",
-      "Query the smart contract on-chain",
-      "Get instant cryptographic confirmation",
-    ],
-  },
-]
+import { useTranslations } from "next-intl"
 
 export function HowItWorks() {
+  const t = useTranslations("HowItWorks")
+
+  const HOW_IT_WORKS = [
+    {
+      role: t("role1"),
+      accent: "var(--ca-accent)",
+      steps: [
+        t("role1Step1"),
+        t("role1Step2"),
+        t("role1Step3"),
+      ],
+    },
+    {
+      role: t("role2"),
+      accent: "var(--ca-teal)",
+      steps: [
+        t("role2Step1"),
+        t("role2Step2"),
+        t("role2Step3"),
+      ],
+    },
+    {
+      role: t("role3"),
+      accent: "var(--ca-success)",
+      steps: [
+        t("role3Step1"),
+        t("role3Step2"),
+        t("role3Step3"),
+      ],
+    },
+  ]
   return (
     <section id="how-it-works" className="bg-ca-surface-2 border-y border-border py-24 md:py-32">
       <div className="mx-auto flex flex-col max-w-6xl px-6">
@@ -45,9 +47,9 @@ export function HowItWorks() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 space-y-1.5"
         >
-          <SectionLabel index={1} label="DECENTRALIZED ARCHITECTURE" />
+          <SectionLabel index={1} label={t("sectionLabel")} />
           <h2 className="text-3xl font-mono font-bold uppercase tracking-tight text-foreground md:text-5xl">
-            Three roles. One trust layer.
+            {t("title")}
           </h2>
         </motion.div>
 

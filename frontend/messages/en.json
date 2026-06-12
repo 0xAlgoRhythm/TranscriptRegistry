@@ -23,5 +23,46 @@
     "launchApp": "LAUNCH APPLICATION",
     "verifyRecord": "VERIFY A RECORD",
     "secured": "SECURED"
+  },
+  "TrustedUniversities": {
+    "title": "Trusted by Top Institutions in Ghana"
+  },
+  "StatsBar": {
+    "gasSaved": "Gas Saved / Deploy",
+    "tamperProof": "Tamper Proof Record",
+    "verificationDelay": "Verification Delay",
+    "costCut": "Deployment Cost Cut"
+  },
+  "HowItWorks": {
+    "sectionLabel": "DECENTRALIZED ARCHITECTURE",
+    "title": "Three roles. One trust layer.",
+    "role1": "Universities",
+    "role1Step1": "Deploy your institution's isolated registry",
+    "role1Step2": "Upload transcript files to IPFS",
+    "role1Step3": "Issue records on-chain with student privacy hash",
+    "role2": "Students",
+    "role2Step1": "Receive your on-chain transcript",
+    "role2Step2": "Grant time-limited access to verifiers",
+    "role2Step3": "Revoke access at any time",
+    "role3": "Verifiers",
+    "role3Step1": "Request access from the student",
+    "role3Step2": "Query the smart contract on-chain",
+    "role3Step3": "Get instant cryptographic confirmation"
+  },
+  "Features": {
+    "sectionLabel": "PRODUCT FEATURES",
+    "titleLine1": "Engineered for trust",
+    "titleLine2": "at every layer.",
+    "feature1Title": "Immutable Records",
+    "feature1Desc": "Every transcript is cryptographically fingerprinted. Once issued on Ethereum, it cannot be altered or forged.",
+    "feature2Title": "Student Access Control",
+    "feature2Desc": "Students decide who sees their credentials. Grant time-limited access — revoke instantly, no intermediary needed.",
+    "feature3Title": "Instant Verification",
+    "feature3Desc": "Employers and institutions get on-chain confirmation in under 5 seconds. No phone calls, no paperwork.",
+    "feature4Title": "Gas-Efficient by Design",
+    "feature4Desc": "Beacon Proxy architecture reduces per-university deployment cost by 82%. Fully upgradeable without redeployment."
+  },
+  "Footer": {
+    "builtOn": "© 2026 CredAxis. Built on Ethereum."
   }
 }

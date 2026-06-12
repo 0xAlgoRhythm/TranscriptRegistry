@@ -3,13 +3,16 @@
 import React from "react"
 import { motion } from "framer-motion"
 import { GlowCard } from "@/components/ui/glow-card"
+import { useTranslations } from "next-intl"
 
 export function StatsBar() {
+  const t = useTranslations("StatsBar")
+
   const stats = [
-    { value: "$12K+", label: "Gas Saved / Deploy" },
-    { value: "100%", label: "Tamper Proof Record" },
-    { value: "0s", label: "Verification Delay" },
-    { value: "82%", label: "Deployment Cost Cut" },
+    { value: "$12K+", label: t("gasSaved") },
+    { value: "100%", label: t("tamperProof") },
+    { value: "0s", label: t("verificationDelay") },
+    { value: "82%", label: t("costCut") },
   ]
 
   return (
