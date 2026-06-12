@@ -1,6 +1,6 @@
 # Full System Review & Audit
 
-**Date:** June 10, 2026  
+**Date:** June 12, 2026  
 **Project:** CredAxis Official Transcripts Registry
 
 This document serves as a comprehensive technical audit of the CredAxis platform. It tracks the progress of the ecosystem, outlines completed architectural components, and highlights pending features and outstanding issues for future development phases.
@@ -67,6 +67,17 @@ This document serves as a comprehensive technical audit of the CredAxis platform
 ### 9. Registrar Email Dispatch (UI parity)
 - **Status**: Completed
 - **Description**: Migrated the one-click email approval dispatch sequence into the core `/api/students/:walletAddress/status` route. Registrars approving applications manually via the web UI now trigger the exact same Nodemailer HTML sequence to the student as they would by clicking the email link.
+
+### 10. AI Integration Layer (MCP Server)
+- **Status**: Completed & Deployed
+- **Description**: Engineered a robust **Model Context Protocol (MCP)** server to allow external AI Agents (e.g. Claude Desktop) to connect securely to the ecosystem.
+- **Security**: The MCP server is strictly `Read-Only` to preserve research compliance and prevent AI agents from hallucinating transcript mints or state changes.
+- **Tools**: Features `get_platform_stats`, `lookup_student`, and `check_transcript` native tools.
+- **Remote Hosting (SSE)**: Refactored the underlying transport from local Standard I/O to Express Server-Sent Events (SSE). It has been successfully deployed to production at `https://mcp.credaxis.app/sse`.
+
+### 11. Core Platform Documentation
+- **Status**: Completed & Deployed
+- **Description**: The official frontend documentation portal (`credaxis.app/docs`) and the project markdown files (`ARCHITECTURE.md`, `MCP_SERVER.md`) have been rigorously updated. The documentation now correctly maps AI configurations to the live production domains (`api.credaxis.app` and `mcp.credaxis.app`).
 
 ---
 
