@@ -45,7 +45,7 @@ export function DocsMCPServer() {
 
       <CodeBlock
         language="bash"
-        code={`https://api.credaxis.app/sse`}
+        code={`https://mcp.credaxis.app/sse`}
       />
 
       <p className="docs-text mt-6">
@@ -61,7 +61,7 @@ export function DocsMCPServer() {
       "args": [
         "-y",
         "@modelcontextprotocol/inspector",
-        "https://api.credaxis.app/sse"
+        "https://mcp.credaxis.app/sse"
       ]
     }
   }

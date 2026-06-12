@@ -67,10 +67,10 @@ If you are using Claude Desktop, you can configure it to connect to the remote C
       "args": [
         "-y",
         "@modelcontextprotocol/inspector",
-        "https://api.credaxis.app/sse"
+        "https://mcp.credaxis.app/sse"
       ]
     }
   }
 }
 ```
-*Note: Replace `https://api.credaxis.app/sse` with your actual deployment URL.*
+*Note: Replace `https://mcp.credaxis.app/sse` with your actual deployment URL.*
