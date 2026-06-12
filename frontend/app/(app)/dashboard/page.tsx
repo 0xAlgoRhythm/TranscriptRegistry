@@ -1354,7 +1354,10 @@ export default function DashboardPage() {
     }
   }
 
-  if (!mounted || isConnecting || isReconnecting || isRbacLoading || role === null) {
+  // Only block on role === null if we actually have an address and are trying to resolve it.
+  const isResolvingRole = !!address && role === null;
+
+  if (!mounted || isConnecting || isReconnecting || isRbacLoading || isResolvingRole) {
     return (
       <div className="mx-auto max-w-6xl space-y-10 animate-pulse">
         <div className="h-8 bg-muted rounded w-64 mb-4" />
@@ -1387,8 +1390,8 @@ export default function DashboardPage() {
         <RegistrarDashboardView registrarAddress={address || ""} />
       ) : (
         <>
-          {/* Main Metric Cards - Hidden for students */}
-          {role !== "student" && (
+          {/* Main Metric Cards - Only for Admin/Registrar */}
+          {(role === "admin" || role === "registrar") && (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Registered Universities"
@@ -1550,8 +1553,8 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Dynamic Activity/News Section - Hidden for students */}
-            {role !== "student" && (
+            {/* Dynamic Activity/News Section - Only for Admin */}
+            {role === "admin" && (
               <div className="md:col-span-2 space-y-6">
                 <SectionLabel index={3} label="REALTIME NETWORK METRICS" />
                 
