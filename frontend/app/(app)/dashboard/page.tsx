@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useTransition } from "react"
 import { useAccount } from "wagmi"
 import { useRoleStore } from "@/lib/stores/role-store"
+import { useRBAC } from "@/components/providers/rbac-provider"
 import { usePlatformStats, usePlatformAdmin } from "@/hooks/use-university-factory"
 import { StatCard } from "@/components/ui/stat-card"
 import { GlowCard } from "@/components/ui/glow-card"
@@ -1249,6 +1250,7 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
 export default function DashboardPage() {
   const { address, isConnecting, isReconnecting } = useAccount()
   const { role } = useRoleStore()
+  const { isLoading: isRbacLoading } = useRBAC()
   const { data: stats } = usePlatformStats()
   const { data: adminAddress } = usePlatformAdmin()
 
@@ -1352,7 +1354,7 @@ export default function DashboardPage() {
     }
   }
 
-  if (!mounted || isConnecting || isReconnecting) {
+  if (!mounted || isConnecting || isReconnecting || isRbacLoading || role === null) {
     return (
       <div className="mx-auto max-w-6xl space-y-10 animate-pulse">
         <div className="h-8 bg-muted rounded w-64 mb-4" />
