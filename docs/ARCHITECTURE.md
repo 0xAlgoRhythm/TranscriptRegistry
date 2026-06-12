@@ -121,3 +121,18 @@ sequenceDiagram
   API-->>Registrar: 302 Redirect to /admin dashboard
   Student->>Student: Can now bind wallet and request transcripts via Privy
 ```
+
+## 6) AI Integration Layer (MCP Server)
+
+```mermaid
+flowchart TD
+  Agent["AI Agent (e.g., Claude Desktop)"]
+  MCP["CredAxis MCP Server (Node.js)"]
+  DB[(PostgreSQL)]
+
+  Agent -- "Stdio Request (Tool Call)" --> MCP
+  MCP -- "Read-Only Queries" --> DB
+  DB -- "Result Set" --> MCP
+  MCP -- "JSON Response" --> Agent
+```
+*For complete tool schema details, see [MCP_SERVER.md](file:///c:/Users/user/Desktop/TranscriptRegistry/docs/MCP_SERVER.md).*
