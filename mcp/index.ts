@@ -1,14 +1,16 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import express from "express";
+import cors from "cors";
 import pg from "pg";
 import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables from root
-import path from "path";
 dotenv.config({ path: path.join(process.cwd(), "..", ".env") });
 
 const { Pool } = pg;
@@ -146,10 +148,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error(`Unknown tool: ${request.params.name}`);
 });
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("CredAxis MCP Server running on stdio");
-}
+// Express Setup
+const app = express();
+app.use(cors());
 
-main().catch(console.error);
+let transport: SSEServerTransport | null = null;
+
+app.get("/sse", async (req, res) => {
+  transport = new SSEServerTransport("/message", res);
+  await server.connect(transport);
+  console.log("SSE Client Connected");
+});
+
+app.post("/message", express.json(), async (req, res) => {
+  if (!transport) {
+    res.status(400).send("No active SSE connection");
+    return;
+  }
+  await transport.handlePostMessage(req, res);
+});
+
+const PORT = process.env.PORT || 3005;
+app.listen(PORT, () => {
+  console.log(`CredAxis Hosted MCP Server listening on port ${PORT}`);
+  console.log(`SSE URL: http://localhost:${PORT}/sse`);
+});

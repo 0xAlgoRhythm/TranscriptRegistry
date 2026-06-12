@@ -1,4 +1,4 @@
-import { CodeBlock } from "../code-block"
+import { CodeBlock } from "../docs-ui"
 
 export function DocsMCPServer() {
   return (
@@ -34,20 +34,22 @@ export function DocsMCPServer() {
         </li>
       </ul>
 
-      <h3 className="docs-subheading mt-10">Local Setup & Claude Desktop</h3>
+      <h3 className="docs-subheading mt-10">Remote Hosting & Connections (SSE)</h3>
       <p className="docs-text">
-        To connect the MCP server to Claude Desktop, first ensure the server is built:
+        The MCP Server operates over Server-Sent Events (SSE), making it perfect for remote hosting (e.g. Render, Vercel). 
+      </p>
+
+      <p className="docs-text">
+        When the server is running, you can connect your AI Agent to the exposed endpoint:
       </p>
 
       <CodeBlock
         language="bash"
-        code={`cd mcp
-npm install
-npm run build`}
+        code={`https://api.credaxis.app/sse`}
       />
 
       <p className="docs-text mt-6">
-        Then, add the following configuration to your Claude Desktop config file (<code className="docs-code-inline">claude_desktop_config.json</code>):
+        To configure Claude Desktop to connect to a remotely hosted CredAxis MCP Server, add the following to your <code className="docs-code-inline">claude_desktop_config.json</code>:
       </p>
 
       <CodeBlock
@@ -55,9 +57,11 @@ npm run build`}
         code={`{
   "mcpServers": {
     "credaxis": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "C:/Absolute/Path/To/TranscriptRegistry/mcp/build/index.js"
+        "-y",
+        "@modelcontextprotocol/inspector",
+        "https://api.credaxis.app/sse"
       ]
     }
   }

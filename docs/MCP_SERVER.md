@@ -6,7 +6,7 @@
 ## Overview
 CredAxis includes a built-in **Model Context Protocol (MCP)** server. The MCP server is a Node.js-based service that allows external, locally running AI Agents (such as Claude Desktop) to connect to the CredAxis PostgreSQL database securely.
 
-By providing standardized tools over standard input/output (stdio), AI agents can parse transcripts, verify on-chain statuses, and query platform analytics directly from their prompt windows without needing separate API integrations.
+By providing standardized tools over a Server-Sent Events (SSE) connection stream, AI agents can parse transcripts, verify on-chain statuses, and query platform analytics directly from their prompt windows without needing separate API integrations.
 
 ---
 
@@ -23,10 +23,10 @@ If write-access is ever required in the future, it must be gated behind explicit
 ---
 
 ## 🛠️ Architecture
-The MCP Server resides in the `/mcp` directory at the project root.
+The MCP Server resides in the `/mcp` directory at the project root and functions as an independent Express.js API.
 
-- **Dependencies:** `@modelcontextprotocol/sdk`, `pg` (PostgreSQL Client), `dotenv`.
-- **Communication:** StdioServerTransport.
+- **Dependencies:** `@modelcontextprotocol/sdk`, `express`, `pg` (PostgreSQL Client), `dotenv`.
+- **Communication:** Server-Sent Events (SSE). Exposes endpoints `/sse` and `/message`.
 - **Data Source:** Connects directly to the `transcriptchain` database defined by the root `.env` file.
 
 ---
@@ -53,33 +53,24 @@ When an AI agent connects to the CredAxis MCP server, it gains access to the fol
 
 ---
 
-## 🚀 Setup & Installation
-
-### Local Deployment
-To run the server locally:
-
-```bash
-cd mcp
-npm install
-npm run build
-npm start
-```
+### Remote Hosting
+Because the server operates over SSE rather than local `stdio`, you can host this Express app on Render, Vercel, or AWS.
 
 ### Claude Desktop Integration
-If you are using Claude Desktop, you can configure it to launch the CredAxis MCP Server automatically on startup.
-
-Add the following to your `claude_desktop_config.json`:
+If you are using Claude Desktop, you can configure it to connect to the remote CredAxis MCP Server. Add the following to your `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "credaxis": {
-      "command": "node",
+      "command": "npx",
       "args": [
-        "C:/Absolute/Path/To/TranscriptRegistry/mcp/build/index.js"
+        "-y",
+        "@modelcontextprotocol/inspector",
+        "https://api.credaxis.app/sse"
       ]
     }
   }
 }
 ```
-*Note: Make sure the absolute path points directly to the built `index.js` file, and ensure your database is running on `localhost:5432`.*
+*Note: Replace `https://api.credaxis.app/sse` with your actual deployment URL.*
