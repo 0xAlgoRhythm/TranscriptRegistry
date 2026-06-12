@@ -1545,7 +1545,55 @@ app.put("/api/students/:walletAddress/status", async (c) => {
       })
       .where(eq(students.walletAddress, walletAddress))
 
-    return c.json({ status, message: `Student status updated to ${status}` })
+    // Send email notification to the student about their status change
+    if (transporter && student.email) {
+      try {
+        const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app"
+        const loginUrl = `${frontendBase}/dashboard`
+        
+        let messageHtml = ""
+        let subject = ""
+
+        if (status === "approved") {
+          subject = "✓ Student Profile Approved — CredAxis"
+          messageHtml = `
+            <h2 style="color: #10b981; margin-top: 0;">APPLICATION APPROVED</h2>
+            <p>Dear <strong>${student.fullName}</strong>,</p>
+            <p>Your student registration has been successfully approved by the university registrar.</p>
+            <p>You may now log into your dashboard to manage your digital identity and request official transcripts.</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${loginUrl}" class="button" style="background-color: #10b981; color: #fff;">ACCESS DASHBOARD</a>
+            </div>
+          `
+        } else if (status === "rejected") {
+          subject = "✕ Student Profile Rejected — CredAxis"
+          messageHtml = `
+            <h2 style="color: #ef4444; margin-top: 0;">APPLICATION REJECTED</h2>
+            <p>Dear <strong>${student.fullName}</strong>,</p>
+            <p>Your student registration request has been <strong>rejected</strong> by the university registrar.</p>
+            <p>This typically occurs if your provided details (Name, Student ID, or Email) do not match the official institutional records.</p>
+            <p>Please review your details and contact your university's administration office if you believe this is an error.</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${loginUrl}" class="button" style="background-color: #ef4444; color: #fff;">RETURN TO DASHBOARD</a>
+            </div>
+          `
+        }
+
+        if (messageHtml) {
+          await transporter.sendMail({
+            from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+            to: student.email,
+            subject,
+            html: generateEmailTemplate(\`Application \${status.charAt(0).toUpperCase() + status.slice(1)}\`, messageHtml)
+          })
+          console.log(\`[EMAIL] \${status} notification sent to \${student.email}\`)
+        }
+      } catch (emailErr) {
+        console.error("[EMAIL] Failed to send student status notification:", emailErr)
+      }
+    }
+
+    return c.json({ status, message: \`Student status updated to \${status}\` })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }
