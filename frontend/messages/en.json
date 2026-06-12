@@ -62,6 +62,38 @@
     "feature4Title": "Gas-Efficient by Design",
     "feature4Desc": "Beacon Proxy architecture reduces per-university deployment cost by 82%. Fully upgradeable without redeployment."
   },
+  "Roles": {
+    "sectionLabel": "USER ROLES",
+    "titleLine1": "Designed for the entire",
+    "titleLine2": "educational ecosystem.",
+    "role1Title": "Students",
+    "role1Desc": "Take absolute ownership of your academic records. Keep your credentials safe in your own wallet, grant temporary verification tokens to potential employers, and easily revoke access when no longer required.",
+    "role2Title": "Universities",
+    "role2Desc": "Modernize credential distribution. Lower operations overhead by deploying isolated registries on Ethereum, issuing transcripts in seconds, and completely eliminating verification email backlogs.",
+    "role3Title": "Verifiers",
+    "role3Desc": "Instantly check qualifications with complete cryptographic certainty. Skip institutional delays and administrative waitlists, verify record hashes in real time, and query verified on-chain proof."
+  },
+  "Contact": {
+    "label": "Get In Touch",
+    "titleLine1": "Ready to",
+    "titleLine2": "Integrate?",
+    "desc": "Whether you are an institution looking to onboard, or an employer looking for API access to our verification endpoints, we are here to help you get started.",
+    "emailUs": "Email Us",
+    "nameLabel": "Name / Organization",
+    "namePlaceholder": "University of Examples",
+    "emailLabel": "Work Email",
+    "emailPlaceholder": "admin@university.edu",
+    "msgLabel": "How can we help?",
+    "msgPlaceholder": "We want to start issuing immutable transcripts...",
+    "btnSending": "Sending...",
+    "btnSent": "Message Sent!",
+    "btnSend": "Send Message"
+  },
+  "CTA": {
+    "sectionLabel": "GET STARTED",
+    "title": "Ready to bring your institution on-chain?",
+    "desc": "Deploy your institution's isolated, upgradeable registry in minutes and join leading universities on CredAxis."
+  },
   "Footer": {
     "builtOn": "© 2026 CredAxis. Built on Ethereum."
   }

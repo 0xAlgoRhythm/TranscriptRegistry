@@ -62,6 +62,38 @@
     "feature4Title": "Eficiencia de Gas",
     "feature4Desc": "La arquitectura Beacon Proxy reduce el costo de despliegue por universidad en un 82%. Totalmente actualizable sin redespliegue."
   },
+  "Roles": {
+    "sectionLabel": "ROLES DE USUARIO",
+    "titleLine1": "Diseñado para todo",
+    "titleLine2": "el ecosistema educativo.",
+    "role1Title": "Estudiantes",
+    "role1Desc": "Toma el control absoluto de tus expedientes académicos. Guarda tus credenciales de forma segura en tu propia billetera, otorga tokens de verificación temporales a posibles empleadores y revoca el acceso fácilmente cuando ya no sea necesario.",
+    "role2Title": "Universidades",
+    "role2Desc": "Moderniza la distribución de credenciales. Reduce los gastos operativos al implementar registros aislados en Ethereum, emitiendo expedientes en segundos y eliminando por completo los retrasos en los correos electrónicos de verificación.",
+    "role3Title": "Verificadores",
+    "role3Desc": "Comprueba las calificaciones al instante con total certeza criptográfica. Evita demoras institucionales y listas de espera administrativas, verifica los hashes de los registros en tiempo real y consulta pruebas verificadas en la cadena."
+  },
+  "Contact": {
+    "label": "Ponte en Contacto",
+    "titleLine1": "¿Listo para",
+    "titleLine2": "Integrar?",
+    "desc": "Ya sea que seas una institución que busca unirse o un empleador que busca acceso a nuestras API de verificación, estamos aquí para ayudarte a comenzar.",
+    "emailUs": "Escríbenos",
+    "nameLabel": "Nombre / Organización",
+    "namePlaceholder": "Universidad de Ejemplos",
+    "emailLabel": "Correo de Trabajo",
+    "emailPlaceholder": "admin@universidad.edu",
+    "msgLabel": "¿Cómo podemos ayudar?",
+    "msgPlaceholder": "Queremos empezar a emitir expedientes inmutables...",
+    "btnSending": "Enviando...",
+    "btnSent": "¡Mensaje Enviado!",
+    "btnSend": "Enviar Mensaje"
+  },
+  "CTA": {
+    "sectionLabel": "COMENZAR",
+    "title": "¿Listo para llevar tu institución a la cadena?",
+    "desc": "Despliega el registro aislado y actualizable de tu institución en minutos y únete a las principales universidades en CredAxis."
+  },
   "Footer": {
     "builtOn": "© 2026 CredAxis. Construido en Ethereum."
   }

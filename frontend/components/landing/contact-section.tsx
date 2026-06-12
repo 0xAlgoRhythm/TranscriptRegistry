@@ -4,8 +4,10 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Mail, MessageSquare, ArrowRight, CheckCircle2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 export function ContactSection() {
+  const t = useTranslations("Contact")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
 
@@ -55,16 +57,16 @@ export function ContactSection() {
           >
             <div className="inline-flex items-center gap-2 rounded-full border border-ca-accent/30 bg-ca-accent/10 px-3 py-1 text-xs font-medium tracking-wide text-ca-accent uppercase">
               <MessageSquare className="h-3.5 w-3.5" />
-              Get In Touch
+              {t("label")}
             </div>
             
             <h2 className="text-4xl font-display font-light md:text-5xl lg:text-6xl">
-              Ready to <br />
-              <strong className="font-semibold text-foreground">Integrate?</strong>
+              {t("titleLine1")} <br />
+              <strong className="font-semibold text-foreground">{t("titleLine2")}</strong>
             </h2>
             
             <p className="max-w-md text-muted-foreground leading-relaxed">
-              Whether you are an institution looking to onboard, or an employer looking for API access to our verification endpoints, we are here to help you get started.
+              {t("desc")}
             </p>
 
             <div className="pt-4 flex flex-col gap-4">
@@ -73,7 +75,7 @@ export function ContactSection() {
                   <Mail className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email Us</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("emailUs")}</p>
                   <p className="text-sm font-medium">info@credaxis.app</p>
                 </div>
               </div>
@@ -92,38 +94,38 @@ export function ContactSection() {
               
               <form onSubmit={handleSubmit} className="relative z-10 space-y-5">
                 <div className="space-y-2">
-                  <label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Name / Organization</label>
+                  <label htmlFor="name" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("nameLabel")}</label>
                   <input
                     type="text"
                     name="name"
                     id="name"
                     required
                     className="w-full rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
-                    placeholder="University of Examples"
+                    placeholder={t("namePlaceholder")}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Work Email</label>
+                  <label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("emailLabel")}</label>
                   <input
                     type="email"
                     name="email"
                     id="email"
                     required
                     className="w-full rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
-                    placeholder="admin@university.edu"
+                    placeholder={t("emailPlaceholder")}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <label htmlFor="message" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">How can we help?</label>
+                  <label htmlFor="message" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("msgLabel")}</label>
                   <textarea
                     name="message"
                     id="message"
                     required
                     rows={4}
                     className="w-full resize-none rounded-lg border border-border bg-ca-surface-2 px-4 py-3 text-sm outline-none transition-colors focus:border-ca-accent focus:bg-ca-surface text-foreground"
-                    placeholder="We want to start issuing immutable transcripts..."
+                    placeholder={t("msgPlaceholder")}
                   ></textarea>
                 </div>
 
@@ -136,11 +138,11 @@ export function ContactSection() {
                   className="w-full bg-ca-accent hover:bg-ca-accent-hover text-white py-6"
                 >
                   {isSubmitting ? (
-                    <span className="flex items-center gap-2">Sending...</span>
+                    <span className="flex items-center gap-2">{t("btnSending")}</span>
                   ) : isSuccess ? (
-                    <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Message Sent!</span>
+                    <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> {t("btnSent")}</span>
                   ) : (
-                    <span className="flex items-center gap-2">Send Message <ArrowRight className="h-4 w-4" /></span>
+                    <span className="flex items-center gap-2">{t("btnSend")} <ArrowRight className="h-4 w-4" /></span>
                   )}
                 </Button>
               </form>

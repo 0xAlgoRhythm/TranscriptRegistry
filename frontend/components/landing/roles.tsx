@@ -5,29 +5,31 @@ import { motion } from "framer-motion"
 import { GlowCard } from "@/components/ui/glow-card"
 import { SectionLabel } from "@/components/ui/section-label"
 import { GraduationCap, Landmark, ShieldCheck } from "lucide-react"
-
-const ROLES_DATA = [
-  {
-    title: "Students",
-    description: "Take absolute ownership of your academic records. Keep your credentials safe in your own wallet, grant temporary verification tokens to potential employers, and easily revoke access when no longer required.",
-    icon: GraduationCap,
-    accent: "var(--ca-teal)",
-  },
-  {
-    title: "Universities",
-    description: "Modernize credential distribution. Lower operations overhead by deploying isolated registries on Ethereum, issuing transcripts in seconds, and completely eliminating verification email backlogs.",
-    icon: Landmark,
-    accent: "var(--ca-accent)",
-  },
-  {
-    title: "Verifiers",
-    description: "Instantly check qualifications with complete cryptographic certainty. Skip institutional delays and administrative waitlists, verify record hashes in real time, and query verified on-chain proof.",
-    icon: ShieldCheck,
-    accent: "var(--ca-success)",
-  },
-]
+import { useTranslations } from "next-intl"
 
 export function Roles() {
+  const t = useTranslations("Roles")
+
+  const ROLES_DATA = [
+    {
+      title: t("role1Title"),
+      description: t("role1Desc"),
+      icon: GraduationCap,
+      accent: "var(--ca-teal)",
+    },
+    {
+      title: t("role2Title"),
+      description: t("role2Desc"),
+      icon: Landmark,
+      accent: "var(--ca-accent)",
+    },
+    {
+      title: t("role3Title"),
+      description: t("role3Desc"),
+      icon: ShieldCheck,
+      accent: "var(--ca-success)",
+    },
+  ]
   return (
     <section className="bg-background py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6">
@@ -38,11 +40,11 @@ export function Roles() {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="mb-16 space-y-1.5"
         >
-          <SectionLabel index={3} label="USER ROLES" />
+          <SectionLabel index={3} label={t("sectionLabel")} />
           <h2 className="text-3xl font-mono font-bold uppercase tracking-tight text-foreground md:text-5xl">
-            Designed for the entire
+            {t("titleLine1")}
             <br />
-            educational ecosystem.
+            {t("titleLine2")}
           </h2>
         </motion.div>
 
