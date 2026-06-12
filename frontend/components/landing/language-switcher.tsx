@@ -23,6 +23,7 @@ export function LanguageSwitcher() {
           <span className="sr-only">Toggle language</span>
         </Button>
       </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-md border-border/40">
         <DropdownMenuItem asChild>
           <Link
             href={pathname}
