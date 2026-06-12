@@ -1390,8 +1390,8 @@ export default function DashboardPage() {
         <RegistrarDashboardView registrarAddress={address || ""} />
       ) : (
         <>
-          {/* Main Metric Cards - Only for Admin/Registrar */}
-          {(role === "admin" || role === "registrar") && (
+          {/* Main Metric Cards - Only for Admin */}
+          {role === "admin" && (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 label="Registered Universities"
