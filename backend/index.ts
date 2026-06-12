@@ -1584,9 +1584,9 @@ app.put("/api/students/:walletAddress/status", async (c) => {
             from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
             to: student.email,
             subject,
-            html: generateEmailTemplate(\`Application \${status.charAt(0).toUpperCase() + status.slice(1)}\`, messageHtml)
+            html: generateEmailTemplate(`Application ${status.charAt(0).toUpperCase() + status.slice(1)}`, messageHtml)
           })
-          console.log(\`[EMAIL] \${status} notification sent to \${student.email}\`)
+          console.log(`[EMAIL] ${status} notification sent to ${student.email}`)
         }
       } catch (emailErr) {
         console.error("[EMAIL] Failed to send student status notification:", emailErr)
