@@ -154,6 +154,36 @@ app.use(cors());
 
 let transport: SSEServerTransport | null = null;
 
+app.get("/", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>CredAxis MCP Server</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { text-align: center; max-width: 600px; padding: 2rem; background: #1e293b; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #334155; }
+        h1 { color: #38bdf8; margin-top: 0; }
+        p { line-height: 1.6; color: #cbd5e1; }
+        code { background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 4px; color: #a78bfa; font-family: monospace; }
+        .status { display: inline-block; padding: 0.25rem 0.75rem; background: #059669; color: white; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; margin-bottom: 1rem; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <span class="status">● System Operational</span>
+        <h1>CredAxis MCP Server</h1>
+        <p>This is the Model Context Protocol (MCP) Integration Server for the CredAxis ecosystem.</p>
+        <p>This server operates over Server-Sent Events (SSE) and is strictly read-only.</p>
+        <p>To connect your AI Agent (like Claude Desktop), point it to the SSE endpoint:<br><br><code>/sse</code></p>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 app.get("/sse", async (req, res) => {
   transport = new SSEServerTransport("/message", res);
   await server.connect(transport);
