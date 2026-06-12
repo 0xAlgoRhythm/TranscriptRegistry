@@ -6,7 +6,7 @@ import { SplashScreen } from "@/components/ui/splash-screen"
 import { CookieBanner } from "@/components/app/cookie-banner"
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import "./globals.css"
+import "../globals.css"
 
 const displayFont = Cormorant_Garamond({
 	variable: "--font-display",
