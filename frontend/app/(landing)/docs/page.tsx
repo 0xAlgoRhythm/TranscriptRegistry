@@ -17,6 +17,7 @@ import { DocsOnChain } from "@/components/docs/sections/on-chain"
 import { DocsErrorCodes } from "@/components/docs/sections/error-codes"
 import { DocsSDK } from "@/components/docs/sections/sdk"
 import { DocsPlayground } from "@/components/docs/sections/playground"
+import { DocsMCPServer } from "@/components/docs/sections/mcp-server"
 
 export const sections = [
   { id: "introduction",     label: "Introduction",           icon: "📖" },
@@ -29,6 +30,7 @@ export const sections = [
   { id: "on-chain",         label: "On-Chain Contracts",     icon: "⛓️" },
   { id: "sdk",              label: "SDK & Integration",      icon: "🛠️" },
   { id: "webhooks",         label: "Webhooks & Emails",      icon: "📡" },
+  { id: "mcp-server",       label: "AI & MCP Server",        icon: "🤖" },
   { id: "error-codes",      label: "Error Codes",            icon: "🚨" },
   { id: "playground",       label: "API Playground",         icon: "⚡" },
 ]
@@ -134,6 +136,9 @@ export default function DocsPage() {
           </DocsSection>
           <DocsSection id="webhooks">
             <DocsWebhooks />
+          </DocsSection>
+          <DocsSection id="mcp-server">
+            <DocsMCPServer />
           </DocsSection>
           <DocsSection id="error-codes">
             <DocsErrorCodes />
