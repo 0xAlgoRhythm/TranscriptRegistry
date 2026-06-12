@@ -1,22 +1,23 @@
-"use client"
+"use client";
 
-import React, { useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { AlertOctagon, RotateCcw } from "lucide-react"
-
+import { useTranslations } from "next-intl";
+import React, { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { AlertOctagon, RotateCcw } from "lucide-react";
 export default function Error({
   error,
-  reset,
+  reset
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & {
+    digest?: string;
+  };
+  reset: () => void;
 }) {
+  const t = useTranslations("Common");
   useEffect(() => {
-    console.error("Application Error:", error)
-  }, [error])
-
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground p-6 relative overflow-hidden">
+    console.error("Application Error:", error);
+  }, [error]);
+  return <div className="flex min-h-screen flex-col items-center justify-center bg-background text-foreground p-6 relative overflow-hidden">
       {/* Decorative backdrop */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(239,68,68,0.1),transparent_35%)]" />
       
@@ -32,29 +33,17 @@ export default function Error({
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-xl font-mono font-bold tracking-wider uppercase text-foreground">
-            SYSTEM EXCEPTION
-          </h1>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            An unexpected runtime error has occurred. Details have been logged to the telemetry console.
-          </p>
+          <h1 className="text-xl font-mono font-bold tracking-wider uppercase text-foreground">{t("sYSTEMEXCEPTION")}</h1>
+          <p className="text-xs text-muted-foreground leading-relaxed">{t("anunexpectedruntimeerror")}</p>
         </div>
 
-        {error.digest && (
-          <div className="p-2 border border-border/40 rounded bg-muted/20 text-[10px] font-mono text-muted-foreground uppercase">
-            Digest ID: {error.digest}
-          </div>
-        )}
+        {error.digest && <div className="p-2 border border-border/40 rounded bg-muted/20 text-[10px] font-mono text-muted-foreground uppercase">{t("digestID")}{error.digest}
+          </div>}
 
         <div className="pt-2">
-          <Button
-            onClick={() => reset()}
-            className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4"
-          >
-            <RotateCcw className="h-3.5 w-3.5" /> RESTART INSTANCE
-          </Button>
+          <Button onClick={() => reset()} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4">
+            <RotateCcw className="h-3.5 w-3.5" />{t("rESTARTINSTANCE")}</Button>
         </div>
       </div>
-    </div>
-  )
+    </div>;
 }

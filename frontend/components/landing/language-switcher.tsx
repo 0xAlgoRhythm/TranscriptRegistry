@@ -28,6 +28,7 @@ export function LanguageSwitcher() {
           <Link
             href={pathname}
             locale="en"
+            prefetch={false}
             className={`cursor-pointer font-medium w-full ${locale === 'en' ? 'text-ca-accent' : ''}`}
           >
             English
@@ -37,6 +38,7 @@ export function LanguageSwitcher() {
           <Link
             href={pathname}
             locale="es"
+            prefetch={false}
             className={`cursor-pointer font-medium w-full ${locale === 'es' ? 'text-ca-accent' : ''}`}
           >
             Español

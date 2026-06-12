@@ -1,21 +1,17 @@
-import { Navbar } from "@/components/landing/navbar"
-import { Footer } from "@/components/landing/footer"
-import { Server, Activity, Database, Shield } from "lucide-react"
-
+import { useTranslations } from "next-intl";
+import { Navbar } from "@/components/landing/navbar";
+import { Footer } from "@/components/landing/footer";
+import { Server, Activity, Database, Shield } from "lucide-react";
 export default function ApiStatusPage() {
-  return (
-    <main className="bg-background text-foreground min-h-screen flex flex-col">
+  const t = useTranslations("Common");
+  return <main className="bg-background text-foreground min-h-screen flex flex-col">
       <Navbar />
       
       <div className="flex-1 max-w-5xl mx-auto w-full px-6 py-24 md:py-32">
         <div className="space-y-4 mb-12 text-center">
-          <div className="inline-flex items-center rounded-full border border-ca-accent/30 bg-ca-accent/10 px-2.5 py-0.5 text-xs font-semibold font-mono text-ca-accent transition-colors">
-            System Status
-          </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">API & Infrastructure</h1>
-          <p className="text-muted-foreground font-mono text-sm max-w-2xl mx-auto">
-            The CredAxis backend API is fully operational and healthy. Below are the details of our core infrastructure services.
-          </p>
+          <div className="inline-flex items-center rounded-full border border-ca-accent/30 bg-ca-accent/10 px-2.5 py-0.5 text-xs font-semibold font-mono text-ca-accent transition-colors">{t("systemStatus")}</div>
+          <h1 className="font-display text-4xl md:text-5xl font-bold tracking-tight">{t("aPIInfrastructure")}</h1>
+          <p className="text-muted-foreground font-mono text-sm max-w-2xl mx-auto">{t("theCredAxisbackendAPI")}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
@@ -26,16 +22,14 @@ export default function ApiStatusPage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">Core API Server</h3>
+                <h3 className="font-bold text-lg">{t("coreAPIServer")}</h3>
                 <span className="flex items-center gap-1.5 text-xs font-mono text-green-500">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </span>
-                  Operational
-                </span>
+                  </span>{t("operational")}</span>
               </div>
-              <p className="text-sm text-muted-foreground">Main backend node processing indexing and IPFS pinning queues.</p>
+              <p className="text-sm text-muted-foreground">{t("mainbackendnodeprocessing")}</p>
             </div>
           </div>
 
@@ -46,13 +40,11 @@ export default function ApiStatusPage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">PostgreSQL Database</h3>
+                <h3 className="font-bold text-lg">{t("postgreSQLDatabase")}</h3>
                 <span className="flex items-center gap-1.5 text-xs font-mono text-green-500">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  Operational
-                </span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>{t("operational")}</span>
               </div>
-              <p className="text-sm text-muted-foreground">Relational database storing metadata schemas and RBAC policies.</p>
+              <p className="text-sm text-muted-foreground">{t("relationaldatabasestoringmetadata")}</p>
             </div>
           </div>
 
@@ -63,13 +55,11 @@ export default function ApiStatusPage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">RPC Node Connection</h3>
+                <h3 className="font-bold text-lg">{t("rPCNodeConnection")}</h3>
                 <span className="flex items-center gap-1.5 text-xs font-mono text-green-500">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  Operational
-                </span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>{t("operational")}</span>
               </div>
-              <p className="text-sm text-muted-foreground">Viem WebSocket and HTTP connection to the Sepolia testnet.</p>
+              <p className="text-sm text-muted-foreground">{t("viemWebSocketandHTTP")}</p>
             </div>
           </div>
 
@@ -80,32 +70,24 @@ export default function ApiStatusPage() {
             </div>
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">Registry Smart Contract</h3>
+                <h3 className="font-bold text-lg">{t("registrySmartContract")}</h3>
                 <span className="flex items-center gap-1.5 text-xs font-mono text-green-500">
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  Operational
-                </span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>{t("operational")}</span>
               </div>
-              <p className="text-sm text-muted-foreground">Transcript Registry EVM contract validating SBT issuance.</p>
+              <p className="text-sm text-muted-foreground">{t("transcriptRegistryEVMcontract")}</p>
             </div>
           </div>
         </div>
 
         <div className="mt-16 text-center max-w-2xl mx-auto space-y-4">
-          <h2 className="text-xl font-bold font-display">API Documentation</h2>
-          <p className="text-muted-foreground text-sm">
-            For integration partners and developers, our REST API documentation is currently available upon request. 
-            The API uses standard JSON payloads and requires JWT Bearer authentication.
-          </p>
+          <h2 className="text-xl font-bold font-display">{t("aPIDocumentation")}</h2>
+          <p className="text-muted-foreground text-sm">{t("forintegrationpartnersand")}</p>
           <div className="pt-4">
-            <a href="mailto:api@credaxis.johnokyere.xyz" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 font-mono">
-              Request API Keys
-            </a>
+            <a href="mailto:api@credaxis.johnokyere.xyz" className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 font-mono">{t("requestAPIKeys")}</a>
           </div>
         </div>
       </div>
 
       <Footer />
-    </main>
-  )
+    </main>;
 }
