@@ -1123,7 +1123,7 @@ app.post("/api/students", async (c) => {
         const adminEmail = process.env.SMTP_USER || process.env.GMAIL_USER || "";
         const recipient = uni?.registrarEmail || adminEmail;
 
-        const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.FRONTEND_URL || "https://credaxis.app";
+        const apiBase = process.env.FRONTEND_URL || "https://credaxis.app";
         const approveUrl = `${apiBase}/api/students/approve-via-token?token=${approvalToken}`;
         const rejectUrl = `${apiBase}/api/students/reject-via-token?token=${approvalToken}`;
 
@@ -1868,7 +1868,7 @@ app.post("/api/public/request-access", async (c) => {
     })
 
     if (transporter) {
-      const apiBase = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.FRONTEND_URL || "https://credaxis.app"
+      const apiBase = process.env.FRONTEND_URL || "https://credaxis.app"
       const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`
       const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`
 
