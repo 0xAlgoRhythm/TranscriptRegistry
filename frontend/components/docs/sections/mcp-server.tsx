@@ -44,7 +44,7 @@ export function DocsMCPServer() {
       </p>
 
       <CodeBlock
-        language="bash"
+        lang="bash"
         code={`https://mcp.credaxis.app/sse`}
       />
 
@@ -53,7 +53,7 @@ export function DocsMCPServer() {
       </p>
 
       <CodeBlock
-        language="json"
+        lang="json"
         code={`{
   "mcpServers": {
     "credaxis": {
