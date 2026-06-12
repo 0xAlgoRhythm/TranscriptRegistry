@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next"
 import { Web3Provider } from "@/components/providers/web3-provider"
 import { SplashScreen } from "@/components/ui/splash-screen"
 import { CookieBanner } from "@/components/app/cookie-banner"
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 import "./globals.css"
 
 const displayFont = Cormorant_Garamond({
@@ -46,20 +48,31 @@ export const metadata: Metadata = {
 	},
 }
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
+	params,
 }: Readonly<{
-	children: React.ReactNode
+	children: React.ReactNode;
+	params: { locale: string };
 }>) {
+	// Await params since it is an asynchronous context in Next.js 15+
+	const { locale } = await params;
+
+	// Providing all messages to the client
+	// side is the easiest way to get started
+	const messages = await getMessages();
+
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang={locale} suppressHydrationWarning>
 			<body
 				className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} font-sans antialiased`}
 			>
-				<Web3Provider>
-					<SplashScreen>{children}</SplashScreen>
-				</Web3Provider>
-				<CookieBanner />
+				<NextIntlClientProvider messages={messages}>
+					<Web3Provider>
+						<SplashScreen>{children}</SplashScreen>
+					</Web3Provider>
+					<CookieBanner />
+				</NextIntlClientProvider>
 				<Analytics />
 			</body>
 		</html>

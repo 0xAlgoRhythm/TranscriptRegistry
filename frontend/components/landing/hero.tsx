@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useTranslations } from "next-intl"
 import { Button } from "@/components/ui/button"
 
 const STATS = [
@@ -40,6 +41,8 @@ const itemSlow = {
 }
 
 export function Hero() {
+  const t = useTranslations("Hero")
+
   return (
     <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-background text-foreground pt-16">
       {/* Visual background accents */}
@@ -89,7 +92,7 @@ export function Hero() {
             lineHeight: 1,
           }}
         >
-          SECURED
+          {t("secured")}
         </span>
       </motion.div>
 
@@ -103,7 +106,7 @@ export function Hero() {
         <motion.div variants={item} className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/40 bg-card/25 backdrop-blur-md px-3 py-1.5">
           <span className="size-1.5 animate-pulse rounded-full bg-ca-accent" />
           <span className="font-mono text-[10px] tracking-wider uppercase text-muted-foreground">
-            INTRODUCING CREDAXIS V2.0
+            {t("badge")}
           </span>
         </motion.div>
 
@@ -112,10 +115,10 @@ export function Hero() {
           variants={itemSlow}
           className="mb-6 text-5xl font-display font-light leading-[1.05] tracking-tight text-foreground md:text-7xl lg:text-[5.5rem]"
         >
-          Academic Transcripts,
+          {t("titleLine1")}
           <br />
           <em className="not-italic font-semibold text-ca-accent">
-            Forged on Blockchain.
+            {t("titleLine2")}
           </em>
         </motion.h1>
 
@@ -124,7 +127,7 @@ export function Hero() {
           variants={item}
           className="mb-10 max-w-lg text-sm leading-relaxed text-muted-foreground md:text-base"
         >
-          Immutable. Verifiable. Student-controlled. Issue, manage, and audit academic records directly on-chain. Completely immune to institutional delays and verification fee scams.
+          {t("subtitle")}
         </motion.p>
 
         {/* CTA buttons */}
@@ -135,7 +138,7 @@ export function Hero() {
               size="lg"
               className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-6 py-5 rounded-lg border border-transparent shadow-lg shadow-ca-accent/20 transition-all duration-200"
             >
-              <Link href="/dashboard">LAUNCH APPLICATION</Link>
+              <Link href="/dashboard">{t("launchApp")}</Link>
             </Button>
           </motion.div>
           <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
@@ -145,7 +148,7 @@ export function Hero() {
               variant="outline"
               className="border-border hover:border-ca-accent/50 text-foreground bg-card font-mono tracking-wider text-xs px-6 py-5 rounded-lg transition-all duration-200 shadow-sm"
             >
-              <Link href="/verify">VERIFY A RECORD</Link>
+              <Link href="/verify">{t("verifyRecord")}</Link>
             </Button>
           </motion.div>
         </motion.div>

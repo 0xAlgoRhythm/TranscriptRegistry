@@ -1,0 +1,27 @@
+{
+  "Index": {
+    "title": "Credenciales Académicas Descentralizadas",
+    "subtitle": "CredAxis proporciona emisión segura de expedientes académicos en cadena para universidades modernas.",
+    "getStarted": "Comenzar",
+    "viewDocs": "Ver Documentación"
+  },
+  "Navbar": {
+    "dashboard": "Panel",
+    "verify": "Verificar",
+    "admin": "Administrador",
+    "login": "Iniciar Sesión / Conectar Billetera",
+    "howItWorks": "Cómo Funciona",
+    "features": "Características",
+    "docs": "Documentación",
+    "launchApp": "INICIAR DAPP"
+  },
+  "Hero": {
+    "badge": "PRESENTANDO CREDAXIS V2.0",
+    "titleLine1": "Expedientes Académicos,",
+    "titleLine2": "Forjados en la Blockchain.",
+    "subtitle": "Inmutable. Verificable. Controlado por el estudiante. Emita, administre y audite registros académicos directamente en la cadena. Completamente inmune a retrasos institucionales y estafas en tarifas de verificación.",
+    "launchApp": "INICIAR APLICACIÓN",
+    "verifyRecord": "VERIFICAR UN REGISTRO",
+    "secured": "ASEGURADO"
+  }
+}

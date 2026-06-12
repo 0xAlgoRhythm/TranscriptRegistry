@@ -7,17 +7,22 @@ import { Button } from "@/components/ui/button"
 import { useUIStore } from "@/lib/stores/ui-store"
 import { Sun, Moon } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
+import { LanguageSwitcher } from "./language-switcher"
 
-const NAV_LINKS = [
-  { label: "How it Works", href: "#how-it-works" },
-  { label: "Features", href: "#features" },
-  { label: "Docs", href: "/docs" },
-  { label: "Verify", href: "/verify" },
-]
+
 
 export function Navbar() {
   const { theme, toggleTheme } = useUIStore()
   const [mounted, setMounted] = useState(false)
+  const t = useTranslations("Navbar")
+
+  const NAV_LINKS = [
+    { label: t("howItWorks"), href: "#how-it-works" },
+    { label: t("features"), href: "#features" },
+    { label: t("docs"), href: "/docs" },
+    { label: t("verify"), href: "/verify" },
+  ]
 
   useEffect(() => {
     setMounted(true)
@@ -61,8 +66,11 @@ export function Navbar() {
             </button>
           )}
 
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
           <Button asChild size="sm" className="bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs px-4">
-            <Link href="/dashboard">LAUNCH DAPP</Link>
+            <Link href="/dashboard">{t("launchApp")}</Link>
           </Button>
         </div>
       </div>

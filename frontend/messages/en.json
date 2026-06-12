@@ -1,0 +1,27 @@
+{
+  "Index": {
+    "title": "Decentralized Academic Credentials",
+    "subtitle": "CredAxis provides secure, on-chain transcript issuance for modern universities.",
+    "getStarted": "Get Started",
+    "viewDocs": "View Documentation"
+  },
+  "Navbar": {
+    "dashboard": "Dashboard",
+    "verify": "Verify",
+    "admin": "Admin",
+    "login": "Login / Connect Wallet",
+    "howItWorks": "How it Works",
+    "features": "Features",
+    "docs": "Docs",
+    "launchApp": "LAUNCH DAPP"
+  },
+  "Hero": {
+    "badge": "INTRODUCING CREDAXIS V2.0",
+    "titleLine1": "Academic Transcripts,",
+    "titleLine2": "Forged on Blockchain.",
+    "subtitle": "Immutable. Verifiable. Student-controlled. Issue, manage, and audit academic records directly on-chain. Completely immune to institutional delays and verification fee scams.",
+    "launchApp": "LAUNCH APPLICATION",
+    "verifyRecord": "VERIFY A RECORD",
+    "secured": "SECURED"
+  }
+}
