@@ -1593,7 +1593,7 @@ app.put("/api/students/:walletAddress/status", async (c) => {
       }
     }
 
-    return c.json({ status, message: \`Student status updated to \${status}\` })
+    return c.json({ status, message: `Student status updated to ${status}` })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }
