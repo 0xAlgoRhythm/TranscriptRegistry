@@ -606,11 +606,13 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedStudentForEdit(s)
-                              setEditName(s.fullName)
-                              setEditEmail(s.email)
-                              setEditWallet(s.walletAddress || "")
-                              setIsEditModalOpen(true)
+                              startTransition(() => {
+                                setSelectedStudentForEdit(s)
+                                setEditName(s.fullName)
+                                setEditEmail(s.email)
+                                setEditWallet(s.walletAddress || "")
+                                setIsEditModalOpen(true)
+                              })
                             }}
                             className="font-mono text-[9px] px-2 py-1 h-6 border-muted-foreground/30 text-muted-foreground hover:bg-muted/30"
                           >
@@ -622,8 +624,10 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                setSelectedStudentForWallet(s)
-                                setIsWalletModalOpen(true)
+                                startTransition(() => {
+                                  setSelectedStudentForWallet(s)
+                                  setIsWalletModalOpen(true)
+                                })
                               }}
                               className="font-mono text-[9px] px-2 py-1 h-6 border-ca-accent text-ca-accent hover:bg-ca-accent hover:text-white"
                             >
@@ -1243,10 +1247,15 @@ function RegistrarDashboardView({ registrarAddress }: { registrarAddress: string
 }
 
 export default function DashboardPage() {
-  const { address } = useAccount()
+  const { address, isConnecting, isReconnecting } = useAccount()
   const { role } = useRoleStore()
   const { data: stats } = usePlatformStats()
   const { data: adminAddress } = usePlatformAdmin()
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // State for live DB stats
   const [dbStats, setDbStats] = useState<any>(null)
@@ -1341,6 +1350,20 @@ export default function DashboardPage() {
       case "verifier": return "Verifier Portal"
       default: return "CredAxis Terminal"
     }
+  }
+
+  if (!mounted || isConnecting || isReconnecting) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-10 animate-pulse">
+        <div className="h-8 bg-muted rounded w-64 mb-4" />
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="h-32 bg-muted rounded" />
+          <div className="h-32 bg-muted rounded" />
+          <div className="h-32 bg-muted rounded" />
+          <div className="h-32 bg-muted rounded" />
+        </div>
+      </div>
+    )
   }
 
   return (
