@@ -27,6 +27,7 @@ interface LogItem {
   txHash: string | null;
 }
 function ActivityLogs() {
+  const t = useTranslations("Common");
   const [logs, setLogs] = useState<LogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -101,6 +102,7 @@ const UniversityRow = React.memo(function UniversityRow({
   isDeactivatePending,
   isReactivatePending
 }: UniversityRowProps) {
+  const t = useTranslations("Common");
   const {
     data
   } = useUniversity(id);
@@ -130,6 +132,7 @@ const UniversityRow = React.memo(function UniversityRow({
     </tr>;
 });
 function UniversityList() {
+  const t = useTranslations("Common");
   const {
     data: count
   } = useUniversityCount();
@@ -165,6 +168,7 @@ function UniversityList() {
     </div>;
 }
 function DeployUniversityForm() {
+  const t = useTranslations("Common");
   const {
     address
   } = useAccount();
@@ -258,6 +262,7 @@ interface GovernanceRequest {
   createdAt: string;
 }
 function PendingGovernanceApprovals() {
+  const t = useTranslations("Common");
   const [requests, setRequests] = useState<GovernanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
