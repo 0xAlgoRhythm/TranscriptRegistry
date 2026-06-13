@@ -688,7 +688,7 @@ function RegistrarDashboardView({
                         {truncateAddress(inst.walletAddress, 6)}
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {new Date(instr.createdAt).toLocaleDateString()}
+                        {new Date(inst.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex justify-end gap-2">
