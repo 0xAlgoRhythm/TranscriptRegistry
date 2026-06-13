@@ -36,7 +36,20 @@ export const metadata: Metadata = {
 	},
 	description:
 		"Issue, manage, and verify academic transcripts on the blockchain. Secure, instant, student-controlled.",
-	keywords: ["academic credentials", "blockchain transcripts", "student records", "web3 education", "decentralized identity", "university records"],
+	keywords: [
+		"academic credentials", 
+		"blockchain transcripts", 
+		"student records", 
+		"web3 education", 
+		"decentralized identity", 
+		"university records",
+		"transcript evaluation",
+		"academic results evaluation",
+		"WES alternative",
+		"World Education Services",
+		"browser compliance",
+		"international transcript assessment"
+	],
 	authors: [{ name: "CredAxis Team" }],
 	creator: "CredAxis",
 	publisher: "CredAxis",
@@ -90,6 +103,26 @@ export default async function RootLayout({
 
 	return (
 		<html lang={locale} suppressHydrationWarning>
+			<head>
+				<script
+					type="application/ld+json"
+					dangerouslySetInnerHTML={{
+						__html: JSON.stringify({
+							"@context": "https://schema.org",
+							"@type": "SoftwareApplication",
+							"name": "CredAxis",
+							"applicationCategory": "EducationalApplication",
+							"operatingSystem": "Web Browser",
+							"description": "CredAxis is a blockchain-based transcript and academic evaluation platform. It serves as a modern alternative to World Education Services (WES) for international transcript assessment, offering instant, cryptographically verifiable academic credentials with full browser compliance.",
+							"offers": {
+								"@type": "Offer",
+								"price": "0",
+								"priceCurrency": "USD"
+							}
+						})
+					}}
+				/>
+			</head>
 			<body
 				className={`${displayFont.variable} ${sansFont.variable} ${monoFont.variable} font-sans antialiased`}
 			>
