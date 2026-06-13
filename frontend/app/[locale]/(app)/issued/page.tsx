@@ -194,7 +194,7 @@ export default function IssuedPage() {
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{t("noteToinspector")}</p>
                   
                   <div className="space-y-2 pt-4">
-                    {transcripts.map(tr => <IssuedRow key={tr.recordId} t={tr} registryAddress={registryAddress} />)}
+                    {transcripts.map(tr => <IssuedRow key={tr.recordId} transcript={tr} registryAddress={registryAddress} />)}
                   </div>
                 </div>}
             </div>
