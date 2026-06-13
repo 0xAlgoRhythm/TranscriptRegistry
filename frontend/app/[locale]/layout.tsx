@@ -29,9 +29,35 @@ const monoFont = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-	title: "CredAxis — Blockchain Academic Credentials",
+	metadataBase: new URL('https://credaxis.app'),
+	title: {
+		default: "CredAxis — Blockchain Academic Credentials",
+		template: "%s | CredAxis",
+	},
 	description:
 		"Issue, manage, and verify academic transcripts on the blockchain. Secure, instant, student-controlled.",
+	keywords: ["academic credentials", "blockchain transcripts", "student records", "web3 education", "decentralized identity", "university records"],
+	authors: [{ name: "CredAxis Team" }],
+	creator: "CredAxis",
+	publisher: "CredAxis",
+	robots: {
+		index: true,
+		follow: true,
+		googleBot: {
+			index: true,
+			follow: true,
+			'max-video-preview': -1,
+			'max-image-preview': 'large',
+			'max-snippet': -1,
+		},
+	},
+	alternates: {
+		canonical: "/",
+		languages: {
+			'en': '/en',
+			'es': '/es',
+		},
+	},
 	openGraph: {
 		title: "CredAxis — Blockchain Academic Credentials",
 		description:
