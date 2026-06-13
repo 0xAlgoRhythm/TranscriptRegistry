@@ -17,28 +17,28 @@ import { formatTimestamp, truncateAddress, cn } from "@/lib/utils";
 import { ListFilter, ChevronRight, School, RefreshCw } from "lucide-react";
 import Link from "next/link";
 function IssuedRow({
-  t,
+  transcript,
   registryAddress
 }: {
-  t: any;
+  transcript: any;
   registryAddress: string;
 }) {
   const t = useTranslations("Common");
-  const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#";
+  const ipfsUrl = transcript.metadataCid ? `https://gateway.pinata.cloud/ipfs/${transcript.metadataCid}` : "#";
   return <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-ca-accent transition-all font-mono text-xs">
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-foreground">{t("record")}{t.recordId.slice(0, 10)}{t("text345")}{t.recordId.slice(-6)}</span>
-          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${t.status === "Active" ? "bg-ca-success/15 text-ca-success border border-ca-success/25" : t.status === "Suspended" ? "bg-ca-warning/15 text-ca-warning border border-ca-warning/25" : "bg-ca-danger/15 text-ca-danger border border-ca-danger/25"}`}>
-            {t.status || "Active"}
+          <span className="font-bold text-foreground">{t("record")}{transcript.recordId.slice(0, 10)}{t("text345")}{transcript.recordId.slice(-6)}</span>
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${transcript.status === "Active" ? "bg-ca-success/15 text-ca-success border border-ca-success/25" : transcript.status === "Suspended" ? "bg-ca-warning/15 text-ca-warning border border-ca-warning/25" : "bg-ca-danger/15 text-ca-danger border border-ca-danger/25"}`}>
+            {transcript.status || "Active"}
           </span>
         </div>
-        <p className="text-[10px] text-muted-foreground">{t("studentHash")}{t.studentHash.slice(0, 12)}{t("date")}{new Date(t.issuedAt || t.createdAt).toISOString().split('T')[0]}
+        <p className="text-[10px] text-muted-foreground">{t("studentHash")}{transcript.studentHash.slice(0, 12)}{t("date")}{new Date(transcript.issuedAt || transcript.createdAt).toISOString().split('T')[0]}
         </p>
       </div>
       <div className="flex items-center gap-4">
-        {t.metadataCid && <a href={ipfsUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-ca-success hover:underline">{t("iPFSVIEWER")}</a>}
-        <Link href={`/issued/${t.recordId}?registry=${registryAddress}`} className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline bg-ca-accent/10 px-2 py-1 rounded">{t("pREVIEWDETAILS")}<ChevronRight className="h-3.5 w-3.5" />
+        {transcript.metadataCid && <a href={ipfsUrl} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-ca-success hover:underline">{t("iPFSVIEWER")}</a>}
+        <Link href={`/issued/${transcript.recordId}?registry=${registryAddress}`} className="inline-flex items-center gap-1 text-[10px] font-bold text-ca-accent hover:underline bg-ca-accent/10 px-2 py-1 rounded">{t("pREVIEWDETAILS")}<ChevronRight className="h-3.5 w-3.5" />
         </Link>
       </div>
     </div>;
