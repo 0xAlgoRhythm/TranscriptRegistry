@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname, useRouter } from "@/i18n/routing"
 import { useRoleStore } from "@/lib/stores/role-store"
 import { useRBAC } from "@/components/providers/rbac-provider"
 import { GlowCard } from "@/components/ui/glow-card"

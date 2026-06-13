@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { usePathname } from "next/navigation"
 import { useUIStore } from "@/lib/stores/ui-store"
 import { useRoleStore, type UserRole } from "@/lib/stores/role-store"

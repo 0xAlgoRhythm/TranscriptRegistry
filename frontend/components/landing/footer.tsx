@@ -1,4 +1,4 @@
-import Link from "next/link"
+import { Link } from "@/i18n/routing"
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from "next-intl"
 
