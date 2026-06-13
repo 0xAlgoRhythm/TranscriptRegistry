@@ -263,11 +263,11 @@ export default function VerifyPage() {
               {studentTranscripts.length > 0 && <div className="space-y-2 border border-border/40 rounded-lg p-3 bg-card/30 backdrop-blur-sm">
                   <span className="text-[10px] font-mono tracking-wider text-muted-foreground uppercase block">{t("selectStudentTranscriptto")}{studentTranscripts.length}{t("found")}</span>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
-                    {studentTranscripts.map(t => {
+                    {studentTranscripts.map(tr => {
                   const t = useTranslations("Common");
-                  const isSelected = recordId.toLowerCase() === t.recordId.toLowerCase();
-                  return <button key={t.recordId} type="button" onClick={() => {
-                    setRecordId(t.recordId);
+                  const isSelected = recordId.toLowerCase() === tr.recordId.toLowerCase();
+                  return <button key={tr.recordId} type="button" onClick={() => {
+                    setRecordId(tr.recordId);
                     setLooked(false);
                   }} className={cn("w-full text-left rounded-md p-3 border text-xs font-mono transition-all flex flex-col gap-1.5", isSelected ? "bg-ca-accent/15 border-ca-accent text-foreground shadow-sm ring-1 ring-ca-accent/20" : "bg-card/50 border-border/40 text-muted-foreground hover:border-border/80 hover:bg-muted/10 hover:text-foreground")}>
                           <div className="flex items-center justify-between">
@@ -282,7 +282,7 @@ export default function VerifyPage() {
                           <div className="flex flex-col gap-0.5 text-[10px] text-muted-foreground">
                             <div className="flex justify-between">
                               <span>{t("recordID")}</span>
-                              <span className="text-foreground">{t.recordId.slice(0, 16)}{t("text464")}{t.recordId.slice(-14)}</span>
+                              <span className="text-foreground">{tr.recordId.slice(0, 16)}{t("text464")}{tr.recordId.slice(-14)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span>{t("issued")}</span>
