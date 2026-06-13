@@ -629,27 +629,27 @@ function RegistrarDashboardView({
                   </tr>
                 </thead>
                 <tbody>
-                  {issuedTranscripts.map(t => {
+                  {issuedTranscripts.map(tr => {
               const t = useTranslations("Common");
-              const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#";
-              return <tr key={t.recordId} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+              const ipfsUrl = tr.metadataCid ? `https://gateway.pinata.cloud/ipfs/${tr.metadataCid}` : "#";
+              return <tr key={tr.recordId} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
                         <td className="p-3 font-semibold text-foreground">
-                          {t.recordId.slice(0, 16)}{t("text124")}{t.recordId.slice(-14)}
+                          {tr.recordId.slice(0, 16)}{t("text124")}{tr.recordId.slice(-14)}
                         </td>
                         <td className="p-3 text-muted-foreground">
-                          {t.studentHash.slice(0, 14)}{t("text125")}</td>
+                          {tr.studentHash.slice(0, 14)}{t("text125")}</td>
                         <td className="p-3 text-muted-foreground">
-                          {new Date(t.issuedAt || t.createdAt).toLocaleDateString()}
+                          {new Date(tr.issuedAt || tr.createdAt).toLocaleDateString()}
                         </td>
                         <td className="p-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${t.status === "Active" ? "bg-green-500/10 text-green-400 border border-green-500/30" : t.status === "Amended" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30" : "bg-red-500/10 text-red-400 border border-red-500/30"}`}>
-                            {t.status || "Active"}
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${tr.status === "Active" ? "bg-green-500/10 text-green-400 border border-green-500/30" : tr.status === "Amended" ? "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30" : "bg-red-500/10 text-red-400 border border-red-500/30"}`}>
+                            {tr.status || "Active"}
                           </span>
                         </td>
                         <td className="p-3 text-right">
                           <div className="flex gap-2 justify-end items-center">
-                            {t.metadataCid && <a href={ipfsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center font-mono text-[9px] font-bold tracking-wider uppercase bg-green-950/20 text-green-400 border border-green-900/50 hover:bg-green-950/45 px-2.5 py-1.5 rounded transition-all">{t("iPFS")}</a>}
-                            <Link href={`/issued/${t.recordId}?registry=${t.registryAddr}`}>
+                            {tr.metadataCid && <a href={ipfsUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center font-mono text-[9px] font-bold tracking-wider uppercase bg-green-950/20 text-green-400 border border-green-900/50 hover:bg-green-950/45 px-2.5 py-1.5 rounded transition-all">{t("iPFS")}</a>}
+                            <Link href={`/issued/${tr.recordId}?registry=${tr.registryAddr}`}>
                               <Button size="sm" type="button" className="font-mono text-[9px] px-2.5 py-1.5 h-7 bg-ca-accent hover:bg-ca-accent/90 text-white">{t("dETAILS")}</Button>
                             </Link>
                           </div>
@@ -688,7 +688,7 @@ function RegistrarDashboardView({
                         {truncateAddress(inst.walletAddress, 6)}
                       </td>
                       <td className="p-3 text-muted-foreground">
-                        {new Date(inst.createdAt).toLocaleDateString()}
+                        {new Date(instr.createdAt).toLocaleDateString()}
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex justify-end gap-2">

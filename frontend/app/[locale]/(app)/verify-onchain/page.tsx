@@ -272,10 +272,10 @@ export default function VerifyPage() {
                   }} className={cn("w-full text-left rounded-md p-3 border text-xs font-mono transition-all flex flex-col gap-1.5", isSelected ? "bg-ca-accent/15 border-ca-accent text-foreground shadow-sm ring-1 ring-ca-accent/20" : "bg-card/50 border-border/40 text-muted-foreground hover:border-border/80 hover:bg-muted/10 hover:text-foreground")}>
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-foreground truncate max-w-[200px]">
-                              {t.universityId ? `University Record #${t.id}` : `Record #${t.id}`}
+                              {t.universityId ? `University Record #${tr.id}` : `Record #${tr.id}`}
                             </span>
-                            <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wide uppercase", t.status === "Active" ? "bg-green-500/15 text-green-500 border border-green-500/30" : t.status === "Amended" ? "bg-yellow-500/15 text-yellow-500 border border-yellow-500/30" : "bg-red-500/15 text-red-500 border border-red-500/30")}>
-                              {t.status || "Active"}
+                            <span className={cn("text-[9px] px-1.5 py-0.5 rounded font-semibold tracking-wide uppercase", tr.status === "Active" ? "bg-green-500/15 text-green-500 border border-green-500/30" : tr.status === "Amended" ? "bg-yellow-500/15 text-yellow-500 border border-yellow-500/30" : "bg-red-500/15 text-red-500 border border-red-500/30")}>
+                              {tr.status || "Active"}
                             </span>
                           </div>
                           
