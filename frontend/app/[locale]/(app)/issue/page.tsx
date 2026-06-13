@@ -561,6 +561,7 @@ export default function IssuePage() {
 
                   {showUniSuggestions && <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
                       {universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).map(u => {
+                  const t = useTranslations("Common");
                   const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase();
                   return <button key={u.contractAddr} type="button" onMouseDown={() => {
                     setRegistryAddress(u.contractAddr);

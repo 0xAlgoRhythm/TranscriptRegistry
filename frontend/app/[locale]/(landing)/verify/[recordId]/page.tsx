@@ -16,6 +16,7 @@ interface Course {
   grade: string;
 }
 function VerifyDetailPageContent() {
+  const t = useTranslations("Common");
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();

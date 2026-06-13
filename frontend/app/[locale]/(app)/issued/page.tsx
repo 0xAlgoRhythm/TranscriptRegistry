@@ -23,6 +23,7 @@ function IssuedRow({
   t: any;
   registryAddress: string;
 }) {
+  const t = useTranslations("Common");
   const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#";
   return <div className="flex items-center justify-between p-3.5 bg-card/45 border border-border/60 rounded hover:border-ca-accent transition-all font-mono text-xs">
       <div className="space-y-1">
@@ -133,6 +134,7 @@ export default function IssuedPage() {
 
           {showUniSuggestions && <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
               {universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).map(u => {
+            const t = useTranslations("Common");
             const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase();
             return <button key={u.contractAddr} type="button" onMouseDown={() => {
               setRegistryAddress(u.contractAddr);

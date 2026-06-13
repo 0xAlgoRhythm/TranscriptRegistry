@@ -264,6 +264,7 @@ export default function VerifyPage() {
                   <span className="text-[10px] font-mono tracking-wider text-muted-foreground uppercase block">{t("selectStudentTranscriptto")}{studentTranscripts.length}{t("found")}</span>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
                     {studentTranscripts.map(t => {
+                  const t = useTranslations("Common");
                   const isSelected = recordId.toLowerCase() === t.recordId.toLowerCase();
                   return <button key={t.recordId} type="button" onClick={() => {
                     setRecordId(t.recordId);

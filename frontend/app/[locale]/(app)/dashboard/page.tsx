@@ -30,6 +30,7 @@ function RegistrarDashboardView({
 }: {
   registrarAddress: string;
 }) {
+  const t = useTranslations("Common");
   const [students, setStudents] = useState<StudentRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -629,6 +630,7 @@ function RegistrarDashboardView({
                 </thead>
                 <tbody>
                   {issuedTranscripts.map(t => {
+              const t = useTranslations("Common");
               const ipfsUrl = t.metadataCid ? `https://gateway.pinata.cloud/ipfs/${t.metadataCid}` : "#";
               return <tr key={t.recordId} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
                         <td className="p-3 font-semibold text-foreground">
@@ -1122,6 +1124,7 @@ export default function DashboardPage() {
 
                     <div className="space-y-4 font-mono">
                       {logsLoading && logs.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground animate-pulse">{t("lOADINGNETWORKSTREAM")}</div> : logs.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground">{t("nORECENTACTIVITIESDETECTED")}</div> : logs.slice(0, 5).map((log, index) => {
+                  const t = useTranslations("Common");
                   const timeAgo = (dateStr: string) => {
                     const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
                     if (seconds < 60) return `${seconds}s ago`;

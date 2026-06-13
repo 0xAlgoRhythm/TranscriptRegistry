@@ -95,8 +95,10 @@ export default function AdminAnalyticsPage() {
             <div className="space-y-4">
               {loading && uniShares.length === 0 ? <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground text-xs animate-pulse">
                   <Loader2 className="h-4 w-4 animate-spin" />{t("calculatingshares")}</div> : uniShares.length === 0 ? <p className="text-xs text-muted-foreground">{t("notranscriptsregisteredon")}</p> : (() => {
+              const t = useTranslations("Common");
               const total = uniShares.reduce((acc, curr) => acc + curr.count, 0);
               return uniShares.map((share, idx) => {
+                const t = useTranslations("Common");
                 const pct = total > 0 ? Math.round(share.count / total * 100) : 0;
                 const colors = ["bg-ca-accent", "bg-ca-teal", "bg-ca-success", "bg-ca-warning"];
                 const colorClass = colors[idx % colors.length];
