@@ -13,8 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FileDropZone } from "@/components/ui/file-drop-zone";
 import { truncateAddress, cn } from "@/lib/utils";
-import { Building2, FileText, CheckCircle2, UserCheck, Lock, ShieldCheck, Send, PlusCircle, RefreshCw, Check, X, AlertTriangle, Upload, Eye, Loader2 } from "lucide-react";
+import { Building2, FileText, CheckCircle2, UserCheck, Lock, ShieldCheck, Send, PlusCircle, RefreshCw, Check, X, AlertTriangle, Upload, Eye, Loader2, Save } from "lucide-react";
 import { Link } from "@/i18n/routing";
+import { OtpApprovalModal } from "@/components/app/registrar-otp-modal";
+import { CohortCodeModal } from "@/components/app/cohort-code-modal";
+
 interface StudentRequest {
   id: number;
   walletAddress: string | null;
@@ -75,6 +78,11 @@ function RegistrarDashboardView({
   const [editWallet, setEditWallet] = useState("");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  
+  // OTP & Cohort Modal states
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isCohortModalOpen, setIsCohortModalOpen] = useState(false);
+
   const [isPending, startTransition] = useTransition();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
   const fetchStudents = async () => {
@@ -476,6 +484,8 @@ function RegistrarDashboardView({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border/40 pb-3 mb-4 gap-3">
             <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">{t("verificationEnrollmentRequests")}</h3>
             <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setIsOtpModalOpen(true)} className="bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500/30 border border-yellow-500/50 font-mono text-[9px] h-7 px-2">OTP Bulk Approve</Button>
+              <Button size="sm" onClick={() => setIsCohortModalOpen(true)} className="bg-ca-accent/20 text-ca-accent-light hover:bg-ca-accent/30 border border-ca-accent/50 font-mono text-[9px] h-7 px-2">Generate Cohort Invite</Button>
               <input type="text" placeholder={t("searchIDNameWallet")} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="w-full sm:w-64 rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" />
               <Button size="sm" variant="outline" onClick={fetchStudents} className="font-mono text-[10px] tracking-wider uppercase border-border/60">
                 <RefreshCw className="h-3.5 w-3.5" />
@@ -815,42 +825,52 @@ function RegistrarDashboardView({
             </form>
           </GlowCard>
         </div>}
-
       {/* Edit Student Details Modal */}
       {isEditModalOpen && selectedStudentForEdit && <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in">
-          <GlowCard className="p-6 w-full max-w-md space-y-4" glow>
-            <div className="flex items-center justify-between border-b border-border/40 pb-3">
-              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-foreground">{t("editStudentDetails")}</h3>
+          <div className="bg-card border border-border/60 rounded-xl p-6 w-full max-w-md shadow-2xl space-y-4">
+            <div className="flex justify-between items-center border-b border-border/40 pb-3">
+              <h3 className="font-mono font-bold tracking-wider text-ca-accent text-sm uppercase">{t("editStudentDetails")}</h3>
               <button onClick={() => setIsEditModalOpen(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             </div>
             
-            <p className="text-xs text-muted-foreground font-mono">{t("updateinstitutionalprofilefields")}<strong>{selectedStudentForEdit.studentId}</strong>.
-            </p>
-
-            <form onSubmit={handleEditStudent} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="editNameInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">{t("fullName")}</Label>
-                <input id="editNameInput" type="text" placeholder={t("enterfullname")} value={editName} onChange={e => setEditName(e.target.value)} className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" required />
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-muted-foreground uppercase">{t("fULLNAME")}</label>
+                <input type="text" value={editName} onChange={e => setEditName(e.target.value)} className="w-full rounded border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" />
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="editEmailInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">{t("emailAddress")}</Label>
-                <input id="editEmailInput" type="email" placeholder={t("enteremailaddress")} value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" required />
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-muted-foreground uppercase">{t("email")}</label>
+                <input type="email" value={editEmail} onChange={e => setEditEmail(e.target.value)} className="w-full rounded border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" />
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="editWalletInput" className="text-[10px] font-mono font-bold uppercase tracking-wider">{t("walletAddress0x")}</Label>
-                <input id="editWalletInput" type="text" placeholder={t("0xorleaveblank")} value={editWallet} onChange={e => setEditWallet(e.target.value)} className="w-full rounded-lg border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" />
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono text-muted-foreground uppercase">{t("walletAddressOptional")}</label>
+                <input type="text" value={editWallet} onChange={e => setEditWallet(e.target.value)} placeholder="0x..." className="w-full rounded border border-border/60 bg-background py-2 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" />
               </div>
-
-              <Button type="submit" disabled={editLoading} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs py-2 flex items-center justify-center gap-1.5">
-                {editLoading ? <><RefreshCw className="h-3 w-3 animate-spin" />{t("sAVING")}</> : <><Check className="h-3 w-3" />{t("sAVECHANGES")}</>}
+              <Button onClick={handleEditStudent} disabled={editLoading} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono text-xs mt-2">
+                {editLoading ? <RefreshCw className="h-3.5 w-3.5 animate-spin mr-2" /> : <Save className="h-3.5 w-3.5 mr-2" />}
+                {t("saveChanges")}
               </Button>
-            </form>
-          </GlowCard>
+            </div>
+          </div>
         </div>}
+
+      <OtpApprovalModal 
+        isOpen={isOtpModalOpen} 
+        onClose={() => setIsOtpModalOpen(false)} 
+        pendingWallets={pendingRequests.filter(s => s.walletAddress).map(s => s.walletAddress as string)} 
+        onSuccess={() => {
+          fetchStudents();
+        }} 
+      />
+
+      <CohortCodeModal 
+        isOpen={isCohortModalOpen} 
+        onClose={() => setIsCohortModalOpen(false)} 
+        registrarAddress={registrarAddress} 
+      />
+
     </div>;
 }
 export default function DashboardPage() {
