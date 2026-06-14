@@ -2217,7 +2217,7 @@ app.post("/api/cohort-codes", async (c) => {
 
     // Generate random code (e.g. CA-XYZ123)
     const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase()
-    const code = \`CA-\${randomStr}\`
+    const code = `CA-${randomStr}`
 
     const result = await db.insert(cohortCodes).values({
       code,
@@ -2238,7 +2238,7 @@ app.post("/api/cohort-codes", async (c) => {
 app.get("/api/cohort-codes/:registrarAddress", async (c) => {
   try {
     const registrarAddress = c.req.param("registrarAddress").toLowerCase()
-    const codes = await db.select().from(cohortCodes).where(eq(cohortCodes.registrarAddress, registrarAddress)).orderBy(sql\`\${cohortCodes.createdAt} DESC\`)
+    const codes = await db.select().from(cohortCodes).where(eq(cohortCodes.registrarAddress, registrarAddress)).orderBy(sql`${cohortCodes.createdAt} DESC`)
     return c.json(codes)
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
@@ -2333,8 +2333,8 @@ app.post("/api/registrar/otp/request", async (c) => {
       await transporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
         to: cleanEmail,
-        subject: \`CredAxis Registrar OTP: \${otp}\`,
-        html: \`<h2>Your OTP is: \${otp}</h2><p>This code expires in 15 minutes. Use it to approve pending requests.</p>\`
+        subject: `CredAxis Registrar OTP: ${otp}`,
+        html: `<h2>Your OTP is: ${otp}</h2><p>This code expires in 15 minutes. Use it to approve pending requests.</p>`
       })
     }
 
