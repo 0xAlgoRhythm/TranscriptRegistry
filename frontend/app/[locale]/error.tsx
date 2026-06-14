@@ -47,7 +47,7 @@ export default function Error({
         )}
 
         <div className="pt-2">
-          <Button onClick={() => React.startTransition(() => reset())} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4">
+          <Button onClick={() => window.location.reload()} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs flex items-center justify-center gap-2 py-4">
             <RotateCcw className="h-3.5 w-3.5" />{t("rESTARTINSTANCE")}
           </Button>
         </div>
