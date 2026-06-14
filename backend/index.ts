@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { db } from "./db/connection.js"
-import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens, transcriptRequests, institutions, institutionRequests } from "./db/schema.js"
+import { universities, transcripts, accessGrants, ipfsUploads, students, transcriptStatusHistory, verifications, systemAuditLogs, registrarEmails, governanceRequests, publicAccessRequests, issuedTokens, transcriptRequests, institutions, institutionRequests, cohortCodes, registrarOtps } from "./db/schema.js"
 import { createRemoteJWKSet, jwtVerify } from "jose"
 import { eq, and, sql, inArray } from "drizzle-orm"
 import { startIndexer } from "./indexer/sync.js"
@@ -2194,6 +2194,190 @@ app.post("/api/test-email", async (c) => {
     });
 
     return c.json({ success: true, message: "Test email sent successfully", messageId: info.messageId })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// ─── COHORT CODES ───
+app.post("/api/cohort-codes", async (c) => {
+  try {
+    const { registrarAddress, cohortName, maxUses } = await c.req.json()
+    if (!registrarAddress || !cohortName) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.registrar, registrarAddress.toLowerCase())
+    })
+
+    if (!uni) {
+      return c.json({ error: "Registrar not found" }, 404)
+    }
+
+    // Generate random code (e.g. CA-XYZ123)
+    const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase()
+    const code = \`CA-\${randomStr}\`
+
+    const result = await db.insert(cohortCodes).values({
+      code,
+      registrarAddress: registrarAddress.toLowerCase(),
+      universityId: uni.universityId,
+      cohortName,
+      maxUses: maxUses || null,
+      currentUses: 0,
+      isActive: true
+    }).returning()
+
+    return c.json({ success: true, code: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+app.get("/api/cohort-codes/:registrarAddress", async (c) => {
+  try {
+    const registrarAddress = c.req.param("registrarAddress").toLowerCase()
+    const codes = await db.select().from(cohortCodes).where(eq(cohortCodes.registrarAddress, registrarAddress)).orderBy(sql\`\${cohortCodes.createdAt} DESC\`)
+    return c.json(codes)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Student Cohort Signup
+app.post("/api/students/cohort-signup", async (c) => {
+  try {
+    const { fullName, studentId, email, walletAddress, department, faculty, cohortCode } = await c.req.json()
+    if (!fullName || !studentId || !email || !cohortCode) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const codeRecord = await db.query.cohortCodes.findFirst({
+      where: and(eq(cohortCodes.code, cohortCode), eq(cohortCodes.isActive, true))
+    })
+
+    if (!codeRecord) {
+      return c.json({ error: "Invalid or inactive cohort code" }, 400)
+    }
+
+    if (codeRecord.maxUses && codeRecord.currentUses >= codeRecord.maxUses) {
+      return c.json({ error: "Cohort code limit reached" }, 400)
+    }
+
+    const cleanWallet = walletAddress ? walletAddress.toLowerCase() : null
+    const cleanEmail = email.toLowerCase()
+
+    // Create student as APPROVED directly
+    const result = await db.insert(students).values({
+      fullName,
+      studentId,
+      email: cleanEmail,
+      walletAddress: cleanWallet,
+      department,
+      faculty,
+      universityId: codeRecord.universityId,
+      status: "approved", // Fast track approval via cohort code
+      actionAt: new Date()
+    }).returning()
+
+    // Increment code usage
+    await db.update(cohortCodes)
+      .set({ currentUses: codeRecord.currentUses + 1 })
+      .where(eq(cohortCodes.id, codeRecord.id))
+
+    return c.json({ success: true, student: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// ─── REGISTRAR OTP ───
+app.post("/api/registrar/otp/request", async (c) => {
+  try {
+    const { email } = await c.req.json()
+    if (!email) return c.json({ error: "Email required" }, 400)
+    const cleanEmail = email.toLowerCase()
+
+    // Find registrar email peg
+    const peg = await db.query.registrarEmails.findFirst({
+      where: eq(registrarEmails.email, cleanEmail)
+    })
+    
+    // Also check universities table
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.registrarEmail, cleanEmail)
+    })
+
+    const registrarAddress = peg ? peg.txHash : (uni ? uni.registrar : null)
+    if (!registrarAddress) {
+      return c.json({ error: "No registrar pegged to this email." }, 404)
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpHash = keccak256(encodePacked(["string"], [otp]))
+
+    // Expires in 15 minutes
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15)
+
+    await db.insert(registrarOtps).values({
+      email: cleanEmail,
+      otpHash,
+      registrarAddress,
+      expiresAt
+    })
+
+    if (transporter) {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: cleanEmail,
+        subject: \`CredAxis Registrar OTP: \${otp}\`,
+        html: \`<h2>Your OTP is: \${otp}</h2><p>This code expires in 15 minutes. Use it to approve pending requests.</p>\`
+      })
+    }
+
+    return c.json({ success: true, message: "OTP sent to email" })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+app.post("/api/registrar/otp/verify-and-approve", async (c) => {
+  try {
+    const { email, otp, targetWalletAddresses } = await c.req.json()
+    if (!email || !otp || !targetWalletAddresses || !targetWalletAddresses.length) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const cleanEmail = email.toLowerCase()
+    const otpHash = keccak256(encodePacked(["string"], [otp]))
+
+    const otpRecord = await db.query.registrarOtps.findFirst({
+      where: and(
+        eq(registrarOtps.email, cleanEmail),
+        eq(registrarOtps.otpHash, otpHash),
+        eq(registrarOtps.isUsed, false)
+      ),
+      orderBy: (otps, { desc }) => [desc(otps.createdAt)]
+    })
+
+    if (!otpRecord) return c.json({ error: "Invalid OTP" }, 400)
+    if (new Date() > otpRecord.expiresAt) return c.json({ error: "OTP expired" }, 400)
+
+    // Mark as used
+    await db.update(registrarOtps).set({ isUsed: true }).where(eq(registrarOtps.id, otpRecord.id))
+
+    // Bulk approve students
+    const wallets = targetWalletAddresses.map((w: string) => w.toLowerCase())
+    for (const w of wallets) {
+      await db.update(students)
+        .set({ status: "approved", actionAt: new Date() })
+        .where(eq(students.walletAddress, w))
+    }
+
+    return c.json({ success: true, processed: wallets.length })
   } catch (err: any) {
     return c.json({ error: err.message }, 500)
   }
