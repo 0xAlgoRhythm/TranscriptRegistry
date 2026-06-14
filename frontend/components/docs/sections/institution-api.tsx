@@ -159,6 +159,36 @@ export function DocsInstitutionAPI() {
         <p>Resolve a university by its registry smart contract address.</p>
         <CodeBlock lang="bash" label="cURL" code={`curl https://credaxis.app/api/universities/by-address/0x0487722E60f437F5588BC97501177d1384c84E19`} />
       </div>
+
+      <h3 style={{ marginTop: "2.5rem" }}>Registrar Abstraction Endpoints (Hybrid State)</h3>
+
+      <div className="api-endpoint-block">
+        <EndpointBadge method="POST" path="/api/cohort-codes" />
+        <p>Generates a new Cohort Invite Code, allowing mass student self-onboarding.</p>
+        <ParamTable params={[
+          { name: "registrarAddress", type: "string", required: true, desc: "The wallet address of the issuing registrar." },
+          { name: "cohortName", type: "string", required: true, desc: "Name of the cohort (e.g. Class of 2026 - CS)." },
+          { name: "maxUses", type: "number", required: false, desc: "Maximum number of times this code can be used." }
+        ]} />
+      </div>
+
+      <div className="api-endpoint-block">
+        <EndpointBadge method="POST" path="/api/registrar/otp/request" />
+        <p>Requests a time-locked, 6-digit OTP to be sent to the registrar's pegged email address. Used for fast-track batch approvals without a Web3 wallet.</p>
+        <ParamTable params={[
+          { name: "email", type: "string", required: true, desc: "The authenticated registrar email." }
+        ]} />
+      </div>
+
+      <div className="api-endpoint-block">
+        <EndpointBadge method="POST" path="/api/registrar/otp/verify-and-approve" />
+        <p>Verifies the 6-digit OTP and natively batch-updates pending student statuses to approved in the PostgreSQL state.</p>
+        <ParamTable params={[
+          { name: "email", type: "string", required: true, desc: "The registrar email." },
+          { name: "otp", type: "string", required: true, desc: "The 6-digit OTP code." },
+          { name: "targetWalletAddresses", type: "array", required: true, desc: "Array of student wallet addresses to approve." }
+        ]} />
+      </div>
     </div>
   )
 }
