@@ -70,6 +70,20 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["recordId"],
         },
       },
+      {
+        name: "check_registrar",
+        description: "Check if a wallet address is already linked as a registrar to an existing university to enforce 1-to-1 mapping.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            walletAddress: {
+              type: "string",
+              description: "The wallet address to check.",
+            },
+          },
+          required: ["walletAddress"],
+        },
+      },
     ],
   };
 });
@@ -139,6 +153,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       return {
         content: [{ type: "text", text: JSON.stringify(res.rows[0], null, 2) }],
+      };
+    } catch (err: any) {
+      return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };
+    }
+  }
+
+  if (request.params.name === "check_registrar") {
+    const { walletAddress } = request.params.arguments as any;
+    try {
+      const res = await pool.query(
+        "SELECT university_id, name FROM universities WHERE LOWER(registrar) = LOWER($1)",
+        [walletAddress]
+      );
+      
+      if (res.rows.length === 0) {
+        return { content: [{ type: "text", text: `Wallet ${walletAddress} is not linked to any university.` }] };
+      }
+
+      return {
+        content: [{ type: "text", text: JSON.stringify({ isLinked: true, university: res.rows[0] }, null, 2) }],
       };
     } catch (err: any) {
       return { content: [{ type: "text", text: `Error: ${err.message}` }], isError: true };

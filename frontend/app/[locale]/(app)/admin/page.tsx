@@ -212,12 +212,11 @@ function DeployUniversityForm() {
     try {
       setIsChecking(true);
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-      const res = await fetch(`${API_URL}/api/universities`);
+      const res = await fetch(`${API_URL}/api/universities/check-registrar/${registrar}`);
       if (res.ok) {
-        const unis = await res.json();
-        const alreadyLinked = unis.some((u: any) => u.registrar.toLowerCase() === registrar.toLowerCase());
-        if (alreadyLinked) {
-          setDeployError("This wallet address is already linked to another institution. A 1-to-1 wallet-to-school mapping is required.");
+        const data = await res.json();
+        if (data.isLinked) {
+          setDeployError(`This wallet address is already linked to another institution (${data.name}). A 1-to-1 wallet-to-school mapping is required.`);
           setIsChecking(false);
           return;
         }

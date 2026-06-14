@@ -370,6 +370,23 @@ app.get("/api/universities/by-address/:addr", async (c) => {
   }
 })
 
+app.get("/api/universities/check-registrar/:addr", async (c) => {
+  try {
+    const addr = c.req.param("addr").toLowerCase()
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.registrar, addr)
+    })
+    
+    if (uni) {
+      return c.json({ isLinked: true, universityId: uni.universityId, name: uni.name })
+    } else {
+      return c.json({ isLinked: false })
+    }
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 // Transcripts
 app.get("/api/transcripts/:recordId", async (c) => {
   try {
