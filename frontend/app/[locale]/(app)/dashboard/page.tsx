@@ -352,14 +352,14 @@ function RegistrarDashboardView({
     if (csvFile) {
       try {
         const text = await csvFile.text();
-        payload = parseCSV(text);
+        payload = await parseCSVChunked(text) as any;
       } catch (err) {
         setBulkError("Failed to read CSV file.");
         setBulkLoading(false);
         return;
       }
     } else if (csvText.trim()) {
-      payload = parseCSV(csvText);
+      payload = await parseCSVChunked(csvText) as any;
     } else {
       setBulkError("Please upload a CSV file or paste student records.");
       setBulkLoading(false);
@@ -397,30 +397,44 @@ function RegistrarDashboardView({
       setBulkLoading(false);
     }
   };
-  const parseCSV = (text: string) => {
-    const lines = text.split(/\r?\n/);
-    const parsed: Array<{
-      fullName: string;
-      studentId: string;
-      email: string;
-    }> = [];
-    let startIndex = 0;
-    if (lines[0] && (lines[0].toLowerCase().includes("name") || lines[0].toLowerCase().includes("id") || lines[0].toLowerCase().includes("email"))) {
-      startIndex = 1;
-    }
-    for (let i = startIndex; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      const parts = line.split(",");
-      if (parts.length >= 3) {
-        parsed.push({
-          fullName: parts[0].trim(),
-          studentId: parts[1].trim(),
-          email: parts[2].trim()
-        });
+  const parseCSVChunked = async (text: string) => {
+    return new Promise((resolve) => {
+      const lines = text.split(/\r?\n/);
+      const parsed: Array<{
+        fullName: string;
+        studentId: string;
+        email: string;
+      }> = [];
+      let startIndex = 0;
+      if (lines[0] && (lines[0].toLowerCase().includes("name") || lines[0].toLowerCase().includes("id") || lines[0].toLowerCase().includes("email"))) {
+        startIndex = 1;
       }
-    }
-    return parsed;
+      
+      let i = startIndex;
+      const processChunk = () => {
+        const end = Math.min(i + 1000, lines.length);
+        for (; i < end; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+          const parts = line.split(",");
+          if (parts.length >= 3) {
+            parsed.push({
+              fullName: parts[0].trim(),
+              studentId: parts[1].trim(),
+              email: parts[2].trim()
+            });
+          }
+        }
+        
+        if (i < lines.length) {
+          setTimeout(processChunk, 0);
+        } else {
+          resolve(parsed);
+        }
+      };
+      
+      processChunk();
+    });
   };
   const pendingRequests = students.filter(s => s.status === "pending");
   const approvedRequests = students.filter(s => s.status === "approved");

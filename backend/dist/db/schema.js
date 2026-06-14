@@ -163,3 +163,24 @@ export const institutionRequests = pgTable("institution_requests", {
     createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
     actionAt: timestamp("action_at", { withTimezone: true }),
 });
+export const cohortCodes = pgTable("cohort_codes", {
+    id: serial("id").primaryKey(),
+    code: text("code").unique().notNull(),
+    registrarAddress: text("registrar_address").notNull(),
+    universityId: integer("university_id").references(() => universities.universityId).notNull(),
+    cohortName: text("cohort_name").notNull(),
+    maxUses: integer("max_uses"),
+    currentUses: integer("current_uses").default(0).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
+});
+export const registrarOtps = pgTable("registrar_otps", {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(),
+    otpHash: text("otp_hash").notNull(),
+    registrarAddress: text("registrar_address").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    isUsed: boolean("is_used").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).default(sql `CURRENT_TIMESTAMP`).notNull(),
+});

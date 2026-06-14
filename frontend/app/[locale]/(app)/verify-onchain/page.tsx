@@ -120,27 +120,34 @@ export default function VerifyPage() {
   const handleBatchVerify = async () => {
     if (!batchInput.trim()) return;
     setIsBatchVerifying(true);
+    setBatchResults([]);
     const ids = batchInput.split("\n").map(id => id.trim()).filter(id => id.length === 66 && id.startsWith("0x"));
+    
+    const BATCH_SIZE = 20;
+    let allResults: any[] = [];
+    
     try {
-      const results = await Promise.all(ids.map(async id => {
-        try {
-          const res = await fetch(`${API_URL}/api/transcripts/${id}`);
-          if (!res.ok) throw new Error("Not found");
-          const data = await res.json();
-          return {
-            id,
-            status: data.status,
-            valid: data.status === "Active"
-          };
-        } catch (e) {
-          return {
-            id,
-            status: "Unknown / Invalid",
-            valid: false
-          };
-        }
-      }));
-      setBatchResults(results);
+      for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+        const chunk = ids.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(chunk.map(async id => {
+          try {
+            const res = await fetch(`${API_URL}/api/transcripts/${id}`);
+            if (!res.ok) throw new Error("Not found");
+            const data = await res.json();
+            return {
+              id,
+              status: data.status,
+              valid: data.status === "Active"
+            };
+          } catch (e) {
+            return { id, status: "Unknown / Invalid", valid: false };
+          }
+        }));
+        
+        allResults = [...allResults, ...results];
+        setBatchResults([...allResults]);
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
     } catch (e) {
       console.error(e);
     } finally {

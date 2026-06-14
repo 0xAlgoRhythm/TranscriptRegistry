@@ -5,7 +5,6 @@ import { universities, transcripts, accessGrants, ipfsUploads, students, transcr
 import { createRemoteJWKSet, jwtVerify } from "jose";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import { startIndexer } from "./indexer/sync.js";
-import { serve } from "@hono/node-server";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1039,7 +1038,7 @@ app.post("/api/students", async (c) => {
                 });
                 const adminEmail = process.env.SMTP_USER || process.env.GMAIL_USER || "";
                 const recipient = uni?.registrarEmail || adminEmail;
-                const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                const apiBase = process.env.FRONTEND_URL || "https://credaxis.app";
                 const approveUrl = `${apiBase}/api/students/approve-via-token?token=${approvalToken}`;
                 const rejectUrl = `${apiBase}/api/students/reject-via-token?token=${approvalToken}`;
                 const messageHtml = `
@@ -1413,6 +1412,52 @@ app.put("/api/students/:walletAddress/status", async (c) => {
             updatedAt: new Date(),
         })
             .where(eq(students.walletAddress, walletAddress));
+        // Send email notification to the student about their status change
+        if (transporter && student.email) {
+            try {
+                const frontendBase = process.env.FRONTEND_URL || "https://credaxis.app";
+                const loginUrl = `${frontendBase}/dashboard`;
+                let messageHtml = "";
+                let subject = "";
+                if (status === "approved") {
+                    subject = "✓ Student Profile Approved — CredAxis";
+                    messageHtml = `
+            <h2 style="color: #10b981; margin-top: 0;">APPLICATION APPROVED</h2>
+            <p>Dear <strong>${student.fullName}</strong>,</p>
+            <p>Your student registration has been successfully approved by the university registrar.</p>
+            <p>You may now log into your dashboard to manage your digital identity and request official transcripts.</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${loginUrl}" class="button" style="background-color: #10b981; color: #fff;">ACCESS DASHBOARD</a>
+            </div>
+          `;
+                }
+                else if (status === "rejected") {
+                    subject = "✕ Student Profile Rejected — CredAxis";
+                    messageHtml = `
+            <h2 style="color: #ef4444; margin-top: 0;">APPLICATION REJECTED</h2>
+            <p>Dear <strong>${student.fullName}</strong>,</p>
+            <p>Your student registration request has been <strong>rejected</strong> by the university registrar.</p>
+            <p>This typically occurs if your provided details (Name, Student ID, or Email) do not match the official institutional records.</p>
+            <p>Please review your details and contact your university's administration office if you believe this is an error.</p>
+            <div style="text-align: center; margin: 32px 0;">
+              <a href="${loginUrl}" class="button" style="background-color: #ef4444; color: #fff;">RETURN TO DASHBOARD</a>
+            </div>
+          `;
+                }
+                if (messageHtml) {
+                    await transporter.sendMail({
+                        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+                        to: student.email,
+                        subject,
+                        html: generateEmailTemplate(`Application ${status.charAt(0).toUpperCase() + status.slice(1)}`, messageHtml)
+                    });
+                    console.log(`[EMAIL] ${status} notification sent to ${student.email}`);
+                }
+            }
+            catch (emailErr) {
+                console.error("[EMAIL] Failed to send student status notification:", emailErr);
+            }
+        }
         return c.json({ status, message: `Student status updated to ${status}` });
     }
     catch (err) {
@@ -1702,7 +1747,7 @@ app.post("/api/public/request-access", async (c) => {
             status: "pending"
         });
         if (transporter) {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+            const apiBase = process.env.FRONTEND_URL || "https://credaxis.app";
             const approveUrl = `${apiBase}/api/public/access-requests/approve?token=${token}`;
             const rejectUrl = `${apiBase}/api/public/access-requests/reject?token=${token}`;
             const messageHtml = `
@@ -1877,7 +1922,7 @@ app.delete("/api/tokens/:id", verifyAuth, async (c) => {
 // Email verified transcript directly
 app.post("/api/public/email-transcript", async (c) => {
     try {
-        const { to, recordId, registryAddress, studentName, studentId, gpa, major, gradYear, fileHash, universityName } = await c.req.json();
+        const { to, recordId, registryAddress, studentName, studentId, gpa, major, gradYear, fileHash, universityName, courses } = await c.req.json();
         if (!to || !recordId || !studentName) {
             return c.json({ error: "Missing required email recipient details" }, 400);
         }
@@ -1904,6 +1949,25 @@ app.post("/api/public/email-transcript", async (c) => {
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">Transcript Record Hash:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #6c5bf0;">${recordId}</td></tr>
             <tr style="border-bottom: 1px solid #222;"><td style="padding: 8px; color: #888;">PDF SHA-256 Checksum:</td><td style="padding: 8px; font-size: 11px; word-break: break-all; color: #a3e635;">${fileHash}</td></tr>
           </table>
+          ${courses && courses.length > 0 ? `
+          <h3 style="color: #6c5bf0; border-bottom: 1px solid #222; padding-bottom: 8px; margin-top: 30px; font-size: 14px;">ACADEMIC RECORD</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; text-align: left;">
+            <tr style="background-color: #1a1a24; border-bottom: 1px solid #333;">
+              <th style="padding: 8px; color: #888;">Code</th>
+              <th style="padding: 8px; color: #888;">Course Name</th>
+              <th style="padding: 8px; color: #888;">Credits</th>
+              <th style="padding: 8px; color: #888;">Grade</th>
+            </tr>
+            ${courses.map((c) => `
+            <tr style="border-bottom: 1px solid #222;">
+              <td style="padding: 8px; color: #fff;">${c.code}</td>
+              <td style="padding: 8px; color: #ccc;">${c.name}</td>
+              <td style="padding: 8px; color: #888;">${c.credits}</td>
+              <td style="padding: 8px; font-weight: bold; color: #10b981;">${c.grade}</td>
+            </tr>
+            `).join('')}
+          </table>
+          ` : ''}
           <div style="text-align: center; margin-top: 30px;">
             <a href="${verifyUrl}" style="background-color: #6c5bf0; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Verify Authenticity On-Chain</a>
           </div>
@@ -1938,14 +2002,208 @@ app.post("/api/test-email", async (c) => {
         return c.json({ error: err.message }, 500);
     }
 });
+// ─── COHORT CODES ───
+app.post("/api/cohort-codes", async (c) => {
+    try {
+        const { registrarAddress, cohortName, maxUses } = await c.req.json();
+        if (!registrarAddress || !cohortName) {
+            return c.json({ error: "Missing required fields" }, 400);
+        }
+        const uni = await db.query.universities.findFirst({
+            where: eq(universities.registrar, registrarAddress.toLowerCase())
+        });
+        if (!uni) {
+            return c.json({ error: "Registrar not found" }, 404);
+        }
+        // Generate random code (e.g. CA-XYZ123)
+        const randomStr = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const code = ;
+        `CA-\${randomStr}\`
+
+    const result = await db.insert(cohortCodes).values({
+      code,
+      registrarAddress: registrarAddress.toLowerCase(),
+      universityId: uni.universityId,
+      cohortName,
+      maxUses: maxUses || null,
+      currentUses: 0,
+      isActive: true
+    }).returning()
+
+    return c.json({ success: true, code: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+app.get("/api/cohort-codes/:registrarAddress", async (c) => {
+  try {
+    const registrarAddress = c.req.param("registrarAddress").toLowerCase()
+    const codes = await db.select().from(cohortCodes).where(eq(cohortCodes.registrarAddress, registrarAddress)).orderBy(sql\`\${cohortCodes.createdAt} DESC\`)
+    return c.json(codes)
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Student Cohort Signup
+app.post("/api/students/cohort-signup", async (c) => {
+  try {
+    const { fullName, studentId, email, walletAddress, department, faculty, cohortCode } = await c.req.json()
+    if (!fullName || !studentId || !email || !cohortCode) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const codeRecord = await db.query.cohortCodes.findFirst({
+      where: and(eq(cohortCodes.code, cohortCode), eq(cohortCodes.isActive, true))
+    })
+
+    if (!codeRecord) {
+      return c.json({ error: "Invalid or inactive cohort code" }, 400)
+    }
+
+    if (codeRecord.maxUses && codeRecord.currentUses >= codeRecord.maxUses) {
+      return c.json({ error: "Cohort code limit reached" }, 400)
+    }
+
+    const cleanWallet = walletAddress ? walletAddress.toLowerCase() : null
+    const cleanEmail = email.toLowerCase()
+
+    // Create student as APPROVED directly
+    const result = await db.insert(students).values({
+      fullName,
+      studentId,
+      email: cleanEmail,
+      walletAddress: cleanWallet,
+      department,
+      faculty,
+      universityId: codeRecord.universityId,
+      status: "approved", // Fast track approval via cohort code
+      actionAt: new Date()
+    }).returning()
+
+    // Increment code usage
+    await db.update(cohortCodes)
+      .set({ currentUses: codeRecord.currentUses + 1 })
+      .where(eq(cohortCodes.id, codeRecord.id))
+
+    return c.json({ success: true, student: result[0] })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// ─── REGISTRAR OTP ───
+app.post("/api/registrar/otp/request", async (c) => {
+  try {
+    const { email } = await c.req.json()
+    if (!email) return c.json({ error: "Email required" }, 400)
+    const cleanEmail = email.toLowerCase()
+
+    // Find registrar email peg
+    const peg = await db.query.registrarEmails.findFirst({
+      where: eq(registrarEmails.email, cleanEmail)
+    })
+    
+    // Also check universities table
+    const uni = await db.query.universities.findFirst({
+      where: eq(universities.registrarEmail, cleanEmail)
+    })
+
+    const registrarAddress = peg ? peg.txHash : (uni ? uni.registrar : null)
+    if (!registrarAddress) {
+      return c.json({ error: "No registrar pegged to this email." }, 404)
+    }
+
+    // Generate 6 digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString()
+    const otpHash = keccak256(encodePacked(["string"], [otp]))
+
+    // Expires in 15 minutes
+    const expiresAt = new Date()
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15)
+
+    await db.insert(registrarOtps).values({
+      email: cleanEmail,
+      otpHash,
+      registrarAddress,
+      expiresAt
+    })
+
+    if (transporter) {
+      await transporter.sendMail({
+        from: process.env.SMTP_FROM || process.env.SMTP_USER || process.env.GMAIL_USER,
+        to: cleanEmail,
+        subject: \`CredAxis Registrar OTP: \${otp}\`,
+        html: \`<h2>Your OTP is: \${otp}</h2><p>This code expires in 15 minutes. Use it to approve pending requests.</p>\`
+      })
+    }
+
+    return c.json({ success: true, message: "OTP sent to email" })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+app.post("/api/registrar/otp/verify-and-approve", async (c) => {
+  try {
+    const { email, otp, targetWalletAddresses } = await c.req.json()
+    if (!email || !otp || !targetWalletAddresses || !targetWalletAddresses.length) {
+      return c.json({ error: "Missing required fields" }, 400)
+    }
+
+    const cleanEmail = email.toLowerCase()
+    const otpHash = keccak256(encodePacked(["string"], [otp]))
+
+    const otpRecord = await db.query.registrarOtps.findFirst({
+      where: and(
+        eq(registrarOtps.email, cleanEmail),
+        eq(registrarOtps.otpHash, otpHash),
+        eq(registrarOtps.isUsed, false)
+      ),
+      orderBy: (otps, { desc }) => [desc(otps.createdAt)]
+    })
+
+    if (!otpRecord) return c.json({ error: "Invalid OTP" }, 400)
+    if (new Date() > otpRecord.expiresAt) return c.json({ error: "OTP expired" }, 400)
+
+    // Mark as used
+    await db.update(registrarOtps).set({ isUsed: true }).where(eq(registrarOtps.id, otpRecord.id))
+
+    // Bulk approve students
+    const wallets = targetWalletAddresses.map((w: string) => w.toLowerCase())
+    for (const w of wallets) {
+      await db.update(students)
+        .set({ status: "approved", actionAt: new Date() })
+        .where(eq(students.walletAddress, w))
+    }
+
+    return c.json({ success: true, processed: wallets.length })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
 // Start server and launch micro-indexer listener
-const port = 3001;
+const port = 3001
 serve({
-    fetch: app.fetch,
-    port,
-});
-console.log(`CredAxis Database-Backed API Server running on http://localhost:${port}`);
-// Launch real-time background blockchain listener
-startIndexer().catch((err) => {
-    console.error("Failed to start indexing agent service on start:", err);
+  fetch: app.fetch,
+  port,
+})
+console.log(`;
+        CredAxis;
+        Database - Backed;
+        API;
+        Server;
+        running;
+        on;
+        http: //localhost:${port}`)
+         
+        // Launch real-time background blockchain listener
+        startIndexer().catch((err) => {
+            console.error("Failed to start indexing agent service on start:", err);
+        });
+    }
+    finally {
+    }
 });
