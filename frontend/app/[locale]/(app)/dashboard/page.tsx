@@ -776,21 +776,21 @@ function RegistrarDashboardView({
                       </tr>
                     </thead>
                     <tbody>
-                      {apiTokens.map(t => <tr key={t.id} className={`border-b border-border/20 transition-colors ${!t.isActive ? 'opacity-50' : 'hover:bg-muted/10'}`}>
-                          <td className="p-3 text-foreground font-semibold">{t.institutionName}</td>
+                      {apiTokens.map(token => <tr key={token.id} className={`border-b border-border/20 transition-colors ${!token.isActive ? 'opacity-50' : 'hover:bg-muted/10'}`}>
+                          <td className="p-3 text-foreground font-semibold">{token.institutionName}</td>
                           <td className="p-3">
                             <span className="bg-muted/30 px-2 py-1 rounded text-[10px] border border-border/40 font-mono blur-[3px] hover:blur-none transition-all cursor-pointer">
-                              {t.token}
+                              {token.token}
                             </span>
                           </td>
                           <td className="p-3">
-                            {t.isActive ? <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-green-500/10 text-green-400">{t("active")}</span> : <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400">{t("revoked")}</span>}
+                            {token.isActive ? <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-green-500/10 text-green-400">{t("active")}</span> : <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500/10 text-red-400">{t("revoked")}</span>}
                           </td>
                           <td className="p-3 text-muted-foreground">
-                            {t.expiresAt ? new Date(t.expiresAt).toLocaleDateString() : "Never"}
+                            {token.expiresAt ? new Date(token.expiresAt).toLocaleDateString() : "Never"}
                           </td>
                           <td className="p-3 text-right">
-                            {t.isActive && <Button size="sm" onClick={() => handleRevokeToken(t.id)} className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6">{t("rEVOKE")}</Button>}
+                            {token.isActive && <Button size="sm" onClick={() => handleRevokeToken(token.id)} className="bg-red-950/20 hover:bg-red-950/45 text-red-400 border border-red-900/50 font-mono text-[9px] px-2 py-1 h-6">{t("rEVOKE")}</Button>}
                           </td>
                         </tr>)}
                     </tbody>

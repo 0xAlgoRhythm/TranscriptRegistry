@@ -405,8 +405,8 @@ export default function TranscriptsPage() {
               </div> : <div className="space-y-4 font-mono text-xs">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase text-muted-foreground">{t("selectTranscript")}</label>
-                  <select value={selectedTranscriptId} onChange={e => setSelectedTranscriptId(e.target.value)} className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-3 text-xs focus:border-ca-accent focus:outline-none">
-                    {studentTranscripts.map(t => <option key={t.recordId} value={t.recordId}>{t("record")}{t.recordId.slice(0, 10)}{t("status")}{t.status})
+                    <select value={selectedTranscriptId} onChange={e => setSelectedTranscriptId(e.target.value)} className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-3 text-xs focus:border-ca-accent focus:outline-none">
+                    {studentTranscripts.map(tr => <option key={tr.recordId} value={tr.recordId}>{t("record")}{tr.recordId.slice(0, 10)}{t("status")}{tr.status})
                       </option>)}
                   </select>
                 </div>
