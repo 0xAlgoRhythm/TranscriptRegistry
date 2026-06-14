@@ -145,10 +145,15 @@ function UniversityList() {
   const handleReactivate = React.useCallback((id: bigint) => {
     reactivateHook.reactivate(id);
   }, [reactivateHook.reactivate]);
+
+  const [displayCount, setDisplayCount] = useState(10);
+
   if (total === 0) {
     return <div className="text-center py-8 font-mono text-xs text-muted-foreground">{t("nOREGISTEREDINSTITUTIONSDETECTED")}</div>;
   }
-  return <div className="overflow-x-auto w-full">
+  const displayTotal = Math.min(total, displayCount);
+
+  return <div className="overflow-x-auto w-full space-y-4">
       <table className="w-full text-left border-collapse font-mono">
         <thead>
           <tr className="border-b border-border/60 text-[10px] uppercase text-muted-foreground tracking-wider">
@@ -161,10 +166,17 @@ function UniversityList() {
         </thead>
         <tbody>
           {Array.from({
-          length: total
+          length: displayTotal
         }, (_, i) => <UniversityRow key={i} id={BigInt(i)} onDeactivate={handleDeactivate} onReactivate={handleReactivate} isDeactivatePending={deactivateHook.isPending || deactivateHook.isConfirming} isReactivatePending={reactivateHook.isPending || reactivateHook.isConfirming} />)}
         </tbody>
       </table>
+      {total > displayCount && (
+        <div className="flex justify-center pt-2">
+          <Button variant="outline" size="sm" onClick={() => setDisplayCount(prev => prev + 10)} className="font-mono text-[10px] tracking-wider uppercase">
+            Load More
+          </Button>
+        </div>
+      )}
     </div>;
 }
 function DeployUniversityForm() {
@@ -188,10 +200,34 @@ function DeployUniversityForm() {
     isSuccess,
     error
   } = useDeployUniversity();
+  const [deployError, setDeployError] = useState("");
+  const [isChecking, setIsChecking] = useState(false);
   const [isPendingTransition, startTransition] = React.useTransition();
-  function handleSubmit(e: React.FormEvent) {
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setDeployError("");
     if (!name || !registrar || !email) return;
+
+    try {
+      setIsChecking(true);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+      const res = await fetch(`${API_URL}/api/universities`);
+      if (res.ok) {
+        const unis = await res.json();
+        const alreadyLinked = unis.some((u: any) => u.registrar.toLowerCase() === registrar.toLowerCase());
+        if (alreadyLinked) {
+          setDeployError("This wallet address is already linked to another institution. A 1-to-1 wallet-to-school mapping is required.");
+          setIsChecking(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Failed to check existing registries", err);
+    } finally {
+      setIsChecking(false);
+    }
+
     startTransition(() => {
       deploy(name, registrar as Address);
     });
@@ -238,14 +274,19 @@ function DeployUniversityForm() {
 
         <AddressInput label="Designated Registrar Wallet" placeholder={t("0x")} value={registrar} onChange={setRegistrar} />
 
+        {deployError && <div className="rounded border border-ca-danger/30 bg-ca-danger/10 p-3 font-mono text-xs text-ca-danger flex items-start gap-2">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+            <p className="leading-relaxed">{deployError}</p>
+          </div>}
+
         {isEmbeddedWallet && <div className="rounded border border-ca-warning/30 bg-ca-warning-dim p-4 font-mono text-xs text-ca-warning flex items-start gap-2">
             <AlertTriangle className="h-4.5 w-4.5 mt-0.5 text-ca-warning shrink-0" />
             <p className="leading-relaxed">
               <strong>{t("warning")}</strong>{t("youarecurrentlyconnected")}</p>
           </div>}
 
-        <Button type="submit" disabled={isPending || isConfirming || isEmbeddedWallet} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5">
-          <Plus className="h-5 w-5" />{t("dEPLOYREGISTRYCONTRACT")}</Button>
+        <Button type="submit" disabled={isChecking || isPending || isConfirming || isEmbeddedWallet} className="w-full bg-ca-accent text-white hover:bg-ca-accent-hover font-mono tracking-wider text-xs py-4 flex items-center justify-center gap-1.5">
+          <Plus className="h-5 w-5" />{isChecking ? "CHECKING REGISTRY..." : t("dEPLOYREGISTRYCONTRACT")}</Button>
 
         <TxPanel status={isPending ? "signing" : isConfirming ? "pending" : isSuccess ? "success" : error ? "error" : "idle"} hash={hash} error={error ? error.message : undefined} title="Deploy University Contract Transaction" />
       </form>
