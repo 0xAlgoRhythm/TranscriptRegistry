@@ -88,12 +88,6 @@ export default function AdminAnalyticsPage() {
         </div>
 
         <div className="md:col-span-1 space-y-4">
-            }} title={`Day ${idx + 1}: ${val} checks`} />)}
-            </div>
-          </GlowCard>
-        </div>
-
-        <div className="md:col-span-1 space-y-4">
           <SectionLabel index={3} label="REGISTRY SHARE" />
           <GlowCard className="p-6 h-64 font-mono text-xs space-y-4 overflow-y-auto">
             <span className="font-bold block border-b border-border/40 pb-3">{t("aCCUMULATIONSHARE")}</span>
@@ -106,6 +100,10 @@ export default function AdminAnalyticsPage() {
                 const pct = total > 0 ? Math.round(share.count / total * 100) : 0;
                 const colors = ["bg-ca-accent", "bg-ca-teal", "bg-ca-success", "bg-ca-warning"];
                 const colorClass = colors[idx % colors.length];
+                return <div key={idx} className="space-y-1.5">
+                        <div className="flex justify-between text-[9px] gap-2">
+                          <span className="truncate max-w-[70%] uppercase">{share.name}</span>
+                          <span className="shrink-0 text-foreground font-bold">{pct}{t("text41")}{share.count})</span>
                         </div>
                         <div className="h-2 w-full bg-muted/40 rounded-full overflow-hidden">
                           <div className={cn("h-full rounded-full", colorClass)} style={{

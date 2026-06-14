@@ -187,43 +187,13 @@ export default function IssuedPage() {
 
               {transcripts.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground font-mono">{t("nOTRANSCRIPTSREGISTEREDYET")}</div> : <div className="border border-border/40 rounded-lg p-4 bg-muted/10 font-mono text-xs space-y-2">
                   <div className="flex justify-between items-center pb-2 border-b border-border/30">
-          })}
-              {(!address || universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).length === 0) && <div className="p-2 border-t border-border/20 mt-1 bg-card">
-                  <label className="text-[9px] text-muted-foreground uppercase block mb-1">{t("orentercustomcontract")}</label>
-                  <input type="text" value={registryAddress} onChange={e => setRegistryAddress(e.target.value)} placeholder={t("0x")} className="w-full rounded border border-border/60 bg-background py-1.5 px-3 text-xs font-mono focus:border-ca-accent focus:outline-none" onMouseDown={e => e.stopPropagation()} />
-                </div>}
-            </div>}
-        </div>
-      </GlowCard>
-
-      {/* Main Database Table */}
-      <div className="space-y-4">
-        <SectionLabel index={2} label="RECORD ENTRY REGISTRY" />
-
-        {!registryAddress ? <EmptyState title="Registry Required" description="Enter the university transcript registry smart contract address to load the database list." icon={<School className="h-8 w-8 text-muted-foreground/50" />} /> : statsLoading || transcriptsLoading ? <div className="py-12 flex justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-ca-accent border-t-transparent" />
-          </div> : <GlowCard className="p-4 overflow-hidden">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-mono text-xs">
-                <div className="p-3.5 bg-muted/20 border border-border/30 rounded">
-                  <span className="text-[10px] text-muted-foreground block uppercase">{t("totalTranscripts")}</span>
-                  <span className="text-sm font-bold text-foreground">{totalCount}</span>
-                </div>
-                <div className="p-3.5 bg-muted/20 border border-border/30 rounded">
-                  <span className="text-[10px] text-muted-foreground block uppercase">{t("verifications")}</span>
-                  <span className="text-sm font-bold text-foreground">{verificationCount}</span>
-                </div>
-              </div>
-
-              {transcripts.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground font-mono">{t("nOTRANSCRIPTSREGISTEREDYET")}</div> : <div className="border border-border/40 rounded-lg p-4 bg-muted/10 font-mono text-xs space-y-2">
-                  <div className="flex justify-between items-center pb-2 border-b border-border/30">
                     <span className="font-bold">{t("tRANSCRIPTINDEXRECORD")}</span>
-                    <span className="text-muted-foreground">({transcripts.length}{t("items")})</span>
+                    <span className="text-muted-foreground">({transcripts.length}{t("items")}</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-relaxed">{t("noteToinspector")}</p>
                   
                   <div className="space-y-2 pt-4">
-                    {transcripts.map(transcript => <IssuedRow key={transcript.recordId} transcript={transcript} registryAddress={registryAddress} />)}
+                    {transcripts.map(tr => <IssuedRow key={tr.recordId} transcript={tr} registryAddress={registryAddress} />)}
                   </div>
                 </div>}
             </div>
