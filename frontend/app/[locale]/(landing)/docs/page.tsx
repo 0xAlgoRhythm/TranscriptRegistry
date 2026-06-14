@@ -19,6 +19,8 @@ import { DocsErrorCodes } from "@/components/docs/sections/error-codes";
 import { DocsSDK } from "@/components/docs/sections/sdk";
 import { DocsPlayground } from "@/components/docs/sections/playground";
 import { DocsMCPServer } from "@/components/docs/sections/mcp-server";
+import { DocsSystemArchitecture } from "@/components/docs/sections/system-architecture";
+
 export const sections = [{
   id: "introduction",
   label: "Introduction",
@@ -27,6 +29,10 @@ export const sections = [{
   id: "quickstart",
   label: "Quickstart",
   icon: "⚡"
+}, {
+  id: "system-architecture",
+  label: "System Architecture",
+  icon: "🏗️"
 }, {
   id: "verify-api",
   label: "Verify API",
@@ -143,6 +149,9 @@ export default function DocsPage() {
           </DocsSection>
           <DocsSection id="quickstart">
             <DocsQuickstart />
+          </DocsSection>
+          <DocsSection id="system-architecture">
+            <DocsSystemArchitecture />
           </DocsSection>
           <DocsSection id="verify-api">
             <DocsVerifyAPI />
