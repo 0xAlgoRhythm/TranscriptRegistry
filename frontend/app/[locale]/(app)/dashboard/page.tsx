@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { FileDropZone } from "@/components/ui/file-drop-zone";
 import { truncateAddress, cn } from "@/lib/utils";
 import { Building2, FileText, CheckCircle2, UserCheck, Lock, ShieldCheck, Send, PlusCircle, RefreshCw, Check, X, AlertTriangle, Upload, Eye, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 interface StudentRequest {
   id: number;
   walletAddress: string | null;

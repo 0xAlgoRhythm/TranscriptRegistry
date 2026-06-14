@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { TRANSCRIPT_STATUS, type TranscriptStatus } from "@/lib/contracts";
 import { formatTimestamp, truncateAddress, cn } from "@/lib/utils";
 import { ListFilter, ChevronRight, School, RefreshCw } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 function IssuedRow({
   transcript,
   registryAddress

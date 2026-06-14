@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import "./docs.css";
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { DocsNav } from "@/components/docs/docs-nav";
 import { DocsSection } from "@/components/docs/docs-section";
 import { DocsIntro } from "@/components/docs/sections/intro";

@@ -16,7 +16,7 @@ import { HashDisplay } from "@/components/ui/hash-display";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { FileText, School, ChevronRight, RefreshCcw, Send, Loader2, X, Check, CheckCircle2, Clock, XCircle } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 const TranscriptCard = React.memo(function TranscriptCard({
   recordId,
   registryAddress

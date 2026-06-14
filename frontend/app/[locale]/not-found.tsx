@@ -1,6 +1,6 @@
 import { useTranslations } from "next-intl";
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Button } from "@/components/ui/button";
 import { Compass, Home } from "lucide-react";
 export default function NotFound() {
