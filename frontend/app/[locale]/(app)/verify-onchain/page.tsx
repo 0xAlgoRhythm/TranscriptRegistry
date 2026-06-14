@@ -265,19 +265,17 @@ export default function VerifyPage() {
                 setRecordId(e.target.value);
                 setLooked(false);
               }} placeholder={t("0x32bytehash")} className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none" required />
+              }} placeholder={t("0x32bytehash")} className="w-full rounded-lg border border-border/60 bg-card py-2.5 px-4 text-xs font-mono focus:border-ca-accent focus:outline-none" required />
               </div>
 
               {studentTranscripts.length > 0 && <div className="space-y-2 border border-border/40 rounded-lg p-3 bg-card/30 backdrop-blur-sm">
                   <span className="text-[10px] font-mono tracking-wider text-muted-foreground uppercase block">{t("selectStudentTranscriptto")}{studentTranscripts.length}{t("found")}</span>
                   <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto pr-1">
                     {studentTranscripts.map(tr => {
-                  const t = useTranslations("Common");
                   const isSelected = recordId.toLowerCase() === tr.recordId.toLowerCase();
                   return <button key={tr.recordId} type="button" onClick={() => {
                     setRecordId(tr.recordId);
                     setLooked(false);
-                  }} className={cn("w-full text-left rounded-md p-3 border text-xs font-mono transition-all flex flex-col gap-1.5", isSelected ? "bg-ca-accent/15 border-ca-accent text-foreground shadow-sm ring-1 ring-ca-accent/20" : "bg-card/50 border-border/40 text-muted-foreground hover:border-border/80 hover:bg-muted/10 hover:text-foreground")}>
-                          <div className="flex items-center justify-between">
                             <span className="font-bold text-foreground truncate max-w-[200px]">
                               {tr.universityId ? `University Record #${tr.id}` : `Record #${tr.id}`}
                             </span>

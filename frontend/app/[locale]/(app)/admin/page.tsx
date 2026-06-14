@@ -63,7 +63,6 @@ function ActivityLogs() {
             {error}
           </div> : logs.length === 0 ? <div className="text-center py-8 font-mono text-xs text-muted-foreground">{t("nOSYSTEMLOGSFOUND")}</div> : <div className="space-y-4 font-mono text-xs max-h-[400px] overflow-y-auto pr-2">
             {logs.map((log, index) => {
-          const t = useTranslations("Common");
           let dotColor = "bg-ca-accent";
           if (log.type === "university_registered") dotColor = "bg-ca-success";
           if (log.type === "status_changed") dotColor = "bg-ca-danger";

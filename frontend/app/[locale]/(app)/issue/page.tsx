@@ -555,19 +555,51 @@ export default function IssuePage() {
                             {registryAddress.slice(0, 10)}{t("text256")}{registryAddress.slice(-8)}
                           </span>
                         </> : <span className="text-muted-foreground">{t("selectfromregistereduniversities")}</span>}
+  return <div className="mx-auto max-w-3xl space-y-10 animate-fade-in pb-16">
+      {/* Header */}
+      <div className="space-y-1">
+        <SectionLabel index={1} label="WIZARD PROCESS" />
+        <h1 className="text-3xl font-mono font-bold tracking-tight uppercase text-foreground">{t("issueOnChainTranscript")}</h1>
+        <p className="text-xs text-muted-foreground">{t("dynamicallygenerateandregister")}</p>
+      </div>
+
+      {/* Step Progress */}
+      <GlowCard className="p-4">
+        <StepWizard steps={steps} currentStep={currentStep} />
+      </GlowCard>
+
+      {/* Wizard Body */}
+      <GlowCard className="p-6 md:p-8 space-y-6 relative" glow>
+        {/* ── Step 1: Institution ────────────────────────────────────── */}
+        {currentStep === 1 && <div className="space-y-5 animate-fade-in">
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-mono font-bold tracking-wide uppercase text-foreground">{t("01InstitutionAddress")}</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t("providethesmartcontract")}</p>
+            </div>
+            <div className="space-y-4">
+              <div className="relative">
+                <label className="text-xs font-mono tracking-wider text-muted-foreground uppercase block mb-1.5">{t("selectUniversityRegistryContract")}</label>
+                <div className="relative">
+                  <button type="button" onClick={() => setShowUniSuggestions(!showUniSuggestions)} className="w-full rounded-lg border border-border/60 bg-card py-3 px-4 text-xs font-mono text-left flex justify-between items-center hover:border-ca-accent transition-colors focus:outline-none">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 truncate">
+                      {registryAddress ? <>
+                          <span className="font-bold text-foreground">
+                            {universities.find(u => u.contractAddr.toLowerCase() === registryAddress.toLowerCase())?.name || "Custom Registry"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded sm:ml-2">
+                            {registryAddress.slice(0, 10)}{t("text256")}{registryAddress.slice(-8)}
+                          </span>
+                        </> : <span className="text-muted-foreground">{t("selectfromregistereduniversities")}</span>}
                     </div>
                     <span className="text-muted-foreground text-[10px] ml-2">▼</span>
                   </button>
 
                   {showUniSuggestions && <div className="absolute z-50 w-full mt-1.5 max-h-60 overflow-y-auto rounded-lg border border-border/60 bg-card p-1 shadow-lg font-mono text-xs">
                       {universities.filter(u => address && u.registrar.toLowerCase() === address.toLowerCase()).map(u => {
-                  const t = useTranslations("Common");
                   const isSelected = registryAddress.toLowerCase() === u.contractAddr.toLowerCase();
                   return <button key={u.contractAddr} type="button" onMouseDown={() => {
                     setRegistryAddress(u.contractAddr);
                     setShowUniSuggestions(false);
-                  }} className={cn("w-full text-left rounded px-3.5 py-3 hover:bg-muted/40 transition-colors flex flex-col gap-1.5 border-b border-border/20 last:border-0", isSelected && "bg-ca-accent/10 border-ca-accent")}>
-                              <div className="flex justify-between items-center">
                                 <span className="font-bold text-foreground">{u.name}</span>
                                 <span className="text-[9px] px-1.5 py-0.5 rounded bg-ca-accent/15 text-ca-accent font-semibold">{t("iD")}{u.universityId}
                                 </span>

@@ -654,14 +654,13 @@ function RegistrarDashboardView({
                 </thead>
                 <tbody>
                   {issuedTranscripts.map(tr => {
-              const t = useTranslations("Common");
               const ipfsUrl = tr.metadataCid ? `https://gateway.pinata.cloud/ipfs/${tr.metadataCid}` : "#";
               return <tr key={tr.recordId} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
                         <td className="p-3 font-semibold text-foreground">
-                          {tr.recordId.slice(0, 16)}{t("text124")}{tr.recordId.slice(-14)}
+                          {tr.recordId.slice(0, 16)}...{tr.recordId.slice(-14)}
                         </td>
                         <td className="p-3 text-muted-foreground">
-                          {tr.studentHash.slice(0, 14)}{t("text125")}</td>
+                          {tr.studentHash.slice(0, 14)}...</td>
                         <td className="p-3 text-muted-foreground">
                           {new Date(tr.issuedAt || tr.createdAt).toLocaleDateString()}
                         </td>
@@ -811,7 +810,7 @@ function RegistrarDashboardView({
               </button>
             </div>
             
-            <p className="text-xs text-muted-foreground font-mono">{t("linkawalletaddress")}<strong>{selectedStudentForWallet.fullName}</strong> ({selectedStudentForWallet.studentId}{t("text151")}</p>
+            <p className="text-xs text-muted-foreground font-mono">{t("linkawalletaddress")}<strong>{selectedStudentForWallet.fullName}</strong> ({selectedStudentForWallet.studentId})</p>
 
             <form onSubmit={handleBindWallet} className="space-y-4">
               <div className="space-y-1.5">
@@ -1130,7 +1129,7 @@ export default function DashboardPage() {
                   </>}
 
                 <Link href="/verify-onchain" className="block group">
-                  <GlowCard className="p-4 hover:border-ca-accent hover:bg-card/45 transition-all">
+                  <GlowCard className="p-4 hover:border-ca-success/10 hover:bg-card/45 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-ca-success/10 rounded-lg text-ca-success">
                         <UserCheck className="h-5 w-5" />
@@ -1158,7 +1157,6 @@ export default function DashboardPage() {
 
                     <div className="space-y-4 font-mono">
                       {logsLoading && logs.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground animate-pulse">{t("lOADINGNETWORKSTREAM")}</div> : logs.length === 0 ? <div className="text-center py-8 text-xs text-muted-foreground">{t("nORECENTACTIVITIESDETECTED")}</div> : logs.slice(0, 5).map((log, index) => {
-                  const t = useTranslations("Common");
                   const timeAgo = (dateStr: string) => {
                     const seconds = Math.floor((new Date().getTime() - new Date(dateStr).getTime()) / 1000);
                     if (seconds < 60) return `${seconds}s ago`;
